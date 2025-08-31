@@ -9,49 +9,80 @@ import crypto from "crypto";
 
 export async function POST(req) {
   try {
+    console.log("Incoming registration request");
+
     const raw = await req.json();
     const { uid, photoURL } = raw;
     const { name, email, password } = formatUserData(raw);
+
     if (!name || !email || (!password && !uid)) {
-      return NextResponse.json({ error: "Name, email, and either password or UID are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Name, email, and password (or OAuth UID) are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!uid && password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
 
+    // Check if email already exists
     const existing = await User.findOne({ email });
-
-    // ❌ Already exists — return conflict
     if (existing) {
-      return NextResponse.json({ error: "Email already exists. Try logging in instead." }, { status: 409 });
+      return NextResponse.json(
+        { error: "Email already exists. Try logging in instead." },
+        { status: 409 }
+      );
     }
 
-    // ✅ Create new user
-    const user = await User.create({
+    // Create user (slug handled in pre-save)
+    const newUser = await User.create({
       name,
       email,
-      password: password || crypto.randomBytes(16).toString("hex"), // safe dummy for OAuth
+      password: password || crypto.randomBytes(16).toString("hex"),
       photoURL: photoURL || "",
       hasOAuth: !!uid,
     });
 
-    const accessToken = createAccessToken(user);
-    const refreshToken = createRefreshToken(user);
+    const accessToken = createAccessToken(newUser);
+    const refreshToken = createRefreshToken(newUser);
 
     const res = NextResponse.json(
       {
-        id: user._id,
-        email: user.email,
-        name: user.name,
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        slug: newUser.slug,
       },
       { status: 201 }
     );
 
     setAuthCookies(res, accessToken, refreshToken);
 
+    console.log(`✅ User ${email} registered successfully`);
     return res;
+
   } catch (err) {
-    if (err.code === 11000 && err.keyPattern?.email) {
-      return NextResponse.json({ error: "Email already exists. Try logging in instead." }, { status: 409 });
+    console.error("Registration error:", err);
+
+    if (err.code === 11000) {
+      if (err.keyPattern?.email) {
+        return NextResponse.json(
+          { error: "Email already exists. Try logging in instead." },
+          { status: 409 }
+        );
+      }
+      if (err.keyPattern?.slug) {
+        return NextResponse.json(
+          { error: "Slug conflict. Try again." },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

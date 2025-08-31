@@ -11,124 +11,103 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(request.url);
 
-    // Parse parameters
+    // Parse parameters with better defaults
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '12'))); // Cap at 50
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '24')));
 
-    const itemId = searchParams.get('itemId')?.trim();
-    const name = searchParams.get('name')?.trim();
-    const search = searchParams.get('search')?.trim(); // Support both 'name' and 'search'
+    // Essential filters
     const category = searchParams.get('category')?.trim();
     const subcategory = searchParams.get('subcategory')?.trim();
-    const minPrice = Math.max(0, parseFloat(searchParams.get('minPrice') || '0'));
-    const maxPrice = Math.min(999999, parseFloat(searchParams.get('maxPrice') || '999999'));
+    const minPrice = searchParams.get('minPrice') ? Math.max(0, parseFloat(searchParams.get('minPrice')!)) : null;
+    const maxPrice = searchParams.get('maxPrice') ? Math.max(0, parseFloat(searchParams.get('maxPrice')!)) : null;
     const material = searchParams.get('material')?.trim();
-    const size = searchParams.get('size')?.trim();
-    const badge = searchParams.get('badge')?.trim();
-    const batch = searchParams.get('batch')?.trim();
-    const tags = searchParams.get('tags')?.split(',').filter(t => t.trim()).map(t => t.trim()) || [];
-    const createdBefore = searchParams.get('createdBefore');
-    const createdAfter = searchParams.get('createdAfter');
+    const inStock = searchParams.get('inStock') === 'true';
+    const onSale = searchParams.get('onSale') === 'true';
     const sort = searchParams.get('sort') || 'newest';
 
     console.log(`[API] Processing request with params:`, {
-      page, limit, itemId, name: name || search, category, subcategory,
-      minPrice, maxPrice, material, size, badge, batch, tags,
-      createdBefore, createdAfter, sort
+      page, limit, category, subcategory, minPrice, maxPrice, 
+      material, inStock, onSale, sort
     });
 
     // Build query object
     const query: any = {};
 
-    // Price range (only add if not default values)
-    if (minPrice > 0 || maxPrice < 999999) {
+    // Only show published products
+    query.isPublished = { $ne: false };
+
+    // Price range filter
+    if (minPrice !== null || maxPrice !== null) {
       query.finalPrice = {};
-      if (minPrice > 0) query.finalPrice.$gte = minPrice;
-      if (maxPrice < 999999) query.finalPrice.$lte = maxPrice;
+      if (minPrice !== null && minPrice > 0) query.finalPrice.$gte = minPrice;
+      if (maxPrice !== null && maxPrice > 0) query.finalPrice.$lte = maxPrice;
     }
 
-    // Search in name and description
-    const searchTerm = name || search;
-    if (searchTerm) {
-      query.$or = [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } }
-      ];
-    }
-
-    // Other filters
-    if (itemId) query.itemId = itemId;
-    if (material) query.material = material;
-    if (size) query.size = size;
-    if (badge) query.badge = badge;
-    if (batch) query.batch = batch;
-    if (tags.length > 0) query.tags = { $in: tags };
-
-    // Date range
-    if (createdAfter || createdBefore) {
-      query.createdAt = {};
-      if (createdAfter) {
-        const afterDate = new Date(createdAfter);
-        if (!isNaN(afterDate.getTime())) {
-          query.createdAt.$gte = afterDate;
-        }
-      }
-      if (createdBefore) {
-        const beforeDate = new Date(createdBefore);
-        if (!isNaN(beforeDate.getTime())) {
-          // Set to end of day
-          beforeDate.setHours(23, 59, 59, 999);
-          query.createdAt.$lte = beforeDate;
-        }
-      }
-    }
-
-    // Category and subcategory lookups
+    // Category filter
     if (category) {
-      const categoryDoc = await Category.findOne({ slug: category });
-      if (categoryDoc) {
-        query.categoryId = categoryDoc._id;
+      const categoryDoc = await Category.findOne({ slug: category }).lean();
+      if (categoryDoc && typeof categoryDoc === 'object' && '_id' in categoryDoc) {
+        query.categoryId = (categoryDoc as { _id: unknown })._id;
       } else {
-        // Invalid category - return empty results
         return NextResponse.json({
           products: [],
           pagination: { page, limit, total: 0, pages: 0 },
+          filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } },
           message: `Category '${category}' not found`
         });
       }
     }
 
+    // Subcategory filter
     if (subcategory) {
-      const subCategoryDoc = await SubCategory.findOne({ slug: subcategory });
-      if (subCategoryDoc) {
-        query.subCategoryId = subCategoryDoc._id;
+      const subCategoryDoc = await SubCategory.findOne({ slug: subcategory }).lean();
+      if (subCategoryDoc && !Array.isArray(subCategoryDoc) && '_id' in subCategoryDoc) {
+        query.subCategoryId = (subCategoryDoc as { _id: unknown })._id;
       } else {
-        // Invalid subcategory - return empty results
         return NextResponse.json({
           products: [],
           pagination: { page, limit, total: 0, pages: 0 },
+          filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } },
           message: `Subcategory '${subcategory}' not found`
         });
       }
     }
 
-    // Sorting
-    let sortQuery: any = { createdAt: -1 }; // default
+    // Material filter
+    if (material) {
+      query.material = { $regex: material, $options: 'i' };
+    }
+
+    // Stock filter
+    if (inStock) {
+      query.inStockQuantity = { $gt: 0 };
+    }
+
+    // Sale filter
+    if (onSale) {
+      query.discountPercent = { $gt: 0 };
+    }
+
+    // Sorting options
+    let sortQuery: any = { createdAt: -1 };
     switch (sort) {
-      case 'oldest':
-        sortQuery = { createdAt: 1 };
-        break;
-      case 'name-asc':
-        sortQuery = { name: 1 };
-        break;
-      case 'name-desc':
-        sortQuery = { name: -1 };
-        break;
       case 'price-low':
-        sortQuery = { finalPrice: 1 };
+        sortQuery = { finalPrice: 1, createdAt: -1 };
         break;
       case 'price-high':
-        sortQuery = { finalPrice: -1 };
+        sortQuery = { finalPrice: -1, createdAt: -1 };
+        break;
+      case 'name-asc':
+        sortQuery = { name: 1, createdAt: -1 };
+        break;
+      case 'name-desc':
+        sortQuery = { name: -1, createdAt: -1 };
+        break;
+      case 'rating':
+        sortQuery = { ratings: -1, 'reviews.average': -1, createdAt: -1 };
+        break;
+      case 'discount':
+        sortQuery = { discountPercent: -1, createdAt: -1 };
         break;
       case 'newest':
       default:
@@ -147,9 +126,45 @@ export async function GET(request: NextRequest) {
         .skip((page - 1) * limit)
         .limit(limit)
         .sort(sortQuery)
+        .lean()
         .exec(),
       Product.countDocuments(query)
     ]);
+
+    // Get filters data only on first page or when no filters applied
+    type CategoryType = { name: string; slug: string };
+    type FiltersDataType = {
+      categories: CategoryType[];
+      materials: string[];
+      priceRange: { minPrice: number; maxPrice: number };
+    };
+    let filtersData: FiltersDataType = { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } };
+    
+    if (page === 1) {
+      const [categories, materials, priceStats] = await Promise.all([
+        Category.find({}).select('name slug').lean<CategoryType[]>(),
+        Product.distinct('material', { 
+          material: { $nin: [null, '', undefined] },
+          isPublished: { $ne: false }
+        }),
+        Product.aggregate([
+          { $match: { isPublished: { $ne: false } } },
+          {
+            $group: {
+              _id: null,
+              minPrice: { $min: '$finalPrice' },
+              maxPrice: { $max: '$finalPrice' }
+            }
+          }
+        ])
+      ]);
+
+      filtersData = {
+        categories: categories || [],
+        materials: (materials || []).filter(m => m && typeof m === 'string').sort(),
+        priceRange: { minPrice: 0, maxPrice: 100000 }
+      };
+    }
 
     const responseData = {
       products,
@@ -159,27 +174,29 @@ export async function GET(request: NextRequest) {
         total,
         pages: Math.ceil(total / limit),
       },
-      query: {
-        searchTerm: searchTerm || null,
+      filters: filtersData,
+      appliedFilters: {
         category: category || null,
         subcategory: subcategory || null,
-        priceRange: minPrice > 0 || maxPrice < 999999 ? { min: minPrice, max: maxPrice } : null,
-        filters: {
-          material: material || null,
-          size: size || null,
-          badge: badge || null,
-          tags: tags.length > 0 ? tags : null
-        }
+        material: material || null,
+        priceRange: (minPrice !== null || maxPrice !== null) ? { min: minPrice, max: maxPrice } : null,
+        inStock: inStock || null,
+        onSale: onSale || null,
+        sort
       },
       meta: {
         fetchTime: Date.now() - startTime,
-        cached: false
+        cached: false,
+        hasMore: page < Math.ceil(total / limit)
       }
     };
 
     console.log(`[API] Products fetched: ${products.length} / ${total} (${Date.now() - startTime}ms)`);
-
-    return NextResponse.json(responseData);
+    // Add cache headers for better performance
+    const response = NextResponse.json(responseData);
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    
+    return response;
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -192,127 +209,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       error: 'Internal server error',
-      message: errorMessage,
-      timestamp: new Date().toISOString()
+      message: process.env.NODE_ENV === 'development' ? errorMessage : 'Something went wrong',
+      timestamp: new Date().toISOString(),
+      products: [],
+      pagination: { page: 1, limit: 24, total: 0, pages: 0 },
+      filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } }
     }, { status: 500 });
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    await connectDB();
-    const data = await request.json();
-    console.log('[API] Creating new product with data:', data);
-
-    // Validate required fields
-    if (!data.name || !data.finalPrice) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name and finalPrice are required' },
-        { status: 400 }
-      );
-    }
-
-    const product = new Product(data);
-    await product.save();
-
-    console.log('[API] New product created successfully');
-
-    return NextResponse.json(product, { status: 201 });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-
-    console.error('[API POST ERROR]', errorMessage);
-
-    // Handle validation errors
-    if (error instanceof Error && error.name === 'ValidationError') {
-      return NextResponse.json(
-        { error: 'Validation error', details: errorMessage },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error', message: errorMessage },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    await connectDB();
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const data = await request.json();
-    const product = await Product.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    console.log('[API] Product updated successfully');
-
-    return NextResponse.json(product);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[API PUT ERROR]', errorMessage);
-
-    return NextResponse.json(
-      { error: 'Internal server error', message: errorMessage },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    await connectDB();
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const product = await Product.findByIdAndDelete(id);
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    console.log('[API] Product deleted successfully');
-
-    return NextResponse.json({
-      message: 'Product deleted successfully',
-      deletedProduct: product
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[API DELETE ERROR]', errorMessage);
-
-    return NextResponse.json(
-      { error: 'Internal server error', message: errorMessage },
-      { status: 500 }
-    );
   }
 }

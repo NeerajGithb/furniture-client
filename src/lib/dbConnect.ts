@@ -1,25 +1,52 @@
 // src/lib/dbConnect.ts
 import mongoose from "mongoose";
 
-let isConnected = false; // Track connection status
+// Use a global cache (important in dev with hot reload)
+let cached = (global as any).mongoose;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
 
 export async function connectDB() {
-  if (isConnected) return;
+  // ✅ Reuse cached connection if available
+  if (cached.conn) {
+    return cached.conn;
+  }
 
-  if (!process.env.MONGODB_URI) {
+  // ✅ Ensure URI is set
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
     throw new Error("❌ MONGODB_URI is missing in environment variables");
   }
 
-  try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "vfurniture", // Change if needed
+  // ✅ If no ongoing connection, create one
+  if (!cached.promise) {
+    const options: mongoose.ConnectOptions = {
+      // ✅ Disable command buffering to avoid accidental unhandled queries
       bufferCommands: false,
-    });
+      // ✅ Better timeouts
+      serverSelectionTimeoutMS: 30000, // fail fast if cannot connect in 30s
+      socketTimeoutMS: 45000, // close idle sockets after 45s
+      // ✅ Recommended in production (prevents deprecation warnings)
+      family: 4, // force IPv4 (avoid IPv6 issues on some hosts)
+    };
 
-    isConnected = true;
-    console.log("✅ Connected to MongoDB");
-  } catch (err: any) {
-    console.error("❌ MongoDB connection failed:", err.message);
-    throw new Error("MongoDB connection error");
+    cached.promise = mongoose
+      .connect(MONGODB_URI, options)
+      .then((mongooseInstance) => {
+        if (mongoose.connection.readyState === 1) {
+          console.log("✅ Securely connected to MongoDB");
+        }
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        console.error("❌ MongoDB connection failed:", err.message);
+        throw err;
+      });
   }
+
+  // ✅ Wait for the cached connection
+  cached.conn = await cached.promise;
+  return cached.conn;
 }

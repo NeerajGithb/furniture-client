@@ -13,6 +13,8 @@ import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaUser } from "react-icons/fa";
 import { LogIn, UserPlus, X, ArrowLeft, Shield, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ErrorMessage from "./ErrorMessage";
+import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { initializeApp } from "@/stores/globalStoreManager";
 
 export default function AuthModal({ isOpen, onClose }) {
   const { setUser } = useAuth();
@@ -159,8 +161,7 @@ export default function AuthModal({ isOpen, onClose }) {
     };
 
     const sendToMongo = async (url, body) => {
-      console.log(`[Mongo] Sending to ${url}`, body);
-      const res = await fetch(url, {
+      const res = await fetchWithCredentials(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -177,7 +178,7 @@ export default function AuthModal({ isOpen, onClose }) {
       toast.success(msg);
 
       try {
-        const res = await fetch("/api/auth/me", {
+        const res = await fetchWithCredentials("/api/auth/me", {
           method: "GET",
           credentials: "include",
         });
@@ -185,6 +186,7 @@ export default function AuthModal({ isOpen, onClose }) {
         if (res.ok) {
           const data = await res.json();
           if (data?.user) {
+            initializeApp();
             setUser(data.user);
           }
         }
@@ -192,7 +194,7 @@ export default function AuthModal({ isOpen, onClose }) {
         console.error("❌ Failed to fetch user after login:", err.message);
       }
 
-      setTimeout(() => handleClose(), 300);
+      setTimeout(() => handleClose(), 100);
     };
 
     try {
@@ -224,7 +226,7 @@ export default function AuthModal({ isOpen, onClose }) {
         handleAuthError(err.status || 500, err.body, setError, true);
 
         try {
-          const res = await fetch("/api/auth/check-email-exists", {
+          const res = await fetchWithCredentials("/api/auth/check-email-exists", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
@@ -256,7 +258,7 @@ export default function AuthModal({ isOpen, onClose }) {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const res = await fetch("/api/auth/google", {
+      const res = await fetchWithCredentials("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -277,7 +279,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
       toast.success("Welcome! Google login successful.");
 
-      const meRes = await fetch("/api/auth/me", {
+      const meRes = await fetchWithCredentials("/api/auth/me", {
         method: "GET",
         credentials: "include",
       });
@@ -285,11 +287,12 @@ export default function AuthModal({ isOpen, onClose }) {
       if (meRes.ok) {
         const meData = await meRes.json();
         if (meData?.user) {
+          initializeApp();
           setUser(meData.user);
         }
       }
 
-      setTimeout(() => handleClose(), 300);
+      setTimeout(() => handleClose(), 100);
     } catch (err) {
       handleAuthError(err.code || 500, {}, setEmailPassError, true);
     } finally {
@@ -312,7 +315,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/send-reset-code", {
+      const res = await fetchWithCredentials("/api/auth/send-reset-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -340,7 +343,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/verify-reset-code", {
+      const res = await fetchWithCredentials("/api/auth/verify-reset-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -379,7 +382,7 @@ export default function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await fetchWithCredentials("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -11,7 +11,7 @@ const ErrorMessage = ({ message, className = "" }) => {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 8 }}
           transition={{ duration: 0.3 }}
-          className={`mt-3 w-full rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700 shadow-sm flex flex-col gap-3 ${className}`}
+          className={`mt-3 w-full rounded-sm bg-red-50 border border-red-200 p-3 text-sm text-red-700 shadow-sm flex flex-col gap-3 ${className}`}
         >
           <div className='flex items-start gap-2'>
             <svg

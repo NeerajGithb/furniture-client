@@ -1,41 +1,74 @@
+// app/api/auth/refresh/route.js
 export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
-import { verifyRefreshToken, createAccessToken, createRefreshToken, setAuthCookies } from "@/lib/auth";
+import { 
+  verifyRefreshToken, 
+  createAccessToken, 
+  createRefreshToken, 
+  setAuthCookies,
+  clearAuthCookies
+} from "@/lib/auth";
 import { connectDB } from "@/lib/dbConnect";
 import User from "@/models/User";
 import { cookies } from "next/headers";
 
 export async function POST() {
+  let response;
+  
   try {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get("vf_refresh")?.value;
 
     if (!refreshToken) {
-      return NextResponse.json({ error: "No refresh token" }, { status: 401 });
+      response = NextResponse.json(
+        { error: "No refresh token", success: false }, 
+        { status: 401 }
+      );
+      clearAuthCookies(response);
+      return response;
     }
 
     const payload = verifyRefreshToken(refreshToken);
     if (!payload?.userId) {
-      return NextResponse.json({ error: "Invalid refresh token" }, { status: 401 });
+      response = NextResponse.json(
+        { error: "Invalid refresh token", success: false }, 
+        { status: 401 }
+      );
+      clearAuthCookies(response);
+      return response;
     }
 
     await connectDB();
 
     const user = await User.findById(payload.userId);
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      response = NextResponse.json(
+        { error: "User not found", success: false }, 
+        { status: 401 }
+      );
+      clearAuthCookies(response);
+      return response;
     }
 
+    // Create new tokens
     const newAccessToken = createAccessToken(user);
     const newRefreshToken = createRefreshToken(user);
 
-    const res = NextResponse.json({ success: true }, { status: 200 });
-    setAuthCookies(res, newAccessToken, newRefreshToken);
+    response = NextResponse.json(
+      { success: true, message: "Tokens refreshed successfully" }, 
+      { status: 200 }
+    );
+    
+    setAuthCookies(response, newAccessToken, newRefreshToken);
+    return response;
 
-    return res;
   } catch (err) {
     console.error("❌ /refresh error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    response = NextResponse.json(
+      { error: "Internal server error", success: false }, 
+      { status: 500 }
+    );
+    clearAuthCookies(response);
+    return response;
   }
 }

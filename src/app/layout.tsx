@@ -1,6 +1,9 @@
+// app/layout.js
 import "./globals.css";
 import Providers from "@/context/Providers";
 import ToastProvider from "@/components/ToastProvider";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function RootLayout({
   children,
@@ -9,13 +12,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-white text-gray-900">
-        {/* Wrap everything inside Providers so they share context */}
+      <body className="bg-gray-100 text-gray-900">
         <Providers>
           <ToastProvider />
-          <div className="max-w-[1640px] mx-auto w-full">
+          <Header />
+          <div className="max-w-[1700px] mx-auto w-full">
             <main>{children}</main>
           </div>
+          <Footer />
         </Providers>
       </body>
     </html>

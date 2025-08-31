@@ -3,22 +3,34 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Search, ShoppingCart, User, Menu, ChevronDown } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Search, ShoppingCart, User, Menu, ChevronDown, Heart } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "./Sidebar";
 import AuthModal from "./AuthModal";
-import SearchModal from "./SearchModal";
+import SearchModal from "./search/SearchModal";
 import UserDropdown from "./UserDropdown";
+import SearchBar from "./search/SearchBar";
+import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from "@/stores/wishlistStore";
+import { useProductStore } from '@/stores/productStore';
 
-// Avatar Component
-const Avatar = ({ src, alt, fallbackText }) => {
+// FIXED: Remove dependency arrays from selectors to prevent re-renders
+const cartCountSelector = (state) => state.cart?.items?.length || 0;
+const wishlistCountSelector = (state) => state.wishlist?.items?.length || 0;
+const categoriesSelector = (state) => state.categories;
+const subcategoriesSelector = (state) => state.subcategories;
+const loadingCategoriesSelector = (state) => state.loadingCategories;
+
+// Memoized Avatar Component
+const Avatar = memo(({ src, alt, fallbackText }) => {
   const [imageError, setImageError] = useState(false);
+  const handleError = useCallback(() => setImageError(true), []);
 
   if (!src || imageError) {
     return (
-      <div className='w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-medium text-gray-700'>
+      <div className='w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-gray-800'>
         {fallbackText}
       </div>
     );
@@ -31,740 +43,638 @@ const Avatar = ({ src, alt, fallbackText }) => {
       width={32}
       height={32}
       className='w-8 h-8 rounded-full object-cover'
-      onError={() => setImageError(true)}
+      onError={handleError}
     />
   );
+});
+
+Avatar.displayName = 'Avatar';
+
+// Stable navigation items
+const NAV_ITEMS = [
+  { href: "/orders", label: "My Orders" },
+  { href: "/categories", label: "Categories" },
+];
+
+// Custom hook for scroll state
+const useScrollState = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const isScrolled = window.scrollY > 80;
+          if (isScrolled !== scrolled) {
+            setScrolled(isScrolled);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [scrolled]);
+
+  return scrolled;
 };
 
-const navItems = [
-  { href: "/orders", label: "My Orders" },
-  { href: "/wishlist", label: "Wishlist" },
-];
+// Memoized Category Item Component
+const CategoryItem = memo(({ category, isActive, onEnter, onActivate }) => {
+  const handleMouseEnter = useCallback(() => {
+    onEnter(category.name);
+  }, [category.name, onEnter]);
 
-const categories = [
-  {
-    name: "Beds",
-    groups: [
-      {
-        title: "Bedroom Essentials",
-        items: [
-          { name: "Beds & Mattresses", slug: "beds-and-mattresses" },
-          { name: "Bedside Tables", slug: "bedside-tables" },
-          { name: "Contemporary Bedside", slug: "contemporary-bedside" },
-          { name: "Modern Bedside", slug: "modern-bedside" },
-          { name: "Traditional Bedside", slug: "traditional-bedside" },
-          { name: "Storage Beds", slug: "storage-beds" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Sofas",
-    groups: [
-      {
-        title: "Seating Solutions",
-        items: [
-          { name: "3 Seater Sofas", slug: "3-seater-sofas" },
-          { name: "2 Seater Sofas", slug: "2-seater-sofas" },
-          { name: "1 Seater Sofas", slug: "1-seater-sofas" },
-          { name: "Sofa Sets", slug: "sofa-sets" },
-          { name: "Customized Sofas", slug: "customized-sofas" },
-          { name: "Reclining Sofas", slug: "reclining-sofas" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Dining",
-    groups: [
-      {
-        title: "Dining Collections",
-        items: [
-          { name: "4 Seater Dining Sets", slug: "4-seater-dining" },
-          { name: "6 Seater Dining Sets", slug: "6-seater-dining" },
-          { name: "8 Seater Dining Sets", slug: "8-seater-dining" },
-          { name: "2 Seater Dining Sets", slug: "2-seater-dining" },
-          { name: "Bar Height Tables", slug: "bar-height-tables" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Sectionals",
-    groups: [
-      {
-        title: "Modular Seating",
-        items: [
-          { name: "L-Shaped Sectionals", slug: "l-shaped-sectionals" },
-          { name: "U-Shaped Sectionals", slug: "u-shaped-sectionals" },
-          { name: "Corner Sofas", slug: "corner-sofas" },
-          { name: "Modular Pieces", slug: "modular-pieces" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Chairs",
-    groups: [
-      {
-        title: "Accent Seating",
-        items: [
-          { name: "Armchairs", slug: "armchairs" },
-          { name: "Accent Chairs", slug: "accent-chairs" },
-          { name: "Rocking Chairs", slug: "rocking-chairs" },
-          { name: "Office Chairs", slug: "office-chairs" },
-          { name: "Dining Chairs", slug: "dining-chairs" },
-        ],
-      },
-    ],
-  },
-  {
-    name: "Storage",
-    groups: [
-      {
-        title: "Organization",
-        items: [
-          { name: "Wardrobes", slug: "wardrobes" },
-          { name: "Chest of Drawers", slug: "chest-of-drawers" },
-          { name: "Bookshelves", slug: "bookshelves" },
-          { name: "TV Units", slug: "tv-units" },
-          { name: "Storage Ottomans", slug: "storage-ottomans" },
-        ],
-      },
-    ],
-  },
-];
+  const handleClick = useCallback(() => {
+    onActivate(null);
+  }, [onActivate]);
 
+  return (
+    <motion.li
+      onMouseEnter={handleMouseEnter}
+      className='relative group'
+      whileHover={{ y: -1 }}
+    >
+      <button
+        className='flex items-center gap-1 text-sm font-medium text-gray-800 hover:text-black transition-colors duration-200 py-2 px-2 rounded-sm hover:bg-gray-50'
+        onClick={handleClick}
+      >
+        <span>{category.name}</span>
+        <motion.div
+          animate={{ rotate: isActive ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={12} />
+        </motion.div>
+      </button>
+      <motion.div
+        className='absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-black'
+        initial={{ width: 0 }}
+        animate={{ width: isActive ? "100%" : "0%" }}
+        transition={{ duration: 0.3 }}
+      />
+    </motion.li>
+  );
+});
+
+CategoryItem.displayName = 'CategoryItem';
+
+// Memoized Mega Menu Component
+const MegaMenu = memo(({ category, onClose, onClearTimeout }) => {
+  const handleMouseEnter = useCallback(() => {
+    onClearTimeout();
+  }, [onClearTimeout]);
+
+  const handleLinkClick = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  if (!category) return null;
+
+  return (
+    <motion.div
+      key={category.name}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className='absolute top-full left-0 w-full bg-white shadow-lg border-b border-gray-100 z-30'
+      onMouseEnter={handleMouseEnter}
+    >
+      <div className='max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+          {category.groups?.map((group, groupIndex) => (
+            <motion.div
+              key={group.title}
+              className='space-y-3'
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: groupIndex * 0.05 }}
+            >
+              <h3 className='font-semibold text-xs uppercase tracking-wide text-black border-b border-gray-200 pb-1.5'>
+                {group.title}
+              </h3>
+              <ul className='space-y-2'>
+                {group.items?.map((item, itemIndex) => (
+                  <motion.li
+                    key={item.slug}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: groupIndex * 0.05 + itemIndex * 0.03 }}
+                  >
+                    <Link
+                      href={`/products?category=${item.categorySlug}&subcategory=${item.slug}`}
+                      onClick={handleLinkClick}
+                      className='block text-sm text-gray-800 hover:text-black transition-colors duration-200 py-0.5 hover:bg-gray-50 px-1.5 rounded -mx-1.5'
+                    >
+                      {item.name}
+                    </Link>
+                  </motion.li>
+                ))}
+              </ul>
+            </motion.div>
+          ))}
+
+          <motion.div
+            className='bg-gray-50 p-4 border border-gray-200'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h3 className='font-semibold text-xs uppercase tracking-wide text-black mb-2'>Featured</h3>
+            <div className='space-y-1.5'>
+              <p className='text-xs text-gray-800 mb-2'>
+                Discover our latest {category.name.toLowerCase()} collections
+              </p>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href={`/products?category=${category.slug}`}
+                  className='inline-block text-xs font-medium text-white bg-black px-3 py-1.5 hover:bg-gray-800 transition-colors duration-200'
+                  onClick={handleLinkClick}
+                >
+                  Shop Now
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+
+MegaMenu.displayName = 'MegaMenu';
+
+// Header Component with initialization
 const Header = () => {
   const pathname = usePathname();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
-  // Scroll states
-  const [scrollY, setScrollY] = useState(0);
-  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
-  const [showStickyTopbar, setShowStickyTopbar] = useState(false);
+  // FIXED: Direct store access without dependency arrays
+  const categories = useProductStore(categoriesSelector);
+  const subcategories = useProductStore(subcategoriesSelector);
+  const loadingCategories = useProductStore(loadingCategoriesSelector);
 
-  // Refs for measuring header height
-  const headerRef = useRef();
-  const [headerHeight, setHeaderHeight] = useState(0);
+  // Initialize store only once
+  const initializeRef = useRef(false);
+  useEffect(() => {
+    if (!initializeRef.current) {
+      useProductStore.getState().initialize();
+      initializeRef.current = true;
+    }
+  }, []);
 
-  // Timeout for sticky topbar delay
-  const stickyDelayRef = useRef();
-
-  // Search placeholder animation
-  const placeholders = [
-    "Search for sofas...",
-    "Search for beds...",
-    "Search for dining sets...",
-    "Search for office chairs...",
-    "Search for bookshelves...",
-  ];
-
-  const [placeholderText, setPlaceholderText] = useState("");
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Category dropdown states
+  // State management
   const [activeCat, setActiveCat] = useState(null);
-  const [prevIdx, setPrevIdx] = useState(0);
-  const timeoutRef = useRef();
-
-  // Modal states
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  // Refs
-  const avatarRef = useRef();
+  // Custom hooks
+  const scrolled = useScrollState();
 
-  // Measure header height on mount
-  useEffect(() => {
-    if (headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight);
+  // Store subscriptions with stable selectors
+  const cartCount = useCartStore(cartCountSelector);
+  const wishlistCount = useWishlistStore(wishlistCountSelector);
+
+  // Refs
+  const timeoutRef = useRef();
+
+  // FIXED: Memoize with JSON.stringify for deep comparison
+  const transformedCategories = useMemo(() => {
+    if (!categories?.length) return [];
+
+    return categories.map(category => {
+      const categorySubcategories = subcategories?.filter(
+        sub => {
+          const categoryId = typeof sub.categoryId === 'object' ? sub.categoryId._id : sub.categoryId;
+          return categoryId === category._id;
+        }
+      ) || [];
+
+      return {
+        name: category.name,
+        slug: category.slug,
+        groups: categorySubcategories.length > 0 ? [
+          {
+            title: `${category.name} Collection`,
+            items: categorySubcategories.map(sub => ({
+              name: sub.name,
+              slug: sub.slug,
+              categorySlug: category.slug
+            }))
+          }
+        ] : [
+          {
+            title: `${category.name} Collection`,
+            items: [
+              {
+                name: `All ${category.name}`,
+                slug: category.slug,
+                categorySlug: category.slug
+              }
+            ]
+          }
+        ]
+      };
+    });
+  }, [JSON.stringify(categories), JSON.stringify(subcategories)]); // Deep comparison
+
+  // Find active category
+  const activeCategory = useMemo(() =>
+    transformedCategories.find(c => c.name === activeCat),
+    [transformedCategories, activeCat]
+  );
+
+  // Stable handlers - no dependencies that change
+  const handleCategoryEnter = useCallback((catName) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setActiveCat(catName);
+  }, []);
+
+  const handleCategoryLeave = useCallback(() => {
+    timeoutRef.current = setTimeout(() => setActiveCat(null), 150);
+  }, []);
+
+  const clearCategoryTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
   }, []);
 
-  // Scroll behavior - like major e-commerce sites
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const direction = currentScrollY > lastScrollY ? "down" : "up";
-
-      setScrollY(currentScrollY);
-
-      // Clear any existing delay timeout
-      if (stickyDelayRef.current) {
-        clearTimeout(stickyDelayRef.current);
-      }
-
-      // When at top - show everything normally
-      if (currentScrollY <= 10) {
-        setIsHeaderScrolled(false);
-        setShowStickyTopbar(false);
-      }
-      // When header is completely out of viewport - show sticky topbar after delay
-      else if (currentScrollY > headerHeight && direction === "down") {
-        setIsHeaderScrolled(true);
-
-        // Show sticky topbar after 500ms delay
-        stickyDelayRef.current = setTimeout(() => {
-          setShowStickyTopbar(true);
-        }, 500);
-      }
-      // When scrolling up but still past header height - keep sticky topbar
-      else if (currentScrollY > headerHeight && direction === "up") {
-        setIsHeaderScrolled(true);
-        setShowStickyTopbar(true);
-      }
-      // When header comes back into viewport - hide sticky topbar
-      else if (currentScrollY <= headerHeight) {
-        setIsHeaderScrolled(false);
-        setShowStickyTopbar(false);
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (stickyDelayRef.current) {
-        clearTimeout(stickyDelayRef.current);
-      }
-    };
-  }, [headerHeight]);
-
-  // Placeholder animation effect
-  useEffect(() => {
-    const currentPhrase = placeholders[currentPhraseIndex];
-
-    const timeout = setTimeout(
-      () => {
-        if (isDeleting) {
-          setPlaceholderText(currentPhrase.substring(0, charIndex - 1));
-          setCharIndex((prev) => prev - 1);
-        } else {
-          setPlaceholderText(currentPhrase.substring(0, charIndex + 1));
-          setCharIndex((prev) => prev + 1);
-        }
-
-        if (!isDeleting && charIndex === currentPhrase.length) {
-          setTimeout(() => setIsDeleting(true), 1500);
-        }
-
-        if (isDeleting && charIndex === 0) {
-          setIsDeleting(false);
-          setCurrentPhraseIndex((prev) => (prev + 1) % placeholders.length);
-        }
-      },
-      isDeleting ? 50 : 120
-    );
-
-    return () => clearTimeout(timeout);
-  }, [charIndex, isDeleting, currentPhraseIndex, placeholders]);
-
-  // Category dropdown handlers
-  const handleEnter = (catName, idx) => {
-    clearTimeout(timeoutRef.current);
-    setPrevIdx(categories.findIndex((c) => c.name === activeCat));
-    setActiveCat(catName);
-  };
-
-  const handleLeave = () => {
-    timeoutRef.current = setTimeout(() => setActiveCat(null), 150);
-  };
+  const closeMegaMenu = useCallback(() => {
+    setActiveCat(null);
+  }, []);
 
   // Modal handlers
-  const openSidebar = () => setIsSidebarOpen(true);
-  const openSearch = () => setIsSearchOpen(true);
-  const openAuth = () => setIsAuthOpen(true);
-  const openDropdown = (ref) => setIsDropdownOpen(true);
+  const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+  const openAuth = useCallback(() => setIsAuthOpen(true), []);
+  const closeAuth = useCallback(() => setIsAuthOpen(false), []);
+  const toggleDropdown = useCallback(() => setIsDropdownOpen(prev => !prev), []);
+  const closeDropdown = useCallback(() => setIsDropdownOpen(false), []);
+  const openDropdown = useCallback(() => setIsDropdownOpen(true), []);
 
-  const active = categories.find((c) => c.name === activeCat);
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    console.log('Header mounted');
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // FIXED: Memoize category navigation with proper dependencies
+  const CategoryNavigation = useMemo(() => {
+    if (loadingCategories) {
+      return (
+        <div className="flex items-center justify-center gap-6 py-2.5 h-11">
+          {Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="flex items-center gap-1">
+              <div className="w-14 h-3 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-2.5 h-2.5 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-11 flex items-center justify-center">
+        <ul className='flex items-center justify-center gap-6'>
+          {transformedCategories.map((category) => (
+            <CategoryItem
+              key={category.name}
+              category={category}
+              isActive={activeCat === category.name}
+              onEnter={handleCategoryEnter}
+              onActivate={setActiveCat}
+            />
+          ))}
+        </ul>
+      </div>
+    );
+  }, [loadingCategories, JSON.stringify(transformedCategories), activeCat, handleCategoryEnter]);
+
+  // FIXED: Memoize simplified categories for tablet
+  const TabletCategories = useMemo(() => {
+    if (loadingCategories) {
+      return (
+        <div className="h-11 flex items-center justify-center gap-3 px-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="w-14 h-3 bg-gray-200 rounded animate-pulse"></div>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-11 flex items-center justify-center px-4 z-30">
+        <ul className='flex items-center justify-center gap-4 text-sm overflow-x-auto scrollbar-hide'>
+          {transformedCategories.slice(0, 5).map((category) => (
+            <li key={category.name} className='whitespace-nowrap'>
+              <Link
+                href={`/products?category=${category.slug}`}
+                className='text-gray-800 hover:text-black font-medium transition-colors duration-200 py-2.5 px-2 rounded-sm hover:bg-gray-50 capitalize'
+              >
+                {category.name}
+              </Link>
+            </li>
+          ))}
+          {transformedCategories.length > 5 && (
+            <li className='whitespace-nowrap'>
+              <Link
+                href='/categories'
+                className='text-gray-500 hover:text-black text-sm transition-colors duration-200 py-2.5 px-1.5'
+              >
+                More...
+              </Link>
+            </li>
+          )}
+        </ul>
+      </div>
+    );
+  }, [loadingCategories, JSON.stringify(transformedCategories)]);
 
   return (
     <>
-      {/* Main Header - Scrolls naturally with page */}
-      <header ref={headerRef} className='relative z-40 bg-white border-b border-gray-100 shadow-sm'>
-        {/* Main Header */}
-        <div className='py-3'>
-          <div className='px-4 '>
+      {/* Main Header */}
+      <header className='relative z-30 bg-white border-b border-gray-100'>
+        {/* Main Header Bar - MOBILE RESPONSIVE FIXED */}
+        <div className='h-12 sm:h-16 flex items-center'>
+          <div className='px-3 sm:px-4 lg:px-8 w-full max-w-[1600px] mx-auto'>
             <div className='flex items-center justify-between h-full'>
-              {/* LEFT: Logo + Search */}
-              <div className='flex items-center flex-1'>
+
+              {/* LEFT: Mobile Menu + Logo - PROPERLY ALIGNED FOR MOBILE */}
+              <div className='flex items-center gap-2 sm:gap-2.5 flex-shrink-0 min-w-0'>
+                {/* Mobile Menu Button - LEFT SIDE AS REQUESTED */}
+                <motion.button
+                  onClick={openSidebar}
+                  className='sm:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
+                  aria-label='Open menu'
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Menu size={19} />
+                </motion.button>
+
+                {/* Logo - PROPERLY SIZED FOR MOBILE */}
                 <Link
                   href='/'
-                  className='flex items-center gap-3 hover:opacity-90 transition-opacity duration-200 mr-8'
+                  className='flex items-center gap-2 sm:gap-2 hover:opacity-90 transition-opacity duration-200'
                 >
-                  <Image src='/logo.png' alt='vFurniture' width={40} height={40} className='rounded' />
-                  <span className='text-2xl font-bold tracking-tight'>
+                  <Image
+                    src='/logo.png'
+                    alt='VFurniture'
+                    width={24}
+                    height={24}
+                    className='rounded w-6 h-6 sm:w-7 sm:h-7'
+                  />
+                  <span className='text-sm sm:text-lg font-bold tracking-tight'>
                     <span className='text-black'>V</span>
                     <span className='text-gray-900'>Furniture</span>
                   </span>
                 </Link>
-
-                {/* Desktop Search Bar */}
-                <div className='hidden lg:flex flex-1 max-w-2xl'>
-                  <div className='relative w-full'>
-                    <form
-                      onSubmit={(e) => e.preventDefault()}
-                      className='flex items-center bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 w-full hover:border-gray-300 focus-within:border-black focus-within:bg-white transition-all duration-200'
-                    >
-                      <Search size={20} className='text-gray-400 mr-3 flex-shrink-0' />
-                      <input
-                        type='text'
-                        placeholder={placeholderText}
-                        className='w-full text-sm text-gray-900 placeholder:text-gray-500 bg-transparent outline-none'
-                      />
-                    </form>
-                  </div>
-                </div>
               </div>
 
-              {/* RIGHT: Navigation + Actions */}
-              <div className='flex items-center gap-1 sm:gap-4'>
-                {/* Mobile/Tablet Search Button */}
-                <motion.button
-                  onClick={openSearch}
-                  className='lg:hidden p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all duration-200'
-                  aria-label='Search'
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Search size={20} />
-                </motion.button>
+              {/* CENTER: Search Bar - HIDDEN ON MOBILE */}
+              <div className='hidden md:flex flex-1 max-w-[800px] mx-6 lg:mx-8'>
+                <SearchBar
+                  className="w-full"
+                />
+              </div>
 
-                {/* Desktop Navigation Links */}
-                <nav className='hidden xl:flex items-center gap-8'>
-                  {navItems.map(({ href, label }) => {
+              {/* RIGHT: Actions - MOBILE OPTIMIZED */}
+              <div className='flex items-center gap-0.5 sm:gap-2'>
+
+                {/* Desktop Navigation Links - HIDDEN ON MOBILE */}
+                <nav className='hidden xl:flex items-center gap-1 mr-2'>
+                  {NAV_ITEMS.map(({ href, label }) => {
                     const isActive = pathname === href;
                     return (
                       <Link
                         key={href}
                         href={href}
-                        className={`relative group text-sm font-medium px-2 py-1 transition-colors duration-200 ${
-                          isActive ? "text-black" : "text-gray-600 hover:text-black"
-                        }`}
+                        className={`relative group text-xs sm:text-sm font-medium px-2 py-1.5 transition-colors duration-200 rounded ${isActive
+                            ? "text-black bg-gray-50"
+                            : "text-gray-800 hover:text-black hover:bg-gray-50 capitalize"
+                          }`}
                       >
                         <span>{label}</span>
                         <span
-                          className={`absolute left-0 -bottom-1 h-0.5 bg-black transition-all duration-300 ease-out ${
-                            isActive ? "w-full" : "w-0 group-hover:w-full"
-                          }`}
+                          className={`absolute left-0 -bottom-1 h-0.5 bg-black transition-all duration-300 ease-out ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                            }`}
                         />
                       </Link>
                     );
                   })}
                 </nav>
 
-                {/* Cart Icon */}
-                <Link
-                  href='/cart'
-                  className='relative p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all duration-200'
-                  aria-label='Shopping cart'
-                >
-                  <ShoppingCart size={20} />
-                  <motion.span
-                    className='absolute -top-1 -right-1 w-5 h-5 bg-black text-white text-xs rounded-full flex items-center justify-center'
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                {/* Action buttons - MOBILE OPTIMIZED */}
+                <div className='flex items-center gap-0.5 sm:gap-3'>
+                  {/* Search Button - ONLY ON MOBILE */}
+                  <motion.button
+                    onClick={openSearch}
+                    className='md:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
+                    aria-label='Search'
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    0
-                  </motion.span>
-                </Link>
+                    <Search size={19} />
+                  </motion.button>
 
-                {/* Auth/Profile */}
-                {!loading && user ? (
-                  <div className='relative'>
+                  {/* Wishlist Icon - HIDDEN ON SMALL MOBILE */}
+                  <Link
+                    href='/wishlist'
+                    className='relative p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
+                    aria-label='Wishlist'
+                  >
+                    <Heart size={19} />
+                    {wishlistCount > 0 && (
+                      <motion.span
+                        className='absolute -top-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium'
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                      >
+                        {wishlistCount > 9 ? '9+' : wishlistCount}
+                      </motion.span>
+                    )}
+                  </Link>
+
+                  {/* Cart Icon - ALWAYS VISIBLE */}
+                  <Link
+                    href='/cart'
+                    className='relative p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
+                    aria-label='Shopping cart'
+                  >
+                    <ShoppingCart size={19} />
+                    {cartCount > 0 && (
+                      <motion.span
+                        className='absolute -top-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-black text-white text-xs rounded-full flex items-center justify-center font-medium'
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                      >
+                        {cartCount > 9 ? '9+' : cartCount}
+                      </motion.span>
+                    )}
+                  </Link>
+
+                  {/* Auth/Profile - MOBILE OPTIMIZED */}
+                  {authLoading ? (
+                    <div className="w-8 h-8 flex items-center justify-center">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                    </div>
+                  ) : user ? (
+                    <div className='relative'>
+                      <motion.button
+                        onClick={toggleDropdown}
+                        onMouseEnter={openDropdown}
+                        className='p-0.5 rounded hover:bg-gray-100 transition-colors duration-200'
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Avatar
+                          src={user?.photoURL || ""}
+                          alt='User Avatar'
+                          fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
+                        />
+                      </motion.button>
+                      <UserDropdown
+                        isOpen={isDropdownOpen}
+                        onClose={closeDropdown}
+                      />
+                    </div>
+                  ) : (
                     <motion.button
-                      ref={avatarRef}
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      onMouseEnter={() => setIsDropdownOpen(true)}
-                      className='p-1 rounded-lg hover:bg-gray-100 transition-colors duration-200'
-                      data-dropdown-trigger
+                      onClick={openAuth}
+                      className='flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
+                      aria-label='Login'
                     >
-                      <Avatar
-                        src={user?.photoURL || ""}
-                        alt='User Avatar'
-                        fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
-                      />
+                      <User size={19} />
+                      <span className='hidden lg:inline ml-1.5 text-xs'>Login</span>
                     </motion.button>
-                    <UserDropdown isOpen={isDropdownOpen} onClose={() => setIsDropdownOpen(false)} />
-                  </div>
-                ) : (
-                  <motion.button
-                    onClick={openAuth}
-                    className='flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-all duration-200'
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <User size={18} />
-                    <span className='hidden sm:inline'>Login</span>
-                  </motion.button>
-                )}
+                  )}
 
-                {/* Mobile Menu Button */}
-                <motion.button
-                  onClick={openSidebar}
-                  className='xl:hidden p-2 text-gray-600 hover:text-black hover:bg-gray-100 rounded-lg transition-all duration-200 ml-2'
-                  aria-label='Open menu'
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Menu size={20} />
-                </motion.button>
+                  {/* Desktop Menu Button - HIDDEN ON MOBILE */}
+                  <motion.button
+                    onClick={openSidebar}
+                    className='hidden sm:flex xl:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-100 rounded transition-all duration-200'
+                    aria-label='Open menu'
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Menu size={19} />
+                  </motion.button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Topbar - Part of main header, no gap */}
-        <div className='relative bg-white border-t border-gray-100' onMouseLeave={handleLeave}>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            {/* DESKTOP: Category Navigation */}
+        <div
+          className='relative bg-white border-t border-gray-100'
+          onMouseLeave={handleCategoryLeave}
+        >
+          <div className='max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-8'>
             <nav className='hidden lg:block'>
-              <ul className='flex items-center justify-center gap-8 py-4'>
-                {categories.map((cat, i) => (
-                  <motion.li
-                    key={cat.name}
-                    onMouseEnter={() => handleEnter(cat.name, i)}
-                    className='relative group'
-                    whileHover={{ y: -1 }}
-                  >
-                    <button className='flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-gray-50'>
-                      <span>{cat.name}</span>
-                      <motion.div animate={{ rotate: activeCat === cat.name ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                        <ChevronDown size={14} />
-                      </motion.div>
-                    </button>
-                    <motion.div
-                      className='absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-black'
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: activeCat === cat.name ? "100%" : "0%",
-                      }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </motion.li>
-                ))}
-              </ul>
+              {CategoryNavigation}
             </nav>
 
-            {/* TABLET: Simplified Categories */}
             <nav className='hidden md:block lg:hidden'>
-              <ul className='flex items-center justify-center gap-6 py-3 text-sm overflow-x-auto'>
-                {categories.slice(0, 4).map((cat) => (
-                  <li key={cat.name} className='whitespace-nowrap'>
-                    <Link
-                      href={`/products?category=${cat.name.toLowerCase()}`}
-                      className='text-gray-700 hover:text-black font-medium transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-gray-50'
-                    >
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
-                <li>
-                  <Link
-                    href='/categories'
-                    className='text-gray-500 hover:text-black text-sm transition-colors duration-200 py-2 px-3'
-                  >
-                    More...
-                  </Link>
-                </li>
-              </ul>
+              {TabletCategories}
             </nav>
-
-            {/* MOBILE: Search Bar */}
-            <div className='md:hidden py-3'>
+            <div className='md:hidden py-2 h-10 flex items-center'>
               <button
                 onClick={openSearch}
-                className='w-full flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-left hover:border-gray-300 transition-colors duration-200'
+                className='flex-1 flex items-center bg-gray-50 border border-gray-200 px-3 py-2 cursor-text hover:bg-gray-100 transition-colors duration-200 text-left'
+                aria-label='Search furniture'
               >
-                <Search className='text-gray-400 flex-shrink-0' size={18} />
-                <span className='text-sm text-gray-600'>Search furniture...</span>
+                <Search size={19} className='text-gray-400 mr-2.5 flex-shrink-0' />
+                <span className='text-sm text-gray-500 truncate'>
+                  {"Search furniture..."}
+                </span>
               </button>
             </div>
           </div>
 
-          {/* MEGA MENU DROPDOWN */}
+          {/* MEGA MENU DROPDOWN - ONLY FOR DESKTOP */}
           <AnimatePresence>
-            {active && (
-              <motion.div
-                key={active.name}
-                initial={{
-                  opacity: 0,
-                  y: -10,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -10,
-                }}
-                transition={{
-                  type: "spring",
-                  damping: 25,
-                  stiffness: 300,
-                  duration: 0.3,
-                }}
-                className='absolute top-full left-0 w-full bg-white shadow-lg border-b border-gray-100 z-50'
-                onMouseEnter={() => clearTimeout(timeoutRef.current)}
-              >
-                <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
-                    {active.groups.map((group, groupIndex) => (
-                      <motion.div
-                        key={group.title}
-                        className='space-y-4'
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: groupIndex * 0.1 }}
-                      >
-                        <h3 className='font-semibold text-sm uppercase tracking-wide text-black border-b border-gray-200 pb-2'>
-                          {group.title}
-                        </h3>
-                        <ul className='space-y-3'>
-                          {group.items.map((item, itemIndex) => (
-                            <motion.li
-                              key={item.slug}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: groupIndex * 0.1 + itemIndex * 0.05 }}
-                            >
-                              <Link
-                                href={`/products?subcategory=${item.slug}`}
-                                onClick={() => setActiveCat(null)}
-                                className='block text-sm text-gray-700 hover:text-black transition-colors duration-200 py-1 hover:bg-gray-50 px-2 rounded -mx-2'
-                              >
-                                {item.name}
-                              </Link>
-                            </motion.li>
-                          ))}
-                        </ul>
-                      </motion.div>
-                    ))}
-
-                    {/* Featured/Promotional Section */}
-                    <motion.div
-                      className='bg-gray-50 p-6 rounded-lg border border-gray-200'
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <h3 className='font-semibold text-sm uppercase tracking-wide text-black mb-3'>Featured</h3>
-                      <div className='space-y-2'>
-                        <p className='text-xs text-gray-600 mb-3'>
-                          Discover our latest collections and exclusive offers
-                        </p>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Link
-                            href='/collections/new-arrivals'
-                            className='inline-block text-sm font-medium text-white bg-black px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-200'
-                            onClick={() => setActiveCat(null)}
-                          >
-                            Shop Now
-                          </Link>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
+            {activeCategory && (
+              <MegaMenu
+                category={activeCategory}
+                onClose={closeMegaMenu}
+                onClearTimeout={clearCategoryTimeout}
+              />
             )}
           </AnimatePresence>
         </div>
       </header>
 
-      {/* Sticky Topbar - Only shows when main header is out of viewport */}
+      {/* Sticky Header on Scroll - MOBILE RESPONSIVE */}
       <AnimatePresence>
-        {showStickyTopbar && (
+        {scrolled && (
           <motion.div
-            className='fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-lg'
-            onMouseLeave={handleLeave}
-            initial={{
-              opacity: 0,
-              y: -60,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            exit={{
-              opacity: 0,
-              y: -60,
-            }}
+            className='fixed top-0 left-0 right-0 z-[10001] bg-white/95 backdrop-blur-md border-b border-gray-300 shadow-sm'
+            onMouseLeave={handleCategoryLeave}
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
             transition={{
               type: "spring",
-              damping: 25,
-              stiffness: 300,
-              duration: 0.4,
+              stiffness: 400,
+              damping: 30,
+              mass: 0.8
             }}
           >
-            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-8'>
               {/* DESKTOP: Category Navigation */}
               <nav className='hidden lg:block'>
-                <ul className='flex items-center justify-center gap-8 py-3'>
-                  {categories.map((cat, i) => (
-                    <motion.li
-                      key={cat.name}
-                      onMouseEnter={() => handleEnter(cat.name, i)}
-                      className='relative group'
-                      whileHover={{ y: -1 }}
-                    >
-                      <button className='flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-gray-50'>
-                        <span>{cat.name}</span>
-                        <motion.div
-                          animate={{ rotate: activeCat === cat.name ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronDown size={14} />
-                        </motion.div>
-                      </button>
-                      <motion.div
-                        className='absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-black'
-                        initial={{ width: 0 }}
-                        animate={{
-                          width: activeCat === cat.name ? "100%" : "0%",
-                        }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </motion.li>
-                  ))}
-                </ul>
+                {CategoryNavigation}
               </nav>
 
               {/* TABLET: Simplified Categories */}
               <nav className='hidden md:block lg:hidden'>
-                <ul className='flex items-center justify-center gap-6 py-3 text-sm overflow-x-auto'>
-                  {categories.slice(0, 4).map((cat) => (
-                    <li key={cat.name} className='whitespace-nowrap'>
-                      <Link
-                        href={`/products?category=${cat.name.toLowerCase()}`}
-                        className='text-gray-700 hover:text-black font-medium transition-colors duration-200 py-2 px-3 rounded-lg hover:bg-gray-50'
-                      >
-                        {cat.name}
-                      </Link>
-                    </li>
-                  ))}
-                  <li>
-                    <Link
-                      href='/categories'
-                      className='text-gray-500 hover:text-black text-sm transition-colors duration-200 py-2 px-3'
-                    >
-                      More...
-                    </Link>
-                  </li>
-                </ul>
+                {TabletCategories}
               </nav>
 
-              {/* MOBILE: Compact Search */}
-              <div className='md:hidden py-2'>
+              {/* MOBILE: Search Input/Button - REPLACES CATEGORIES IN STICKY TOO */}
+              <div className='md:hidden py-2 h-10 flex items-center'>
                 <button
                   onClick={openSearch}
-                  className='w-full flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-left hover:border-gray-300 transition-colors duration-200'
+                  className='flex-1 flex items-center bg-gray-50 border border-gray-200 px-3 py-2 cursor-text hover:bg-gray-100 transition-colors duration-200 text-left'
+                  aria-label='Search furniture'
                 >
-                  <Search className='text-gray-400 flex-shrink-0' size={16} />
-                  <span className='text-sm text-gray-600'>Search...</span>
+                  <Search size={19} className='text-gray-400 mr-2.5 flex-shrink-0' />
+                  <span className='text-sm text-gray-500 truncate'>
+                    {"Search furniture..."}
+                  </span>
                 </button>
               </div>
             </div>
 
-            {/* MEGA MENU for Sticky Topbar */}
+            {/* MEGA MENU for Sticky Header - ONLY FOR DESKTOP */}
             <AnimatePresence>
-              {active && (
-                <motion.div
-                  key={active.name}
-                  initial={{
-                    opacity: 0,
-                    y: -10,
-                  }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    y: -10,
-                  }}
-                  transition={{
-                    type: "spring",
-                    damping: 25,
-                    stiffness: 300,
-                    duration: 0.3,
-                  }}
-                  className='absolute top-full left-0 w-full bg-white shadow-lg border-b border-gray-100 z-40'
-                  onMouseEnter={() => clearTimeout(timeoutRef.current)}
-                >
-                  <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
-                      {active.groups.map((group, groupIndex) => (
-                        <motion.div
-                          key={group.title}
-                          className='space-y-4'
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: groupIndex * 0.1 }}
-                        >
-                          <h3 className='font-semibold text-sm uppercase tracking-wide text-black border-b border-gray-200 pb-2'>
-                            {group.title}
-                          </h3>
-                          <ul className='space-y-3'>
-                            {group.items.map((item, itemIndex) => (
-                              <motion.li
-                                key={item.slug}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: groupIndex * 0.1 + itemIndex * 0.05 }}
-                              >
-                                <Link
-                                  href={`/products?subcategory=${item.slug}`}
-                                  onClick={() => setActiveCat(null)}
-                                  className='block text-sm text-gray-700 hover:text-black transition-colors duration-200 py-1 hover:bg-gray-50 px-2 rounded -mx-2'
-                                >
-                                  {item.name}
-                                </Link>
-                              </motion.li>
-                            ))}
-                          </ul>
-                        </motion.div>
-                      ))}
-
-                      {/* Featured/Promotional Section */}
-                      <motion.div
-                        className='bg-gray-50 p-6 rounded-lg border border-gray-200'
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <h3 className='font-semibold text-sm uppercase tracking-wide text-black mb-3'>Featured</h3>
-                        <div className='space-y-2'>
-                          <p className='text-xs text-gray-600 mb-3'>
-                            Discover our latest collections and exclusive offers
-                          </p>
-                          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Link
-                              href='/collections/new-arrivals'
-                              className='inline-block text-sm font-medium text-white bg-black px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-200'
-                              onClick={() => setActiveCat(null)}
-                            >
-                              Shop Now
-                            </Link>
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
+              {activeCategory && (
+                <MegaMenu
+                  category={activeCategory}
+                  onClose={closeMegaMenu}
+                  onClearTimeout={clearCategoryTimeout}
+                />
               )}
             </AnimatePresence>
           </motion.div>
@@ -772,9 +682,9 @@ const Header = () => {
       </AnimatePresence>
 
       {/* Modals */}
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
+      <AuthModal isOpen={isAuthOpen} onClose={closeAuth} />
     </>
   );
 };

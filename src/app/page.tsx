@@ -35,7 +35,7 @@ export default function HomePage() {
 
       <motion.div variants={fadeInUp} className="py-12">
         <CategoryGrid />
-      </motion.div>
+      </motion.div> 
 
       <motion.div variants={fadeInUp} className="py-12">
         <ProductShowcase />

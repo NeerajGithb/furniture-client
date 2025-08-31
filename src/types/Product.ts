@@ -1,0 +1,173 @@
+// types/Product.ts
+export interface Product {
+  _id: string;
+  name: string;
+  itemId: string;
+  originalPrice: number;
+  finalPrice: number;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // ✅ Optional / descriptive fields
+  description?: string;
+  brand?: string;
+  warranty?: string;
+  returnPolicy?: string;
+
+  // ✅ Categories
+  categoryId?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+  subCategoryId?: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+
+  // ✅ Pricing / stock
+  emiPrice?: number;
+  discountPercent?: number;
+  inStockQuantity?: number;
+
+  // ✅ Options
+  colorOptions?: string[];
+  size?: string[];
+  material?: string;
+  tags?: string[];
+
+  // ✅ Media
+  galleryImages?: Array<{
+    url: string;
+    alt?: string;
+    publicId: string;
+  }>;
+  mainImage?: {
+    url: string;
+    alt?: string;
+    publicId: string;
+  };
+  badge?: string;
+
+  // ✅ Dimensions & weight
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+  };
+  weight?: number;
+
+  // ✅ Status
+  isPublished?: boolean;
+  isFeatured?: boolean;
+  isNewArrival?: boolean;
+  isBestSeller?: boolean;
+
+  // ✅ Ratings & reviews
+  ratings?: number;
+  reviews?: {
+    average: number;
+    count: number;
+    breakdown?: {
+      5: number;
+      4: number;
+      3: number;
+      2: number;
+      1: number;
+    };
+    list?: Array<{
+      user: string;
+      rating: number;
+      comment: string;
+      date: Date;
+    }>;
+  };
+
+  // ✅ Shipping
+  shippingInfo?: {
+    freeShipping?: boolean;
+    estimatedDays?: number;
+    shippingCost?: number;
+  };
+
+  // ✅ Variants
+  variants?: Array<{
+    color?: string;
+    size?: string;
+    sku?: string;
+    price?: number;
+    inStock?: number;
+  }>;
+
+  // ✅ SEO
+  slug?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+
+  // ✅ Business / sales data
+  totalSold?: number;
+  viewCount?: number;
+  wishlistCount?: number;
+
+  //new
+  images?:string;
+  onSale?:string;
+  price?:number;
+  stock?:number;
+}
+
+// 🎯 Lightweight type for cards
+export interface ProductCardData extends Pick<Product,
+  | '_id'
+  | 'name'
+  | 'itemId'
+  | 'finalPrice'
+  | 'originalPrice'
+  | 'discountPercent'
+  | 'badge'
+  | 'mainImage'
+  | 'ratings'
+  | 'reviews'
+  | 'inStockQuantity'
+> {}
+
+// 🎯 Filters type
+export interface ProductFilters {
+  categories: Array<{
+    _id: string;
+    name: string;
+    slug: string;
+  }>;
+  materials: string[];
+  priceRange: {
+    minPrice: number;
+    maxPrice: number;
+  };
+}
+
+// 🎯 API response type
+export interface ProductsApiResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  filters: ProductFilters;
+  appliedFilters: {
+    category: string | null;
+    subcategory: string | null;
+    material: string | null;
+    priceRange: { min: number | null; max: number | null } | null;
+    inStock: boolean | null;
+    onSale: boolean | null;
+    sort: string;
+  };
+  meta: {
+    fetchTime: number;
+    cached: boolean;
+    hasMore?: boolean;
+  };
+}

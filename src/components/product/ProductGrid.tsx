@@ -1,137 +1,125 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import ProductCard from './ProductCard';
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  category: string;
-  subCategory: string;
-  brand: string;
-  material: string;
-  dimensions: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  weight: number;
-  images: string[];
-  pricing: {
-    originalPrice: number;
-    finalPrice: number;
-    discount?: number;
-  };
-  inventory: {
-    stock: number;
-    available: boolean;
-  };
-  reviews: {
-    average: number;
-    count: number;
-    list: Array<{
-      user: string;
-      rating: number;
-      comment: string;
-      date: Date;
-    }>;
-  };
-  featured: boolean;
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+import React, { memo, useMemo } from "react";
+import { motion } from "framer-motion";
+import ProductCard from "./ProductCard";
+import { Product } from "@/types/Product";
+import { usePathname } from "next/navigation";
 
 interface ProductGridProps {
   products: Product[];
   loading?: boolean;
   error?: string | null;
+  loadingMore?: boolean;
 }
+
+const ProductCardWrapper = memo(({ product }: { product: Product }) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, y: 5, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    transition={{ duration: 0.25 }}
+    className="w-full"
+  >
+    <ProductCard product={product} />
+  </motion.div>
+));
+ProductCardWrapper.displayName = "ProductCardWrapper";
+
+const SkeletonCard = memo(() => (
+  <div
+    className="bg-white border border-gray-200 overflow-hidden shadow-sm w-full mx-auto"
+    style={{
+      aspectRatio: "3/4",
+      minWidth: "200px",
+      maxWidth: "370px",
+      width: "100%",
+      height: "auto",
+    }}
+  >
+    {/* Image shimmer */}
+    <div
+      className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 relative overflow-hidden"
+      style={{ height: "65%" }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer transform -skew-x-12"></div>
+    </div>
+
+    {/* Content shimmer */}
+    <div className="p-2 sm:p-3 lg:p-4 h-[35%] flex flex-col justify-between">
+      <div className="space-y-1 sm:space-y-2">
+        <div className="h-3 sm:h-3.5 bg-gray-300 w-full animate-pulse rounded"></div>
+        <div className="h-3 sm:h-3.5 bg-gray-300 w-3/4 animate-pulse rounded"></div>
+        <div className="h-2.5 sm:h-3 bg-gray-200 w-1/2 animate-pulse rounded"></div>
+      </div>
+      <div className="h-4 sm:h-5 bg-gray-300 w-2/3 animate-pulse rounded"></div>
+    </div>
+  </div>
+));
+SkeletonCard.displayName = "SkeletonCard";
 
 const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   loading = false,
-  error = null
+  error = null,
+  loadingMore = false,
 }) => {
+  const pathname = usePathname();
+  const home =
+    pathname === "/products" ||
+    pathname.startsWith("/categories/") ||
+    pathname.startsWith("/collections/") ||
+    pathname === "/search";
+
+  // Fully responsive grid with proper column sizing
+  const gridClasses = useMemo(
+    () =>
+      `grid w-full gap-3 sm:gap-4 lg:gap-5 xl:gap-6 
+       grid-cols-1 min-[480px]:grid-cols-2 
+       sm:grid-cols-2 md:grid-cols-3 
+       lg:grid-cols-3 xl:grid-cols-4 
+       ${home ? "2xl:grid-cols-4" : "2xl:grid-cols-5"}`,
+    [home]
+  );
+
+  // Remove duplicate products
+  const uniqueProducts = useMemo(() => {
+    const seen = new Set();
+    return products.filter((p) => {
+      if (seen.has(p._id)) return false;
+      seen.add(p._id);
+      return true;
+    });
+  }, [products]);
+
   if (error) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col items-center justify-center py-16 text-center"
-      >
-        <div className="text-gray-500 mb-4">
-          <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Something went wrong</h3>
-        <p className="text-gray-500 max-w-md">
-          {error || 'Unable to load products. Please try again later.'}
-        </p>
-      </motion.div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        {Array.from({ length: 10 }).map((_, index) => (
-          <div key={index} className="animate-pulse">
-            <div className="bg-gray-200 aspect-square rounded-sm mb-3"></div>
-            <div className="space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              <div className="flex gap-2">
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
-                <div className="h-4 bg-gray-200 rounded w-12"></div>
-              </div>
-              <div className="h-3 bg-gray-200 rounded w-20"></div>
-            </div>
-          </div>
-        ))}
+      <div className="text-center py-20">
+        <div className="text-gray-600 text-sm">No products found</div>
       </div>
     );
   }
 
-  if (!products || products.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex flex-col items-center justify-center py-16 text-center"
-      >
-        <div className="text-gray-500 mb-4">
-          <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-        <p className="text-gray-500 max-w-md">
-          Try adjusting your search or filter criteria to find what you're looking for.
-        </p>
-      </motion.div>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
-    >
-      {products.map((product, index) => (
-        <ProductCard
-          key={product._id}
-          product={product}
-          index={index}
-        />
-      ))}
-    </motion.div>
+    <div className="w-full px-3">
+      <div className={gridClasses}>
+        {/* Show skeletons while loading and no data */}
+        {loading && uniqueProducts.length === 0
+          ? Array.from({ length: 12 }).map((_, i) => (
+              <SkeletonCard key={`skeleton-${i}`} />
+            ))
+          : uniqueProducts.map((product) => (
+              <ProductCardWrapper key={product._id} product={product} />
+            ))}
+
+        {/* Show skeletons when loading more */}
+        {loadingMore &&
+          Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={`loadmore-${i}`} />
+          ))}
+      </div>
+    </div>
   );
 };
 
-export default ProductGrid;
+export default memo(ProductGrid);

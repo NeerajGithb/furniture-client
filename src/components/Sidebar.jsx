@@ -71,7 +71,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   <Link
                     href='/account'
                     onClick={onClose}
-                    className='flex items-center justify-between bg-gray-100 rounded-md px-3 py-2 hover:bg-gray-200 transition'
+                    className='flex items-center justify-between bg-gray-100 rounded-sm px-3 py-2 hover:bg-gray-200 transition'
                   >
                     <div className='flex items-center gap-2 overflow-hidden'>
                       <Avatar
@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose }) {
                       setIsAuthOpen(true);
                       onClose();
                     }}
-                    className='w-full py-2 text-sm bg-black text-white rounded-md font-medium hover:bg-gray-900 transition'
+                    className='w-full py-2 text-sm bg-black text-white rounded-sm font-medium hover:bg-gray-900 transition'
                   >
                     Login / Signup
                   </button>
@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen, onClose }) {
                     className='flex items-center justify-between gap-2 py-2 hover:bg-gray-50 px-2 rounded transition'
                   >
                     <div className='flex items-center gap-3'>
-                      <div className='w-9 h-9 relative rounded-md overflow-hidden'>
+                      <div className='w-9 h-9 relative rounded-sm overflow-hidden'>
                         <Image src={image} alt={name} fill priority className='object-cover' />
                       </div>
                       <span className='text-sm text-gray-800'>{name}</span>
@@ -127,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }) {
                       key={href}
                       href={href}
                       onClick={onClose}
-                      className={`relative group px-3 py-2 rounded-md transition-all duration-200 font-medium text-sm
+                      className={`relative group px-3 py-2 rounded-sm transition-all duration-200 font-medium text-sm
                         ${
                           isActive
                             ? "bg-gray-100 text-black shadow-sm"

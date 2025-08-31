@@ -1,15 +1,23 @@
+// app/api/auth/logout/route.js
 export const runtime = "nodejs";
-
 import { NextResponse } from "next/server";
 import { clearAuthCookies } from "@/lib/auth";
 
 export async function POST() {
   try {
-    const res = NextResponse.json({ message: "Successfully logged out" }, { status: 200 });
-
-    clearAuthCookies(res);
-    return res;
+    const response = NextResponse.json(
+      { success: true, message: "Logged out successfully" }, 
+      { status: 200 }
+    );
+    
+    clearAuthCookies(response);
+    return response;
+    
   } catch (err) {
-    return NextResponse.json({ error: "Logout failed. Please try again later." }, { status: 500 });
+    console.error("❌ /logout error:", err);
+    return NextResponse.json(
+      { error: "Internal server error", success: false }, 
+      { status: 500 }
+    );
   }
 }

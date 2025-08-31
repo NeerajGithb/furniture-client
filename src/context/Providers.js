@@ -1,13 +1,7 @@
 // context/Providers.js
-import Header from "@/components/Header";
+"use client";
 import { AuthProvider } from "./AuthContext";
-import Footer from "@/components/Footer";
+
 export default function Providers({ children }) {
-  return (
-    <AuthProvider>
-      <Header />
-      {children}
-      <Footer />
-    </AuthProvider>
-  );
+  return <AuthProvider>{children}</AuthProvider>;
 }

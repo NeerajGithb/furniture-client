@@ -1,46 +1,69 @@
+
+// /api/subcategories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from "@/lib/dbConnect";
-
 import SubCategory from '@/models/subcategory';
-import Category from '@/models/category'; // Add this import
 
-export async function GET() {
-    try {
-        await connectDB();
-        const subcategories = await SubCategory.find().populate('categoryId', 'name slug');
-        return NextResponse.json(subcategories);
-    } catch (error) {
-        const message =
-            typeof error === 'object' && error !== null && 'message' in error
-                ? (error as { message: string }).message
-                : 'An unexpected error occurred';
-        return NextResponse.json({ error: message }, { status: 500 });
-    }
+interface SubCategoryResponse {
+  success: boolean;
+  data?: any[];
+  error?: string;
+  retry?: boolean;
 }
 
-export async function POST(request: Request) {
+async function fetchSubCategoriesWithRetry(retryCount = 3): Promise<SubCategoryResponse> {
+  for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
-        await connectDB();
-        const { name, categoryId } = await request.json();
-
-        const category = await Category.findById(categoryId);
-        if (!category) {
-            return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-        }
-
-        const subcategory = new SubCategory({
-            name,
-            categoryId,
-            slug: name.toLowerCase().replace(/\s+/g, '-')
-        });
-        await subcategory.save();
-
-        return NextResponse.json(subcategory, { status: 201 });
+      await connectDB();
+      const subcategories = await SubCategory.find()
+        .populate('categoryId', 'name slug')
+        .lean();
+      
+      return {
+        success: true,
+        data: subcategories
+      };
     } catch (error) {
-        const message =
-            typeof error === 'object' && error !== null && 'message' in error
-                ? (error as { message: string }).message
-                : 'An unexpected error occurred';
-        return NextResponse.json({ error: message }, { status: 500 });
+      console.error(`SubCategories fetch attempt ${attempt} failed:`, error);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      const isRetryableError = errorMessage.includes('connection') || 
+                              errorMessage.includes('timeout') ||
+                              errorMessage.includes('ECONNREFUSED') ||
+                              errorMessage.includes('MongoNetworkError');
+      
+      if (attempt === retryCount || !isRetryableError) {
+        return {
+          success: false,
+          error: errorMessage,
+          retry: isRetryableError && attempt < retryCount
+        };
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
     }
+  }
+  
+  return {
+    success: false,
+    error: "Maximum retry attempts reached"
+  };
+}
+
+export async function GET() {
+  try {
+    const result = await fetchSubCategoriesWithRetry(3);
+    
+    if (result.success) {
+      return NextResponse.json(result.data || []);
+    } else {
+      // Return fallback empty array
+      return NextResponse.json([]);
+    }
+  } catch (error) {
+    console.error("Unexpected error in subcategories API:", error);
+    // Return fallback empty array
+    return NextResponse.json([]);
+  }
 }

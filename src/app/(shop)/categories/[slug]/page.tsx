@@ -1,488 +1,1054 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { useParams } from 'next/navigation';
-import { Search, Filter, X, ChevronDown } from 'lucide-react';
-import ProductGrid from '@/components/product/ProductGrid';
-
-interface Product {
-    _id: string;
-    name: string;
-    description: string;
-    category: string;
-    subCategory: string;
-    brand: string;
-    material: string;
-    dimensions: {
-        length: number;
-        width: number;
-        height: number;
-    };
-    weight: number;
-    images: string[];
-    pricing: {
-        originalPrice: number;
-        finalPrice: number;
-        discount?: number;
-    };
-    inventory: {
-        stock: number;
-        available: boolean;
-    };
-    reviews: {
-        average: number;
-        count: number;
-        list: Array<{
-            user: string;
-            rating: number;
-            comment: string;
-            date: Date;
-        }>;
-    };
-    featured: boolean;
-    tags: string[];
-    createdAt: Date;
-    updatedAt: Date;
-}
+import { useState, useEffect, useCallback, useRef, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useParams, useRouter } from "next/navigation";
+import {
+  ChevronDown,
+  X,
+  Filter,
+  SlidersHorizontal,
+  ArrowLeft,
+} from "lucide-react";
+import ProductGrid from "@/components/product/ProductGrid";
+import { Product } from '@/types/Product';
+import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
 
 interface Category {
-    _id: string;
-    name: string;
-    slug: string;
-    description: string;
-    image: string;
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
 }
 
-interface SubCategory {
-    _id: string;
-    name: string;
-    slug: string;
-    category: string;
-    description: string;
-    image: string;
+interface Filters {
+  subcategories: Category[];
+  materials: string[];
+  priceRange: {
+    minPrice: number;
+    maxPrice: number;
+  };
 }
 
-const CategoryPage = () => {
-    const params = useParams();
-    const categorySlug = params?.slug as string;
-
-    const [products, setProducts] = useState<Product[]>([]);
-    const [category, setCategory] = useState<Category | null>(null);
-    const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    // Filter states
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedSubCategory, setSelectedSubCategory] = useState('');
-    const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-    const [sortBy, setSortBy] = useState('featured');
-    const [showFilters, setShowFilters] = useState(false);
-
-    // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
-    const [productsPerPage] = useState(20);
-
-    useEffect(() => {
-        if (categorySlug) {
-            fetchData();
-        }
-    }, [categorySlug]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-
-            const [productsRes, categoriesRes, subCategoriesRes] = await Promise.all([
-                fetch('/api/products'),
-                fetch('/api/category'),
-                fetch('/api/subCategory')
-            ]);
-
-            if (!productsRes.ok) throw new Error('Failed to fetch products');
-            if (!categoriesRes.ok) throw new Error('Failed to fetch categories');
-            if (!subCategoriesRes.ok) throw new Error('Failed to fetch subcategories');
-
-            const [productsData, categoriesData, subCategoriesData] = await Promise.all([
-                productsRes.json(),
-                categoriesRes.json(),
-                subCategoriesRes.json()
-            ]);
-
-            // Find the category by slug
-            const foundCategory = categoriesData.find((cat: Category) =>
-                cat.slug === categorySlug
-            );
-
-            if (!foundCategory) {
-                throw new Error('Category not found');
-            }
-
-            // Filter products by category
-            const categoryProducts = productsData.filter((product: Product) =>
-                product.category === foundCategory.name
-            );
-
-            // Filter subcategories for this category
-            const categorySubCategories = subCategoriesData.filter((sub: SubCategory) =>
-                sub.category === foundCategory.name
-            );
-
-            setCategory(foundCategory);
-            setProducts(categoryProducts);
-            setSubCategories(categorySubCategories);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'An error occurred');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Filter and sort products
-    const filteredAndSortedProducts = useMemo(() => {
-        let filtered = [...products];
-
-        // Search filter
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
-            filtered = filtered.filter(product =>
-                product.name.toLowerCase().includes(query) ||
-                product.description.toLowerCase().includes(query) ||
-                product.brand.toLowerCase().includes(query) ||
-                product.tags.some(tag => tag.toLowerCase().includes(query))
-            );
-        }
-
-        // SubCategory filter
-        if (selectedSubCategory) {
-            filtered = filtered.filter(product => product.subCategory === selectedSubCategory);
-        }
-
-        // Price range filter
-        if (priceRange.min || priceRange.max) {
-            const min = priceRange.min ? parseFloat(priceRange.min) : 0;
-            const max = priceRange.max ? parseFloat(priceRange.max) : Infinity;
-            filtered = filtered.filter(product =>
-                product.pricing.finalPrice >= min && product.pricing.finalPrice <= max
-            );
-        }
-
-        // Sort products
-        switch (sortBy) {
-            case 'price-low':
-                filtered.sort((a, b) => a.pricing.finalPrice - b.pricing.finalPrice);
-                break;
-            case 'price-high':
-                filtered.sort((a, b) => b.pricing.finalPrice - a.pricing.finalPrice);
-                break;
-            case 'name':
-                filtered.sort((a, b) => a.name.localeCompare(b.name));
-                break;
-            case 'rating':
-                filtered.sort((a, b) => b.reviews.average - a.reviews.average);
-                break;
-            case 'newest':
-                filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                break;
-            default: // featured
-                filtered.sort((a, b) => {
-                    if (a.featured && !b.featured) return -1;
-                    if (!a.featured && b.featured) return 1;
-                    return b.reviews.average - a.reviews.average;
-                });
-        }
-
-        return filtered;
-    }, [products, searchQuery, selectedSubCategory, priceRange, sortBy]);
-
-    // Pagination
-    const totalProducts = filteredAndSortedProducts.length;
-    const totalPages = Math.ceil(totalProducts / productsPerPage);
-    const startIndex = (currentPage - 1) * productsPerPage;
-    const paginatedProducts = filteredAndSortedProducts.slice(startIndex, startIndex + productsPerPage);
-
-    const clearFilters = () => {
-        setSearchQuery('');
-        setSelectedSubCategory('');
-        setPriceRange({ min: '', max: '' });
-        setSortBy('featured');
-        setCurrentPage(1);
-    };
-
-    const hasActiveFilters = searchQuery || selectedSubCategory || priceRange.min || priceRange.max;
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    {/* Header Skeleton */}
-                    <div className="mb-8">
-                        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
-                    </div>
-
-                    {/* Filter Bar Skeleton */}
-                    <div className="bg-gray-50 rounded-sm p-6 mb-8">
-                        <div className="h-12 bg-gray-200 rounded mb-4 animate-pulse"></div>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-10 bg-gray-200 rounded animate-pulse"></div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Products Grid Skeleton */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                        {Array.from({ length: 10 }).map((_, i) => (
-                            <div key={i} className="animate-pulse">
-                                <div className="aspect-square bg-gray-200 rounded-sm mb-3"></div>
-                                <div className="space-y-2">
-                                    <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-full"></div>
-                                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !category) {
-        return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-gray-400 mb-4">
-                        <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">Category Not Found</h1>
-                    <p className="text-gray-600 mb-6">
-                        {error || 'The category you are looking for does not exist.'}
-                    </p>
-                    <a
-                        href="/products"
-                        className="bg-black text-white px-6 py-3 rounded-sm font-semibold hover:bg-gray-800 transition-colors"
-                    >
-                        Browse All Products
-                    </a>
-                </div>
-            </div>
-        );
-    }
-
-    return (
+const FilterSection = memo(({
+  title,
+  isExpanded,
+  onToggle,
+  children,
+}: {
+  title: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) => (
+  <div className="border-b border-gray-100 pb-4 mb-4">
+    <button
+      onClick={onToggle}
+      className="flex items-center justify-between w-full text-left font-semibold text-gray-900 hover:text-black transition-colors mb-3"
+    >
+      <span className="text-sm uppercase tracking-wide">{title}</span>
+      <ChevronDown
+        className={`w-4 h-4 transform transition-transform ${
+          isExpanded ? "rotate-180" : ""
+        }`}
+      />
+    </button>
+    <AnimatePresence>
+      {isExpanded && (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="min-h-screen bg-white"
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden"
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Breadcrumb */}
-                <motion.nav
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="flex items-center space-x-2 text-sm text-gray-500 mb-8"
-                >
-                    <a href="/" className="hover:text-gray-900 transition-colors">Home</a>
-                    <span>/</span>
-                    <a href="/products" className="hover:text-gray-900 transition-colors">Products</a>
-                    <span>/</span>
-                    <span className="text-gray-900">{category.name}</span>
-                </motion.nav>
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+));
 
-                {/* Category Header */}
-                <div className="mb-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="text-center mb-8"
-                    >
-                        {category.image && (
-                            <div className="w-32 h-32 mx-auto mb-6 rounded-sm overflow-hidden">
-                                <img
-                                    src={category.image}
-                                    alt={category.name}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                        )}
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">{category.name}</h1>
-                        {category.description && (
-                            <p className="text-gray-600 max-w-2xl mx-auto">
-                                {category.description}
-                            </p>
-                        )}
-                    </motion.div>
+FilterSection.displayName = "FilterSection";
+
+// Memoized Sidebar Component
+const FilterSidebar = memo(({ 
+  filters, 
+  selectedSubcategory,
+  setSelectedSubcategory,
+  selectedMaterial,
+  setSelectedMaterial,
+  priceRange,
+  setPriceRange,
+  inStockOnly,
+  setInStockOnly,
+  onSaleOnly,
+  setOnSaleOnly,
+  sortBy,
+  setSortBy,
+  hasActiveFilters,
+  clearAllFilters,
+  isScrolled,
+  expandedSections,
+  setExpandedSections
+}: {
+  filters: Filters;
+  selectedSubcategory: string;
+  setSelectedSubcategory: (value: string) => void;
+  selectedMaterial: string;
+  setSelectedMaterial: (value: string) => void;
+  priceRange: { min: string; max: string };
+  setPriceRange: (value: { min: string; max: string } | ((prev: { min: string; max: string }) => { min: string; max: string })) => void;
+  inStockOnly: boolean;
+  setInStockOnly: (value: boolean) => void;
+  onSaleOnly: boolean;
+  setOnSaleOnly: (value: boolean) => void;
+  sortBy: string;
+  setSortBy: (value: string) => void;
+  hasActiveFilters: boolean;
+  clearAllFilters: () => void;
+  isScrolled: boolean;
+  expandedSections: { [key: string]: boolean };
+  setExpandedSections: (value: any) => void;
+}) => {
+  const toggleSection = useCallback((section: string) => {
+    setExpandedSections((prev: any) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }, [setExpandedSections]);
+
+  return (
+    <motion.aside
+      initial={{ x: -250, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="hidden lg:block w-64 bg-white shadow-sm min-h-screen"
+    >
+      <div 
+        className={`sticky max-h-screen overflow-y-auto transition-all duration-300 ${
+          isScrolled ? 'top-[70px]' : 'top-0'
+        }`}
+      >
+        <div className="p-6">
+          {/* Filter Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="w-4 h-4 text-gray-600" />
+              <h2 className="font-bold text-lg text-gray-900">Filters</h2>
+            </div>
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-red-600 hover:text-red-800 font-semibold transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Subcategory Filter */}
+          {filters && filters.subcategories && filters.subcategories.length > 0 && (
+            <FilterSection
+              title="Subcategories"
+              isExpanded={expandedSections.subcategory}
+              onToggle={() => toggleSection("subcategory")}
+            >
+              <div className="space-y-2">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="subcategory"
+                    checked={selectedSubcategory === ""}
+                    onChange={() => setSelectedSubcategory("")}
+                    className="mr-3 accent-black"
+                  />
+                  <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                    All Subcategories
+                  </span>
+                </label>
+                {filters.subcategories.map((subcategory) => (
+                  <label
+                    key={subcategory._id || subcategory.slug}
+                    className="flex items-center cursor-pointer group"
+                  >
+                    <input
+                      type="radio"
+                      name="subcategory"
+                      checked={selectedSubcategory === subcategory.slug}
+                      onChange={() => setSelectedSubcategory(subcategory.slug)}
+                      className="mr-3 accent-black"
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                      {subcategory.name || subcategory.slug}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </FilterSection>
+          )}
+
+          {/* Price Range Filter */}
+          <FilterSection
+            title="Price Range"
+            isExpanded={expandedSections.price}
+            onToggle={() => toggleSection("price")}
+          >
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={priceRange.min}
+                  onChange={(e) =>
+                    setPriceRange((prev) => ({
+                      ...prev,
+                      min: e.target.value,
+                    }))
+                  }
+                  className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                />
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={priceRange.max}
+                  onChange={(e) =>
+                    setPriceRange((prev) => ({
+                      ...prev,
+                      max: e.target.value,
+                    }))
+                  }
+                  className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                />
+              </div>
+            </div>
+          </FilterSection>
+
+          {/* Material Filter */}
+          {filters && filters.materials && filters.materials.length > 0 && (
+            <FilterSection
+              title="Material"
+              isExpanded={expandedSections.material}
+              onToggle={() => toggleSection("material")}
+            >
+              <div className="space-y-2">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="material"
+                    checked={selectedMaterial === ""}
+                    onChange={() => setSelectedMaterial("")}
+                    className="mr-3 accent-black"
+                  />
+                  <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                    All Materials
+                  </span>
+                </label>
+                {filters.materials.slice(0, 8).map((material) => (
+                  <label
+                    key={material}
+                    className="flex items-center cursor-pointer group"
+                  >
+                    <input
+                      type="radio"
+                      name="material"
+                      checked={selectedMaterial === material}
+                      onChange={() => setSelectedMaterial(material)}
+                      className="mr-3 accent-black"
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-black transition-colors capitalize">
+                      {material}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </FilterSection>
+          )}
+
+          {/* Availability & Sale Filter */}
+          <FilterSection
+            title="Availability"
+            isExpanded={expandedSections.availability}
+            onToggle={() => toggleSection("availability")}
+          >
+            <div className="space-y-2">
+              <label className="flex items-center cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className="mr-3 accent-black"
+                />
+                <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                  In Stock Only
+                </span>
+              </label>
+              <label className="flex items-center cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={onSaleOnly}
+                  onChange={(e) => setOnSaleOnly(e.target.checked)}
+                  className="mr-3 accent-black"
+                />
+                <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                  On Sale Only
+                </span>
+              </label>
+            </div>
+          </FilterSection>
+
+          {/* Sort By Filter */}
+          <FilterSection
+            title="Sort By"
+            isExpanded={expandedSections.sort}
+            onToggle={() => toggleSection("sort")}
+          >
+            <div className="space-y-2">
+              {[
+                { value: "newest", label: "Newest First" },
+                { value: "price-low", label: "Price: Low to High" },
+                { value: "price-high", label: "Price: High to Low" },
+                { value: "name-asc", label: "Name: A-Z" },
+                { value: "name-desc", label: "Name: Z-A" },
+                { value: "rating", label: "Customer Rating" },
+                { value: "discount", label: "Highest Discount" },
+              ].map((option) => (
+                <label
+                  key={option.value}
+                  className="flex items-center cursor-pointer group"
+                >
+                  <input
+                    type="radio"
+                    name="sort"
+                    checked={sortBy === option.value}
+                    onChange={() => setSortBy(option.value)}
+                    className="mr-3 accent-black"
+                  />
+                  <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                    {option.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </FilterSection>
+        </div>
+      </div>
+    </motion.aside>
+  );
+});
+
+FilterSidebar.displayName = "FilterSidebar";
+
+const CategoryProductsPage = () => {
+  const params = useParams();
+  const router = useRouter();
+  const categorySlug = params.slug as string;
+  
+  const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<Category | null>(null);
+  const [filters, setFilters] = useState<Filters>({
+    subcategories: [],
+    materials: [],
+    priceRange: { minPrice: 0, maxPrice: 100000 },
+  });
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Filter states
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [onSaleOnly, setOnSaleOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("newest");
+
+  // UI states
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    subcategory: true,
+    price: true,
+    material: true,
+    availability: true,
+    sort: true,
+  });
+
+  // Infinite scroll
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const observerTarget = useRef<HTMLDivElement>(null);
+  
+  // Scroll state for sidebar
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Fetch category details first
+  const fetchCategoryDetails = useCallback(async () => {
+    try {
+      const response = await fetchWithCredentials(`/api/categories/${categorySlug}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error("Category not found");
+        }
+        throw new Error("Failed to fetch category");
+      }
+      const categoryData = await response.json();
+      setCategory(categoryData);
+    } catch (err) {
+      console.error('Error fetching category:', err);
+    }
+  }, [categorySlug, router]);
+
+  // Fetch products with filters
+  const fetchCategoryProducts = useCallback(
+    async (page = 1, reset = false) => {
+      try {
+        if (page === 1) {
+          setLoading(true);
+          setError(null);
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          setLoadingMore(true);
+        }
+
+        const params = new URLSearchParams();
+        params.append("page", page.toString());
+        params.append("limit", "20");
+        
+        // Add category filter - this is the key change
+        params.append("category", categorySlug);
+
+        // Add other filters
+        if (selectedSubcategory) params.append("subcategory", selectedSubcategory);
+        if (selectedMaterial) params.append("material", selectedMaterial);
+        if (priceRange.min) params.append("minPrice", priceRange.min);
+        if (priceRange.max) params.append("maxPrice", priceRange.max);
+        if (inStockOnly) params.append("inStock", "true");
+        if (onSaleOnly) params.append("onSale", "true");
+        params.append("sort", sortBy);
+
+        // Use the general products API with category filter
+        const response = await fetchWithCredentials(`/api/products?${params}`);
+        if (!response.ok) throw new Error("Failed to fetch products");
+
+        const data = await response.json();
+
+        if (reset || page === 1) {
+          setProducts(data.products || []);
+          // Set filters if available in response
+          if (data.filters) {
+            setFilters(prev => ({
+              subcategories: data.filters.subcategories || prev.subcategories || [],
+              materials: data.filters.materials || prev.materials || [],
+              priceRange: data.filters.priceRange || prev.priceRange || { minPrice: 0, maxPrice: 100000 },
+            }));
+          }
+        } else {
+          setProducts((prev) => [...prev, ...(data.products || [])]);
+        }
+
+        setTotalProducts(data.pagination?.total || 0);
+        setHasMore(page < (data.pagination?.pages || 0));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [
+      categorySlug,
+      selectedSubcategory, 
+      selectedMaterial, 
+      priceRange.min, 
+      priceRange.max, 
+      inStockOnly, 
+      onSaleOnly, 
+      sortBy
+    ]
+  );
+
+  // Fetch filters data separately if needed
+  const fetchFilters = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("category", categorySlug);
+      params.append("filtersOnly", "true");
+      
+      const response = await fetchWithCredentials(`/api/products?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.filters) {
+          setFilters(prev => ({
+            subcategories: data.filters.subcategories || [],
+            materials: data.filters.materials || [],
+            priceRange: data.filters.priceRange || { minPrice: 0, maxPrice: 100000 },
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching filters:', err);
+    }
+  }, [categorySlug]);
+
+  // Initial load
+  useEffect(() => {
+    if (categorySlug) {
+      setCurrentPage(1);
+      fetchCategoryDetails();
+      fetchFilters();
+      fetchCategoryProducts(1, true);
+    }
+  }, [categorySlug, fetchCategoryDetails, fetchFilters, fetchCategoryProducts]);
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    if (categorySlug) {
+      setCurrentPage(1);
+      fetchCategoryProducts(1, true);
+    }
+  }, [
+    categorySlug,
+    selectedSubcategory,
+    selectedMaterial,
+    priceRange.min,
+    priceRange.max,
+    inStockOnly,
+    onSaleOnly,
+    sortBy,
+    fetchCategoryProducts
+  ]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+
+        if (entry.isIntersecting && hasMore && !loading && !loadingMore) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          fetchCategoryProducts(nextPage, false);
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "200px",
+      }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, currentPage, fetchCategoryProducts]);
+
+  // Optimized scroll listener for sidebar
+  useEffect(() => {
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const scrollTop = window.scrollY;
+          setTimeout(() => {
+            setIsScrolled(scrollTop > 130);
+          }, 600);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setSelectedSubcategory("");
+    setSelectedMaterial("");
+    setPriceRange({ min: "", max: "" });
+    setInStockOnly(false);
+    setOnSaleOnly(false);
+    setSortBy("newest");
+    setCurrentPage(1);
+  }, []);
+
+  const hasActiveFilters =
+    !!selectedSubcategory ||
+    !!selectedMaterial ||
+    !!priceRange.min ||
+    !!priceRange.max ||
+    !!inStockOnly ||
+    !!onSaleOnly ||
+    sortBy !== "newest";
+
+  const sortOptions = [
+    { value: "newest", label: "Newest First" },
+    { value: "price-low", label: "Price: Low to High" },
+    { value: "price-high", label: "Price: High to Low" },
+    { value: "name-asc", label: "Name: A-Z" },
+    { value: "name-desc", label: "Name: Z-A" },
+    { value: "rating", label: "Customer Rating" },
+    { value: "discount", label: "Highest Discount" },
+  ];
+
+  // Show loading for initial load
+  if (loading && !products.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading category...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !products.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-4">{error}</div>
+          <button 
+            onClick={() => router.push('/products')}
+            className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+          >
+            Go to All Products
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-screen-2xl mx-auto">
+        <div className="flex">
+          {/* Left Sidebar Filters - Desktop */}
+          <FilterSidebar
+            filters={filters}
+            selectedSubcategory={selectedSubcategory}
+            setSelectedSubcategory={setSelectedSubcategory}
+            selectedMaterial={selectedMaterial}
+            setSelectedMaterial={setSelectedMaterial}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            inStockOnly={inStockOnly}
+            setInStockOnly={setInStockOnly}
+            onSaleOnly={onSaleOnly}
+            setOnSaleOnly={setOnSaleOnly}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            hasActiveFilters={hasActiveFilters}
+            clearAllFilters={clearAllFilters}
+            isScrolled={isScrolled}
+            expandedSections={expandedSections}
+            setExpandedSections={setExpandedSections}
+          />
+
+          {/* Main Content */}
+          <main className="flex-1 min-w-0">
+            <div className="px-4 py-6 sm:px-6 lg:px-8">
+              {/* Category Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="mb-6"
+              >
+                {/* Back to Products Link */}
+                <div className="flex items-center mb-4">
+                  <button
+                    onClick={() => router.push('/products')}
+                    className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm">All Products</span>
+                  </button>
                 </div>
 
-                {/* Search and Filter Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                    className="bg-gray-50 rounded-sm p-6 mb-8 space-y-4"
-                >
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder={`Search in ${category.name}...`}
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        />
-                    </div>
-
-                    {/* Filter Toggle (Mobile) */}
-                    <div className="flex items-center justify-between">
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className="md:hidden flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-sm hover:bg-gray-50 transition-colors"
-                        >
-                            <Filter className="w-4 h-4" />
-                            <span>Filters</span>
-                            <ChevronDown className={`w-4 h-4 transform transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {/* Results Count */}
-                        <div className="text-sm text-gray-600">
-                            {totalProducts} {totalProducts === 1 ? 'product' : 'products'} found
-                        </div>
-                    </div>
-
-                    {/* Filters */}
-                    <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 ${showFilters ? 'block' : 'hidden md:grid'}`}>
-                        {/* SubCategory Filter */}
-                        <select
-                            value={selectedSubCategory}
-                            onChange={(e) => {
-                                setSelectedSubCategory(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="border border-gray-200 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        >
-                            <option value="">All Subcategories</option>
-                            {subCategories.map(subCategory => (
-                                <option key={subCategory._id} value={subCategory.name}>
-                                    {subCategory.name}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Price Range */}
-                        <input
-                            type="number"
-                            placeholder="Min Price"
-                            value={priceRange.min}
-                            onChange={(e) => {
-                                setPriceRange(prev => ({ ...prev, min: e.target.value }));
-                                setCurrentPage(1);
-                            }}
-                            className="border border-gray-200 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Max Price"
-                            value={priceRange.max}
-                            onChange={(e) => {
-                                setPriceRange(prev => ({ ...prev, max: e.target.value }));
-                                setCurrentPage(1);
-                            }}
-                            className="border border-gray-200 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        />
-
-                        {/* Sort By */}
-                        <select
-                            value={sortBy}
-                            onChange={(e) => {
-                                setSortBy(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="border border-gray-200 rounded-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                        >
-                            <option value="featured">Featured</option>
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                            <option value="name">Name A-Z</option>
-                            <option value="rating">Highest Rated</option>
-                            <option value="newest">Newest First</option>
-                        </select>
-
-                        {/* Clear Filters */}
-                        {hasActiveFilters && (
-                            <button
-                                onClick={clearFilters}
-                                className="flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-sm transition-colors md:col-span-4"
-                            >
-                                <X className="w-4 h-4" />
-                                <span>Clear Filters</span>
-                            </button>
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Products Grid */}
-                <ProductGrid
-                    products={paginatedProducts}
-                    loading={false}
-                    error={null}
-                />
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
-                        className="flex items-center justify-center gap-2 mt-12"
-                    >
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 border border-gray-200 rounded-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Previous
-                        </button>
-
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            const pageNumber = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                            return (
-                                <button
-                                    key={pageNumber}
-                                    onClick={() => setCurrentPage(pageNumber)}
-                                    className={`px-4 py-2 border rounded-sm transition-colors ${currentPage === pageNumber
-                                            ? 'bg-black text-white border-black'
-                                            : 'border-gray-200 hover:bg-gray-50'
-                                        }`}
-                                >
-                                    {pageNumber}
-                                </button>
-                            );
-                        })}
-
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="px-4 py-2 border border-gray-200 rounded-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            Next
-                        </button>
-                    </motion.div>
+                {/* Category Title and Description */}
+                {category && (
+                  <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                      {category.name}
+                    </h1>
+                    {category.description && (
+                      <p className="text-gray-600 text-lg max-w-2xl">
+                        {category.description}
+                      </p>
+                    )}
+                  </div>
                 )}
+
+                {/* Results Header */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="text-lg text-gray-600">
+                    Showing{" "}
+                    <span className="font-semibold text-black">
+                      {products.length}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-black">
+                      {totalProducts.toLocaleString()}
+                    </span>{" "}
+                    {category ? `${category.name.toLowerCase()} products` : 'results'}
+                  </div>
+
+                  {/* Mobile Filter Button */}
+                  <button
+                    onClick={() => setShowMobileFilters(true)}
+                    className="lg:hidden flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-50 transition-colors rounded-sm"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span className="font-medium text-sm">Filters</span>
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Active Filters */}
+              {hasActiveFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="flex flex-wrap items-center gap-2 mb-6 p-4 bg-white border border-gray-200 rounded-sm shadow-sm"
+                >
+                  <span className="text-sm font-semibold text-gray-700 mr-2">
+                    Active:
+                  </span>
+                  {selectedSubcategory && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      Subcategory:{" "}
+                      {
+                        filters && filters.subcategories && filters.subcategories.find
+                          ? filters.subcategories.find((c) => c.slug === selectedSubcategory)?.name
+                          : selectedSubcategory
+                      }
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setSelectedSubcategory("")}
+                      />
+                    </span>
+                  )}
+                  {selectedMaterial && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      Material: {selectedMaterial}
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setSelectedMaterial("")}
+                      />
+                    </span>
+                  )}
+                  {(priceRange.min || priceRange.max) && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      Price: ₹{priceRange.min || 0} - ₹{priceRange.max || "∞"}
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setPriceRange({ min: "", max: "" })}
+                      />
+                    </span>
+                  )}
+                  {inStockOnly && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      In Stock Only
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setInStockOnly(false)}
+                      />
+                    </span>
+                  )}
+                  {onSaleOnly && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      On Sale Only
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setOnSaleOnly(false)}
+                      />
+                    </span>
+                  )}
+                  {sortBy !== "newest" && (
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white text-sm rounded-full">
+                      Sort: {sortOptions.find(opt => opt.value === sortBy)?.label}
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-red-200"
+                        onClick={() => setSortBy("newest")}
+                      />
+                    </span>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Products Grid */}
+              <div className="mb-8">
+                <ProductGrid
+                  products={products}
+                  loading={loading}
+                  error={error}
+                  loadingMore={loadingMore}
+                />
+              </div>
+
+              {/* Infinite Scroll Observer Target */}
+              <div ref={observerTarget} className="h-32" />
+
+              {/* No More Products Message */}
+              {!hasMore && products.length > 0 && !loadingMore && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center py-12"
+                >
+                  <div className="bg-white rounded-sm p-8 border border-gray-200 shadow-sm">
+                    <div className="text-gray-600 font-medium text-lg mb-2">
+                      🎉 You've seen all {category?.name.toLowerCase()} products!
+                    </div>
+                    <div className="text-gray-500 text-sm">
+                      That's all {totalProducts.toLocaleString()} products in this category
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
-        </motion.div>
-    );
+          </main>
+        </div>
+
+        {/* Mobile Filter Overlay */}
+        <AnimatePresence>
+          {showMobileFilters && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+              onClick={() => setShowMobileFilters(false)}
+            >
+              <motion.div
+                initial={{ x: -300 }}
+                animate={{ x: 0 }}
+                exit={{ x: -300 }}
+                transition={{ type: "tween", duration: 0.3 }}
+                className="w-80 bg-white h-full overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  {/* Mobile Filter Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="w-5 h-5" />
+                      <h2 className="font-semibold text-lg">Filters</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowMobileFilters(false)}
+                      className="p-2 hover:bg-gray-100 rounded-sm"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Clear All Button */}
+                  {hasActiveFilters && (
+                    <button
+                      onClick={() => {
+                        clearAllFilters();
+                        setShowMobileFilters(false);
+                      }}
+                      className="w-full mb-6 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-sm font-medium transition-colors"
+                    >
+                      Clear All Filters
+                    </button>
+                  )}
+
+                  {/* Mobile Filter Sections */}
+                  {filters && filters.subcategories && filters.subcategories.length > 0 && (
+                    <FilterSection
+                      title="Subcategories"
+                      isExpanded={expandedSections.subcategory}
+                      onToggle={() => setExpandedSections((prev: any) => ({ ...prev, subcategory: !prev.subcategory }))}
+                    >
+                      <div className="space-y-2">
+                        <label className="flex items-center cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="mobile-subcategory"
+                            checked={selectedSubcategory === ""}
+                            onChange={() => setSelectedSubcategory("")}
+                            className="mr-3 accent-black"
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                            All Subcategories
+                          </span>
+                        </label>
+                        {filters.subcategories.map((subcategory) => (
+                          <label
+                            key={subcategory._id || subcategory.slug}
+                            className="flex items-center cursor-pointer group"
+                          >
+                            <input
+                              type="radio"
+                              name="mobile-subcategory"
+                              checked={selectedSubcategory === subcategory.slug}
+                              onChange={() => setSelectedSubcategory(subcategory.slug)}
+                              className="mr-3 accent-black"
+                            />
+                            <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                              {subcategory.name || subcategory.slug}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </FilterSection>
+                  )}
+
+                  <FilterSection
+                    title="Price Range"
+                    isExpanded={expandedSections.price}
+                    onToggle={() => setExpandedSections((prev: any) => ({ ...prev, price: !prev.price }))}
+                  >
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={priceRange.min}
+                          onChange={(e) =>
+                            setPriceRange((prev) => ({
+                              ...prev,
+                              min: e.target.value,
+                            }))
+                          }
+                          className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={priceRange.max}
+                          onChange={(e) =>
+                            setPriceRange((prev) => ({
+                              ...prev,
+                              max: e.target.value,
+                            }))
+                          }
+                          className="px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </FilterSection>
+
+                  {filters && filters.materials && filters.materials.length > 0 && (
+                    <FilterSection
+                      title="Material"
+                      isExpanded={expandedSections.material}
+                      onToggle={() => setExpandedSections((prev: any) => ({ ...prev, material: !prev.material }))}
+                    >
+                      <div className="space-y-2">
+                        <label className="flex items-center cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="mobile-material"
+                            checked={selectedMaterial === ""}
+                            onChange={() => setSelectedMaterial("")}
+                            className="mr-3 accent-black"
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                            All Materials
+                          </span>
+                        </label>
+                        {filters.materials.slice(0, 8).map((material) => (
+                          <label
+                            key={material}
+                            className="flex items-center cursor-pointer group"
+                          >
+                            <input
+                              type="radio"
+                              name="mobile-material"
+                              checked={selectedMaterial === material}
+                              onChange={() => setSelectedMaterial(material)}
+                              className="mr-3 accent-black"
+                            />
+                            <span className="text-sm text-gray-700 group-hover:text-black transition-colors capitalize">
+                              {material}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </FilterSection>
+                  )}
+
+                  <FilterSection
+                    title="Availability"
+                    isExpanded={expandedSections.availability}
+                    onToggle={() => setExpandedSections((prev: any) => ({ ...prev, availability: !prev.availability }))}
+                  >
+                    <div className="space-y-2">
+                      <label className="flex items-center cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={inStockOnly}
+                          onChange={(e) => setInStockOnly(e.target.checked)}
+                          className="mr-3 accent-black"
+                        />
+                        <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                          In Stock Only
+                        </span>
+                      </label>
+                      <label className="flex items-center cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={onSaleOnly}
+                          onChange={(e) => setOnSaleOnly(e.target.checked)}
+                          className="mr-3 accent-black"
+                        />
+                        <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                          On Sale Only
+                        </span>
+                      </label>
+                    </div>
+                  </FilterSection>
+
+                  <FilterSection
+                    title="Sort By"
+                    isExpanded={expandedSections.sort}
+                    onToggle={() => setExpandedSections((prev: any) => ({ ...prev, sort: !prev.sort }))}
+                  >
+                    <div className="space-y-2">
+                      {sortOptions.map((option) => (
+                        <label
+                          key={option.value}
+                          className="flex items-center cursor-pointer group"
+                        >
+                          <input
+                            type="radio"
+                            name="mobile-sort"
+                            checked={sortBy === option.value}
+                            onChange={() => setSortBy(option.value)}
+                            className="mr-3 accent-black"
+                          />
+                          <span className="text-sm text-gray-700 group-hover:text-black transition-colors">
+                            {option.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </FilterSection>
+
+                  {/* Apply Filters Button */}
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="w-full mt-6 px-6 py-3 bg-black text-white rounded-sm font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    Apply Filters
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 };
 
-export default CategoryPage;
+export default CategoryProductsPage;

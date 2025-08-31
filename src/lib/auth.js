@@ -1,7 +1,7 @@
+// lib/auth.js
 export const runtime = "nodejs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { serialize } from "cookie";
 
 const ACCESS_TOKEN_NAME = "vf_access";
 const REFRESH_TOKEN_NAME = "vf_refresh";
@@ -19,7 +19,7 @@ if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
 export const createAccessToken = (user) =>
   jwt.sign(
     {
-      userId: user._id.toString(), // Ensure it's a string
+      userId: user._id.toString(),
       email: user.email,
     },
     JWT_SECRET,
@@ -42,7 +42,8 @@ export const createRefreshToken = (user) =>
 export const verifyAccessToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch {
+  } catch (error) {
+    console.error("Access token verification failed:", error.message);
     return null;
   }
 };
@@ -50,7 +51,8 @@ export const verifyAccessToken = (token) => {
 export const verifyRefreshToken = (token) => {
   try {
     return jwt.verify(token, JWT_REFRESH_SECRET);
-  } catch {
+  } catch (error) {
+    console.error("Refresh token verification failed:", error.message);
     return null;
   }
 };
@@ -58,66 +60,125 @@ export const verifyRefreshToken = (token) => {
 // =============================
 // Get Refresh Token from Cookies (Server-side)
 // =============================
-export const getRefreshTokenFromCookie = (req) => {
-  // Inside API route handler
-  if (req?.cookies) {
-    return req.cookies.get(REFRESH_TOKEN_NAME)?.value || null;
-  }
+export const getRefreshTokenFromCookie = async (req) => {
+  try {
+    // Inside API route handler
+    if (req?.cookies) {
+      return req.cookies.get(REFRESH_TOKEN_NAME)?.value || null;
+    }
 
-  // Inside server component / middleware
-  return cookies().get(REFRESH_TOKEN_NAME)?.value || null;
+    // Inside server component / middleware
+    const cookieStore = await cookies();
+    return cookieStore.get(REFRESH_TOKEN_NAME)?.value || null;
+  } catch (error) {
+    console.error("Error getting refresh token from cookie:", error);
+    return null;
+  }
 };
 
 // =============================
-// Set Auth Cookies (access + refresh)
+// Set Auth Cookies (NextResponse compatible)
 // =============================
-export const setAuthCookies = (res, accessToken, refreshToken) => {
-  res.headers.append(
-    "Set-Cookie",
-    serialize(ACCESS_TOKEN_NAME, accessToken, {
+export const setAuthCookies = (response, accessToken, refreshToken) => {
+  try {
+    // Set access token cookie
+    response.cookies.set({
+      name: ACCESS_TOKEN_NAME,
+      value: accessToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 15, // 15 minutes
-    })
-  );
+    });
 
-  res.headers.append(
-    "Set-Cookie",
-    serialize(REFRESH_TOKEN_NAME, refreshToken, {
+    // Set refresh token cookie
+    response.cookies.set({
+      name: REFRESH_TOKEN_NAME,
+      value: refreshToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
-  );
+    });
+
+    console.log("Auth cookies set successfully");
+  } catch (error) {
+    console.error("Error setting auth cookies:", error);
+  }
 };
 
 // =============================
-// Clear Auth Cookies
+// Clear Auth Cookies (NextResponse compatible)
 // =============================
-export const clearAuthCookies = (res) => {
-  res.headers.append(
-    "Set-Cookie",
-    serialize(ACCESS_TOKEN_NAME, "", {
+export const clearAuthCookies = (response) => {
+  try {
+    // Clear access token cookie
+    response.cookies.set({
+      name: ACCESS_TOKEN_NAME,
+      value: "",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 0,
-    })
-  );
+    });
 
-  res.headers.append(
-    "Set-Cookie",
-    serialize(REFRESH_TOKEN_NAME, "", {
+    // Clear refresh token cookie
+    response.cookies.set({
+      name: REFRESH_TOKEN_NAME,
+      value: "",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
       maxAge: 0,
-    })
-  );
+    });
+
+    console.log("Auth cookies cleared successfully");
+  } catch (error) {
+    console.error("Error clearing auth cookies:", error);
+  }
+};
+
+// =============================
+// Alternative method using headers (if cookies.set doesn't work)
+// =============================
+export const setAuthCookiesViaHeaders = (response, accessToken, refreshToken) => {
+  try {
+    const isProduction = process.env.NODE_ENV === "production";
+    const secureFlag = isProduction ? "Secure; " : "";
+    
+    response.headers.set(
+      "Set-Cookie",
+      [
+        `${ACCESS_TOKEN_NAME}=${accessToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${60 * 15}`,
+        `${REFRESH_TOKEN_NAME}=${refreshToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 7}`
+      ].join(", ")
+    );
+    
+    console.log("Auth cookies set via headers successfully");
+  } catch (error) {
+    console.error("Error setting auth cookies via headers:", error);
+  }
+};
+
+export const clearAuthCookiesViaHeaders = (response) => {
+  try {
+    const isProduction = process.env.NODE_ENV === "production";
+    const secureFlag = isProduction ? "Secure; " : "";
+    
+    response.headers.set(
+      "Set-Cookie",
+      [
+        `${ACCESS_TOKEN_NAME}=; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=0`,
+        `${REFRESH_TOKEN_NAME}=; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=0`
+      ].join(", ")
+    );
+    
+    console.log("Auth cookies cleared via headers successfully");
+  } catch (error) {
+    console.error("Error clearing auth cookies via headers:", error);
+  }
 };

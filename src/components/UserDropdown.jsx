@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Settings, User, ShoppingBag, MapPin, LayoutDashboard, LogOut, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { useOrderStore } from "@/stores/orderStore";
+import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { resetApp } from "@/stores/globalStoreManager";
 
 const Avatar = ({ src, alt, fallbackText }) => {
   const [imageError, setImageError] = useState(false);
@@ -43,42 +46,76 @@ const Avatar = ({ src, alt, fallbackText }) => {
   );
 };
 
-const userMenuItems = [
-  {
-    id: "profile",
-    label: "My Profile",
-    icon: User,
-    href: "/account",
-  },
-  {
-    id: "orders",
-    label: "My Orders",
-    icon: ShoppingBag,
-    href: "/orders",
-    badge: 2,
-  },
-  {
-    id: "addresses",
-    label: "Addresses",
-    icon: MapPin,
-    href: "/address",
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
-];
-
 export default function UserDropdown({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
   const { user, setUser } = useAuth();
   const router = useRouter();
   const [loadingStates, setLoadingStates] = useState({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { orders, fetchOrders } = useOrderStore();
+  const pathname = usePathname();
+  const [navigatingTo, setNavigatingTo] = useState(null);
 
-  // Handle click outside and viewport visibility
+  const userMenuItems = [
+    {
+      id: "profile",
+      label: "My Profile",
+      icon: User,
+      href: "/profile",
+    },
+    {
+      id: "orders",
+      label: "My Orders",
+      icon: ShoppingBag,
+      href: "/orders",
+      badge: orders.length > 0 && orders.some(order => order.status !== "completed")
+        ? orders.filter(order => order.status !== "completed").length
+        : undefined,
+    },
+    {
+      id: "addresses",
+      label: "Addresses",
+      icon: MapPin,
+      href: "/profile/address",
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: Settings,
+      href: "/profile/settings",
+    },
+  ];
+
+  // Add admin item if user is admin
+  const allMenuItems = user?.role === "admin"
+    ? [...userMenuItems, {
+      id: "admin",
+      label: "Admin Dashboard",
+      icon: LayoutDashboard,
+      href: "/admin",
+    }]
+    : userMenuItems;
+
+  // Check if current path matches any menu item
+  const isActiveItem = (item) => pathname === item.href;
+  
+  // Clear loading states when navigation completes
+  useEffect(() => {
+    if (navigatingTo) {
+      const targetItem = allMenuItems.find(item => item.id === navigatingTo);
+      if (targetItem && (pathname === targetItem.href || pathname.startsWith(targetItem.href + "/"))) {
+        setLoadingStates(prev => ({ ...prev, [navigatingTo]: false }));
+        setNavigatingTo(null);
+      }
+    }
+  }, [pathname, navigatingTo, allMenuItems]);
+
+  // Clear all loading states when component mounts (in case of page refresh)
+  useEffect(() => {
+    setLoadingStates({});
+    setNavigatingTo(null);
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -134,20 +171,39 @@ export default function UserDropdown({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   const handleMenuClick = async (item) => {
-    setLoadingStates((prev) => ({ ...prev, [item.id]: true }));
+    if (isActiveItem(item)) {
+      onClose();
+      return;
+    }
 
-    // Start navigation immediately but keep loading state
-    router.push(item.href);
+    setLoadingStates(prev => ({ ...prev, [item.id]: true }));
+    setNavigatingTo(item.id);
 
-    // Keep loading state active - will be cleared when component unmounts or page changes
-    // In a real app, you'd clear this when the new page loads
+    try {
+      await router.push(item.href);
+      // Don't close here, wait for pathname update
+    } catch (error) {
+      console.error("Navigation error:", error);
+      setLoadingStates(prev => ({ ...prev, [item.id]: false }));
+      setNavigatingTo(null);
+      toast.error("Navigation failed");
+    }
   };
+
+  const prevPathRef = useRef(pathname);
+
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      onClose();
+      prevPathRef.current = pathname;
+    }
+  }, [pathname]); // Remove onClose from dependencies
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
 
     try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
+      const res = await fetchWithCredentials("/api/auth/logout", { method: "POST" });
       const data = await res.json();
 
       if (!res.ok) {
@@ -157,6 +213,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       }
 
       setUser(null);
+      await resetApp();
       toast.success("Logged out successfully");
       router.push("/");
     } catch (err) {
@@ -208,6 +265,10 @@ export default function UserDropdown({ isOpen, onClose }) {
     },
   };
 
+  useEffect(() => {
+    if (user?._id) fetchOrders(1, 100);
+  }, [user, fetchOrders]);
+
   return (
     <div className='relative'>
       <AnimatePresence mode='wait'>
@@ -253,9 +314,10 @@ export default function UserDropdown({ isOpen, onClose }) {
 
             {/* Menu Items */}
             <div className='py-1 bg-white'>
-              {userMenuItems.map((item, index) => {
+              {allMenuItems.map((item, index) => {
                 const IconComponent = item.icon;
                 const isLoading = loadingStates[item.id];
+                const isActive = isActiveItem(item);
 
                 return (
                   <motion.button
@@ -265,18 +327,21 @@ export default function UserDropdown({ isOpen, onClose }) {
                     onClick={() => handleMenuClick(item)}
                     disabled={isLoading}
                     whileHover={
-                      !isLoading
+                      !isLoading && !isActive
                         ? {
-                            backgroundColor: "#f8f9fa",
-                            x: 4,
-                            transition: { duration: 0.2 },
-                          }
+                          backgroundColor: "#f8f9fa", // Use hex instead of rgb()
+                          x: 4,
+                          transition: { duration: 0.2 },
+                        }
                         : {}
                     }
-                    whileTap={!isLoading ? { scale: 0.98 } : {}}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm border-b border-gray-100 transition-all duration-200 ${
-                      isLoading ? "cursor-not-allowed bg-gray-50" : "hover:bg-gray-50 cursor-pointer"
-                    }`}
+                    whileTap={!isLoading && !isActive ? { scale: 0.98 } : {}}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm border-b border-gray-100 transition-colors duration-200 relative ${isLoading
+                      ? "cursor-not-allowed opacity-60"
+                      : isActive
+                        ? "bg-blue-50 border-l-4 border-l-blue-500 cursor-default"
+                        : "cursor-pointer"
+                      }`}
                   >
                     <motion.div
                       className='relative w-4 h-4'
@@ -284,14 +349,21 @@ export default function UserDropdown({ isOpen, onClose }) {
                       transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
                     >
                       {isLoading ? (
-                        <Loader2 className='w-4 h-4 text-gray-900 animate-spin' />
+                        <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
                       ) : (
-                        <IconComponent className='w-4 h-4 text-gray-900' />
+                        <IconComponent className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-gray-900"}`} />
                       )}
                     </motion.div>
-                    <span className={`flex-1 font-medium text-gray-900 ${isLoading ? "opacity-75" : ""}`}>
+
+                    <span className={`flex-1 font-medium ${isLoading
+                      ? "opacity-75 text-gray-600"
+                      : isActive
+                        ? "text-blue-600 font-semibold"
+                        : "text-gray-900"
+                      }`}>
                       {item.label}
                     </span>
+
                     {item.badge && !isLoading && (
                       <motion.span
                         initial={{ scale: 0, rotate: -180 }}
@@ -303,69 +375,26 @@ export default function UserDropdown({ isOpen, onClose }) {
                           damping: 30,
                           delay: 0.3 + index * 0.1,
                         }}
-                        className='bg-gray-900 text-white text-xs px-1.5 py-0.5 font-bold min-w-[20px] text-center'
+                        className={`text-xs px-1.5 py-0.5 font-bold min-w-[20px] text-center ${isActive
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-900 text-white"
+                          }`}
                       >
                         {item.badge}
                       </motion.span>
                     )}
+
                     {isLoading && (
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: "100%" }}
-                        className='absolute bottom-0 left-0 h-0.5 bg-gray-900'
+                        className='absolute bottom-0 left-0 h-0.5 bg-blue-600'
                         transition={{ duration: 0.8, ease: "easeOut" }}
                       />
                     )}
                   </motion.button>
                 );
               })}
-
-              {/* Admin Dashboard (if admin) */}
-              {user?.role === "admin" && (
-                <motion.button
-                  variants={itemVariants}
-                  onClick={() => handleMenuClick({ id: "admin", href: "/admin", label: "Admin Dashboard" })}
-                  disabled={loadingStates.admin}
-                  whileHover={
-                    !loadingStates.admin
-                      ? {
-                          backgroundColor: "#f3f4f6",
-                          x: 4,
-                          transition: { duration: 0.2 },
-                        }
-                      : {}
-                  }
-                  whileTap={!loadingStates.admin ? { scale: 0.98 } : {}}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm border-b border-gray-300 transition-all duration-200 ${
-                    loadingStates.admin ? "cursor-not-allowed bg-gray-50" : "hover:bg-gray-50 cursor-pointer"
-                  }`}
-                >
-                  <motion.div
-                    className='relative w-4 h-4'
-                    animate={loadingStates.admin ? { rotate: 360 } : { rotate: 0 }}
-                    transition={
-                      loadingStates.admin ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.3 }
-                    }
-                  >
-                    {loadingStates.admin ? (
-                      <Loader2 className='w-4 h-4 text-gray-900 animate-spin' />
-                    ) : (
-                      <LayoutDashboard className='w-4 h-4 text-gray-900' />
-                    )}
-                  </motion.div>
-                  <span className={`flex-1 font-medium text-gray-900 ${loadingStates.admin ? "opacity-75" : ""}`}>
-                    Admin Dashboard
-                  </span>
-                  {loadingStates.admin && (
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      className='absolute bottom-0 left-0 h-0.5 bg-gray-900'
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                    />
-                  )}
-                </motion.button>
-              )}
             </div>
 
             {/* Logout Section */}
@@ -376,16 +405,15 @@ export default function UserDropdown({ isOpen, onClose }) {
                 whileHover={
                   !isLoggingOut
                     ? {
-                        backgroundColor: "#1f2937",
+                        backgroundColor: "#1f2937", // Use hex instead of rgb()
                         x: 4,
                         transition: { duration: 0.2 },
                       }
                     : {}
                 }
                 whileTap={!isLoggingOut ? { scale: 0.98 } : {}}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-all duration-200 relative overflow-hidden ${
-                  isLoggingOut ? "cursor-not-allowed text-gray-400" : "text-white hover:bg-gray-800 cursor-pointer"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors duration-200 relative overflow-hidden ${isLoggingOut ? "cursor-not-allowed text-gray-400" : "text-white cursor-pointer"
+                  }`}
               >
                 <motion.div
                   className='relative w-4 h-4 z-10'

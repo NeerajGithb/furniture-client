@@ -1,0 +1,660 @@
+// PaymentPage.tsx - Fixed version that only removes ordered items from cart
+
+"use client";
+
+import { useEffect, useState, useCallback, useMemo, JSX } from "react";
+import { useRouter } from "next/navigation";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCheckoutStore } from "@/stores/checkoutStore";
+import { useAddressStore } from "@/stores/addressStore";
+import PriceSummaryCard from "@/components/PriceSummaryCard";
+import {
+  Smartphone,
+  Banknote,
+  CreditCard,
+  Building2,
+  Shield,
+  ArrowLeft,
+  Loader2,
+  Check,
+  ChevronRight,
+  MapPin,
+  Edit3,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { useCartStore } from "@/stores/cartStore";
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  icon: JSX.Element;
+  description: string;
+  popular?: boolean;
+  offers?: string[];
+  available: boolean;
+}
+
+const PaymentPage = () => {
+  const { user } = useCurrentUser();
+  const router = useRouter();
+
+  // Checkout store
+  const {
+    getCheckoutData,
+    hasValidCheckout,
+    updateSelectedPaymentMethod,
+    canPlaceOrder,
+    clearCheckout,
+    getSelectedItems,
+  } = useCheckoutStore();
+
+  //cart store
+  const { removeFromCart } = useCartStore();
+  
+  // Address store
+  const { addresses } = useAddressStore();
+
+  // Local state
+  const [showUPIForm, setShowUPIForm] = useState(false);
+  const [upiId, setUpiId] = useState("");
+  const [placingOrder, setPlacingOrder] = useState(false);
+
+  // Get checkout data
+  const checkoutData = getCheckoutData();
+  const selectedCartItems = getSelectedItems();
+  const selectedAddress = addresses.find(
+    (addr) => addr._id === checkoutData?.selectedAddressId
+  );
+
+  // Payment methods configuration
+  const paymentMethods: PaymentMethod[] = useMemo(
+    () => [
+      {
+        id: "upi",
+        name: "UPI",
+        icon: <Smartphone className="w-5 h-5" />,
+        description: "Pay using your UPI ID",
+        popular: true,
+        offers: ["Get 5% cashback", "Instant payment"],
+        available: false, // Disabled for now
+      },
+      {
+        id: "cards",
+        name: "Credit/Debit Cards",
+        icon: <CreditCard className="w-5 h-5" />,
+        description: "Visa, Mastercard, Rupay & more",
+        offers: ["EMI available", "2% cashback on select cards"],
+        available: false, // Disabled for now
+      },
+      {
+        id: "netbanking",
+        name: "Net Banking",
+        icon: <Building2 className="w-5 h-5" />,
+        description: "All major banks supported",
+        available: false, // Disabled for now
+      },
+      {
+        id: "cod",
+        name: "Cash on Delivery",
+        icon: <Banknote className="w-5 h-5" />,
+        description: "Pay when your order is delivered",
+        popular: true,
+        offers: ["No advance payment", "Pay after receiving product"],
+        available: true, // Only COD is available
+      },
+    ],
+    []
+  );
+
+  // FIXED: Improved redirect checks with better error handling
+  useEffect(() => {
+    if (!user?._id) {
+      router.push("/auth/signin?returnUrl=/checkout/payment");
+      return;
+    }
+
+    // Only redirect if we have no valid checkout data
+    if (!hasValidCheckout()) {
+      console.log("No valid checkout data, redirecting to checkout");
+      return;
+    }
+
+    // Only redirect if we have checkout data but no address selected
+    if (checkoutData && !checkoutData.selectedAddressId) {
+      console.log("No address selected, redirecting to checkout");
+      toast.error("Please select a delivery address");
+      return;
+    }
+  }, [user?._id, hasValidCheckout, checkoutData?.selectedAddressId, router]);
+
+  // Handle payment method selection
+  const handlePaymentMethodSelect = useCallback(
+    (methodId: string) => {
+      const method = paymentMethods.find((m) => m.id === methodId);
+      if (!method?.available) {
+        toast.error(`${method?.name || "This payment method"} is coming soon!`);
+        return;
+      }
+
+      updateSelectedPaymentMethod(methodId);
+      setShowUPIForm(methodId === "upi");
+      if (methodId !== "upi") setUpiId("");
+    },
+    [updateSelectedPaymentMethod, paymentMethods]
+  );
+
+  // FIXED: Remove only ordered items from cart
+  const removeOrderedItemsFromCart = useCallback(async (orderedItems: any[]) => {
+    if (!orderedItems || orderedItems.length === 0) {
+      console.log("No items to remove from cart");
+      return;
+    }
+
+    console.log(`Removing ${orderedItems.length} ordered items from cart:`, 
+      orderedItems.map(item => ({ 
+        productId: item.productId, 
+        quantity: item.quantity 
+      }))
+    );
+
+    const removePromises = orderedItems.map(async (item) => {
+      try {
+        console.log(`Removing product ${item.productId} from cart`);
+        const success = await removeFromCart(item.productId);
+        if (success) {
+          console.log(`Successfully removed ${item.productId} from cart`);
+        } else {
+          console.warn(`Failed to remove ${item.productId} from cart`);
+        }
+        return success;
+      } catch (error) {
+        console.error(`Error removing ${item.productId} from cart:`, error);
+        return false;
+      }
+    });
+
+    try {
+      const results = await Promise.allSettled(removePromises);
+      const successful = results.filter(result => result.status === 'fulfilled' && result.value).length;
+      const failed = results.length - successful;
+
+      if (successful > 0) {
+        console.log(`Successfully removed ${successful} items from cart`);
+      }
+      if (failed > 0) {
+        console.warn(`Failed to remove ${failed} items from cart`);
+      }
+    } catch (error) {
+      console.error("Error in bulk cart item removal:", error);
+      throw error;
+    }
+  }, [removeFromCart]);
+
+  // FIXED: Improved order placement with proper cart item removal
+  const handlePlaceOrder = useCallback(async () => {
+    if (!checkoutData || !selectedCartItems.length) {
+      toast.error("No items selected for checkout");
+      return;
+    }
+
+    if (!checkoutData.selectedAddressId) {
+      toast.error("Please select a delivery address");
+      return;
+    }
+
+    if (!checkoutData.selectedPaymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
+    // Validate UPI ID if UPI is selected
+    if (checkoutData.selectedPaymentMethod === "upi") {
+      if (!upiId.trim()) {
+        toast.error("Please enter your UPI ID");
+        return;
+      }
+      const upiRegex = /^[\w.-]+@[\w.-]+$/;
+      if (!upiRegex.test(upiId)) {
+        toast.error("Please enter a valid UPI ID");
+        return;
+      }
+    }
+
+    setPlacingOrder(true);
+
+    try {
+      // Prepare order payload
+      const orderPayload = {
+        addressId: checkoutData.selectedAddressId,
+        paymentMethod: checkoutData.selectedPaymentMethod,
+        selectedItems: checkoutData.selectedItems,
+        insuranceEnabled: checkoutData.insuranceEnabled,
+        totals: checkoutData.totals,
+        cartData: selectedCartItems,
+        upiId: checkoutData.selectedPaymentMethod === "upi" ? upiId : undefined,
+      };
+
+      console.log("Placing order with payload:", {
+        ...orderPayload,
+        cartData: `${orderPayload.cartData.length} items`,
+      });
+
+      // Create order
+      const orderResponse = await fetchWithCredentials("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload),
+      });
+
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `Order creation failed: ${orderResponse.status}`
+        );
+      }
+
+      const orderData = await orderResponse.json();
+      const orderNumber = orderData.order?.orderNumber;
+
+      if (!orderNumber) {
+        throw new Error("Order created but no order number received");
+      }
+
+      console.log("Order created successfully:", orderNumber);
+
+      // Handle Cash on Delivery vs Other Payment Methods
+      if (checkoutData.selectedPaymentMethod === "cod") {
+        // For COD, order is complete - no payment processing needed
+        
+        try {
+          // FIXED: Remove only the items that were ordered from cart
+          await removeOrderedItemsFromCart(selectedCartItems);
+          console.log("Ordered items removed from cart successfully");
+        } catch (cartError) {
+          console.error("Error removing ordered items from cart:", cartError);
+          // Don't block order success if cart update fails
+          toast.error("Order placed but failed to update cart. Please refresh your cart.");
+        }
+        
+        // Clear checkout data
+        clearCheckout();
+        console.log("Checkout data cleared");
+
+        // Show success message
+        toast.success("Order placed successfully!");
+        
+        // Navigate to success page
+        console.log("Navigating to order success page:", orderNumber);
+        router.push(`/order-success?orderNumber=${orderNumber}`);
+        return;
+        
+      } else {
+        // For other payment methods, initiate payment processing
+        try {
+          console.log("Initiating payment for order:", orderData.order._id);
+
+          const paymentResponse = await fetchWithCredentials("/api/payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: orderData.order._id,
+              paymentMethod: checkoutData.selectedPaymentMethod,
+              upiId:
+                checkoutData.selectedPaymentMethod === "upi"
+                  ? upiId
+                  : undefined,
+            }),
+          });
+
+          if (paymentResponse.ok) {
+            toast.success("Processing payment...");
+
+            // Simulate payment processing time
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // FIXED: Remove only ordered items from cart
+            try {
+              await removeOrderedItemsFromCart(selectedCartItems);
+              console.log("Ordered items removed from cart after payment");
+            } catch (cartError) {
+              console.error("Error removing ordered items from cart after payment:", cartError);
+              toast.error("Payment successful but failed to update cart. Please refresh your cart.");
+            }
+            
+            // Clear checkout data
+            clearCheckout();
+
+            toast.success("Payment successful! Order placed.");
+            router.push(`/order-success?orderNumber=${orderNumber}`);
+          } else {
+            const errorData = await paymentResponse.json().catch(() => ({}));
+            throw new Error(
+              errorData.error || `Payment failed: ${paymentResponse.status}`
+            );
+          }
+        } catch (paymentError) {
+          console.error("Payment error:", paymentError);
+          throw paymentError;
+        }
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to place order";
+      console.error("Order placement error:", errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setPlacingOrder(false);
+    }
+  }, [checkoutData, selectedCartItems, upiId, router, clearCheckout, removeOrderedItemsFromCart]);
+
+  // FIXED: Better loading state handling
+  if (!user?._id) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">
+            Authentication Required
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Please sign in to continue with payment.
+          </p>
+          <button
+            onClick={() => router.push("/auth/signin?returnUrl=/checkout/payment")}
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (!checkoutData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading payment options...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No items selected
+  if (!selectedCartItems.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">
+            No items selected for checkout
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Please go back to your cart and select items to checkout.
+          </p>
+          <button
+            onClick={() => router.push("/cart")}
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+          >
+            Go to Cart
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No address selected
+  if (!selectedAddress) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">
+            No delivery address selected
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Please go back and select a delivery address.
+          </p>
+          <button
+            onClick={() => router.push("/checkout")}
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+          >
+            Go to Checkout
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className=" mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-xl font-medium text-gray-900">Payment</h1>
+              <div className="flex items-center gap-2 text-sm text-gray-600 mt-0.5">
+                <Shield className="w-4 h-4" />
+                <span>100% Safe & Secure</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className=" mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+          {/* Left Section - Payment Methods */}
+          <div className="lg:col-span-4">
+            {/* Address Summary */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded border border-gray-200 p-4 mb-6"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gray-100 rounded-full">
+                    <MapPin className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 mb-1">
+                      Deliver to
+                    </h4>
+                    <div className="text-sm text-gray-700 space-y-0.5">
+                      <p className="font-medium">{selectedAddress.fullName}</p>
+                      <p>{selectedAddress.addressLine1}</p>
+                      {selectedAddress.addressLine2 && (
+                        <p>{selectedAddress.addressLine2}</p>
+                      )}
+                      <p className="text-gray-600">
+                        {selectedAddress.city}, {selectedAddress.state} -{" "}
+                        {selectedAddress.postalCode}
+                      </p>
+                      <p className="text-gray-600">
+                        Phone: {selectedAddress.phone}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => router.push("/checkout")}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Change
+                </button>
+              </div>
+            </motion.div>
+
+            {/* Payment Methods */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white rounded border border-gray-200"
+            >
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="font-medium text-gray-900">
+                  Choose Payment Method
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Currently, only Cash on Delivery is available. Online payments
+                  coming soon!
+                </p>
+              </div>
+
+              <div className="divide-y divide-gray-200">
+                {paymentMethods.map((method) => (
+                  <div key={method.id} className="relative">
+                    <div
+                      onClick={() => handlePaymentMethodSelect(method.id)}
+                      className={`flex items-center p-4 transition-colors ${
+                        method.available
+                          ? `cursor-pointer hover:bg-gray-50 ${
+                              checkoutData.selectedPaymentMethod === method.id
+                                ? "bg-blue-50"
+                                : ""
+                            }`
+                          : "cursor-not-allowed opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div
+                          className={`p-2 rounded-full ${
+                            checkoutData.selectedPaymentMethod === method.id &&
+                            method.available
+                              ? "bg-blue-600 text-white"
+                              : method.available
+                              ? "bg-gray-100 text-gray-600"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {method.icon}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4
+                              className={`font-medium ${
+                                method.available
+                                  ? "text-gray-900"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {method.name}
+                            </h4>
+                            {method.popular && method.available && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                                Popular
+                              </span>
+                            )}
+                            {!method.available && (
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                                Coming Soon
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`text-sm mt-0.5 ${
+                              method.available
+                                ? "text-gray-600"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {method.description}
+                          </p>
+                          {method.offers && method.available && (
+                            <div className="flex gap-2 mt-1 flex-wrap">
+                              {method.offers.map((offer, idx) => (
+                                <span
+                                  key={idx}
+                                  className="text-xs text-green-600"
+                                >
+                                  • {offer}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {checkoutData.selectedPaymentMethod === method.id &&
+                          method.available && (
+                            <Check className="w-5 h-5 text-blue-600" />
+                          )}
+                        {method.available && (
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* UPI Form - Only show if UPI is selected and available */}
+                    <AnimatePresence>
+                      {method.id === "upi" &&
+                        checkoutData.selectedPaymentMethod === "upi" &&
+                        method.available && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-gray-200 bg-gray-50"
+                          >
+                            <div className="p-4">
+                              <div className="max-w-md">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Enter UPI ID
+                                </label>
+                                <input
+                                  type="text"
+                                  value={upiId}
+                                  onChange={(e) => setUpiId(e.target.value)}
+                                  placeholder="example@upi"
+                                  className="w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                />
+                                <p className="text-xs text-gray-600 mt-1">
+                                  Enter your UPI ID (e.g., name@paytm,
+                                  name@googlepay)
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                    </AnimatePresence>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Right Section - Price Summary */}
+          <div className="lg:col-span-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <PriceSummaryCard
+                mode="payment"
+                onPlaceOrder={handlePlaceOrder}
+                placingOrder={placingOrder}
+                showItemDetails={true}
+                showTrustSignals={true}
+                showContinueShopping={false}
+              />
+            </motion.div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PaymentPage;

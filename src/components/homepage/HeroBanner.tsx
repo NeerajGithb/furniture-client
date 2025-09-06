@@ -289,7 +289,7 @@ const HeroBanner = () => {
             {slides[currentSlide].subtitle}
           </p>
           <Link
-            href={`/collections/${slides[currentSlide].category}?category=${slides[currentSlide].category}`}
+            href={`/collections/${slides[currentSlide].category}?c=${slides[currentSlide].category}`}
             onClick={handleCTAClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

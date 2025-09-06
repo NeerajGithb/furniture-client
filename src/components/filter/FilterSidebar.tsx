@@ -266,9 +266,9 @@ const FilterSidebar = ({
   // Get URL parameters directly from searchParams
   const urlParams = useMemo(
     () => ({
-      selectedCategory: searchParams.get("category") || "",
-      selectedSubcategory: searchParams.get("subcategory") || "",
-      selectedMaterial: searchParams.get("material") || "",
+      selectedCategory: searchParams.get("c") || "",
+      selectedSubcategory: searchParams.get("sc") || "",
+      selectedMaterial: searchParams.get("m") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
@@ -322,10 +322,15 @@ const FilterSidebar = ({
         const params = new URLSearchParams(searchParams.toString());
 
         Object.entries(newFilters).forEach(([key, value]) => {
+          // Only map category and subcategory keys
+          let paramKey = key;
+          if (key === "category") paramKey = "c";
+          else if (key === "subcategory") paramKey = "sc";
+
           if (value && value !== "" && value !== "false") {
-            params.set(key, value);
+            params.set(paramKey, value);
           } else {
-            params.delete(key);
+            params.delete(paramKey);
           }
         });
 
@@ -737,7 +742,7 @@ const FilterSidebar = ({
       initial={{ x: -250, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="hidden lg:block w-60 bg-white shadow-lg min-h-screen border-r border-gray-100"
+      className="hidden lg:block w-60 bg-white shadow-right min-h-screen "
     >
       <div
         ref={sidebarRef}

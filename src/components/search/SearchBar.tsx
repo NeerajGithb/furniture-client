@@ -495,7 +495,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
           return (
             <div
               key={`${type}-${i}`}
-              className={`px-4 py-3 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
+              className={`px-4 py-2 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
                 isSelected
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-700 hover:bg-gray-50"
@@ -515,7 +515,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`truncate ${
+                    className={`truncate text-sm ${
                       isSelected ? "text-blue-700" : ""
                     }`}
                   >
@@ -529,7 +529,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 </div>
               </div>
               {isSelected && (
-                <ArrowUpRight size={14} className="text-blue-600" />
+                <ArrowUpRight size={12} className="text-blue-600" />
               )}
             </div>
           );
@@ -584,16 +584,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`truncate ${
-                      isSelected ? "text-blue-700" : ""
-                    }`}
+                    className={`truncate ${isSelected ? "text-blue-700" : ""}`}
                   >
                     {suggestion}
                   </div>
                 </div>
               </div>
               {isSelected && (
-                <ArrowUpRight size={14} className="text-blue-600" />
+                <ArrowUpRight size={12} className="text-blue-600" />
               )}
             </div>
           );
@@ -633,9 +631,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
             onBlur={handleInputBlur}
             placeholder={placeholderText}
             disabled={isSearching || loadingProducts}
-            className={`w-full pl-5 pr-16 py-1.5 text-base bg-white/90 backdrop-blur-sm border border-gray-200 focus:outline-none focus:border-gray-300 focus:bg-white transition-all duration-300 ease-out text-gray-900 placeholder-gray-400 ${
+            className={`w-full pl-5 pr-16 h-[30px] max-h-[30px] text-xs font-normal rounded-xs bg-gray-50  border border-gray-200 
+            focus:outline-none focus:border-gray-600  focus:bg-white transition-all duration-300 ease-out 
+            text-gray-900 placeholder-gray-400 
+            ${
               isSearching || loadingProducts
-                ? "cursor-not-allowed opacity-75"
+                ? "cursor-not-allowed opacity-70"
                 : ""
             }`}
             autoComplete="off"
@@ -644,9 +645,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
             aria-haspopup="listbox"
             role="combobox"
           />
-
+          <style jsx>{`
+            input:not(:placeholder-shown) {
+              font-size: 0.875rem; /* text-sm */
+            }
+          `}</style>
           {/* Search Icons */}
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
             {/* Clear button - only show on hover and when there's query */}
             {query && !isSearching && !loadingProducts && isHovered && (
               <button
@@ -655,7 +660,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded hover:bg-gray-100"
                 aria-label="Clear search"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             )}
 
@@ -688,7 +693,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-sm shadow-lg z-50 max-w-full "
+          className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xs shadow-lg z-50 max-w-full "
           style={{
             maxHeight: "min(400px, 80vh)",
             width: "100%",
@@ -705,7 +710,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                   {renderSuggestionSection(
                     suggestions.recent,
                     "recent",
-                    <Clock size={14} />,
+                    <Clock size={12} />,
                     currentIndex,
                     "Recent Searches",
                     4
@@ -720,7 +725,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                   {renderSuggestionSection(
                     suggestions.trending,
                     "trending",
-                    <TrendingUp size={14} />,
+                    <TrendingUp size={12} />,
                     currentIndex,
                     "Trending Searches",
                     8
@@ -735,7 +740,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                   {renderSuggestionSection(
                     suggestions.queries,
                     "query",
-                    <Search size={14} />,
+                    <Search size={12} />,
                     currentIndex,
                     "Suggestions",
                     8
@@ -752,7 +757,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                   {didYouMeanSuggestions.length > 0 &&
                     renderDidYouMeanSection(
                       didYouMeanSuggestions,
-                      <Search size={14} />,
+                      <Search size={12} />,
                       currentIndex + (suggestions?.queries?.length || 0),
                       query,
                       didYouMeanSuggestions.isFallback,

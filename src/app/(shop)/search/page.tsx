@@ -24,7 +24,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import ProductGrid from "@/components/product/ProductGrid";
-import FilterSidebar from "@/components/FilterSidebar";
+import FilterSidebar from "@/components/filter/FilterSidebar";
 import useSearchStore from "@/stores/searchStore";
 
 // Cache stable selectors

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useAddressStore } from "@/stores/addressStore";
-import PriceSummaryCard from "@/components/PriceSummaryCard";
+import PriceSummaryCard from "@/components/ui/PriceSummaryCard";
 import {
   Smartphone,
   Banknote,

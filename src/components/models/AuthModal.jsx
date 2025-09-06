@@ -12,7 +12,7 @@ import { isValidEmail, isValidPassword } from "@/utils/validators";
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaUser } from "react-icons/fa";
 import { LogIn, UserPlus, X, ArrowLeft, Shield, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import ErrorMessage from "./ErrorMessage";
+import ErrorMessage from "../ui/ErrorMessage";
 import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
 import { initializeApp } from "@/stores/globalStoreManager";
 

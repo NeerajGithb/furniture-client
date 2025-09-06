@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import ProductGrid from "@/components/product/ProductGrid";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import FilterSidebar from "@/components/FilterSidebar";
+import FilterSidebar from "@/components/filter/FilterSidebar";
 import { useProductStore } from "@/stores/productStore";
 
 // Cache stable selectors - fixes hydration issues

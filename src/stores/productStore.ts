@@ -1,25 +1,9 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { Product } from '@/types/Product';
+import { Category, Product, SubCategory } from '@/types/Product';
 import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
 
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  products?: Product[];
-}
 
-interface SubCategory {
-  _id: string;
-  name: string;
-  slug: string;
-  categoryId: {
-    _id: string;
-    name: string;
-    slug: string;
-  };
-}
 
 interface ProductFilters {
   category?: string;

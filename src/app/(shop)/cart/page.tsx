@@ -21,7 +21,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCartStore } from "@/stores/cartStore";
 import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
-import PriceSummaryCard from "@/components/PriceSummaryCard";
+import PriceSummaryCard from "@/components/ui/PriceSummaryCard";
 import toast from "react-hot-toast";
 
 const CartPage = () => {
@@ -145,7 +145,7 @@ const CartPage = () => {
   if (loading && !cart) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className=" mx-auto px-4 py-8">
+        <div className=" mx-auto px-4 py-8 max-w-7xl">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -181,7 +181,7 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className=" mx-auto px-4 py-8">
+      <div className=" mx-auto px-4 py-8 max-w-7xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">

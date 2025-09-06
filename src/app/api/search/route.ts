@@ -17,7 +17,6 @@ export async function GET(request : NextRequest) {
   try {
     const clientId = cacheManager.getClientId(request);
     const { searchParams } = new URL(request.url);
-    console.log('Received search request:', request.url);
     // Extract and validate parameters
     const q = searchParams.get('q')?.trim() || '';
     const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);

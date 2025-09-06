@@ -171,3 +171,44 @@ export interface ProductsApiResponse {
     hasMore?: boolean;
   };
 }
+
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  mainImage: {
+    url: string;
+    alt: string;
+  };
+  products?: Product[];
+}
+
+export interface SubCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  description: string;
+  mainImage?: {
+    url?: string;
+    alt?: string;
+  };
+  categoryId: {
+    _id: string;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface IInspiration {
+  _id: string;
+  title: string;
+  slug: string;
+  description: string;
+  heroImage: { url: string; alt: string; publicId: string };
+  tags: string[];
+  keywords: string[];
+  categories: string[] | Array<{_id: string; name: string; slug: string; mainImage?: { url: string; alt: string; publicId: string }}>;
+  createdAt: string;
+  updatedAt: string;
+}

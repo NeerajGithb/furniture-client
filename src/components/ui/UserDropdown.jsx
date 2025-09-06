@@ -20,7 +20,7 @@ const Avatar = ({ src, alt, fallbackText }) => {
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className='w-8 h-8 bg-gray-900 flex items-center justify-center text-sm font-bold text-white border border-gray-700'
+        className='w-8 h-8 bg-black flex items-center justify-center text-sm font-medium text-white rounded-full'
       >
         {fallbackText}
       </motion.div>
@@ -32,7 +32,7 @@ const Avatar = ({ src, alt, fallbackText }) => {
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className='w-8 h-8 border border-gray-700'
+      className='w-8 h-8 rounded-full overflow-hidden border border-gray-200'
     >
       <Image
         src={src}
@@ -59,13 +59,13 @@ export default function UserDropdown({ isOpen, onClose }) {
   const userMenuItems = [
     {
       id: "profile",
-      label: "My Profile",
+      label: "Profile",
       icon: User,
       href: "/profile",
     },
     {
       id: "orders",
-      label: "My Orders",
+      label: "Orders",
       icon: ShoppingBag,
       href: "/orders",
       badge: orders.length > 0 && orders.some(order => order.status !== "completed")
@@ -86,20 +86,17 @@ export default function UserDropdown({ isOpen, onClose }) {
     },
   ];
 
-  // Add admin item if user is admin
   const allMenuItems = user?.role === "admin"
     ? [...userMenuItems, {
       id: "admin",
-      label: "Admin Dashboard",
+      label: "Dashboard",
       icon: LayoutDashboard,
       href: "/admin",
     }]
     : userMenuItems;
 
-  // Check if current path matches any menu item
   const isActiveItem = (item) => pathname === item.href;
   
-  // Clear loading states when navigation completes
   useEffect(() => {
     if (navigatingTo) {
       const targetItem = allMenuItems.find(item => item.id === navigatingTo);
@@ -110,20 +107,28 @@ export default function UserDropdown({ isOpen, onClose }) {
     }
   }, [pathname, navigatingTo, allMenuItems]);
 
-  // Clear all loading states when component mounts (in case of page refresh)
   useEffect(() => {
     setLoadingStates({});
     setNavigatingTo(null);
   }, []);
 
+  // Enhanced outside click detection with multiple event types
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        !event.target.closest("[data-dropdown-trigger]")
-      ) {
-        onClose();
+    const handleOutsideInteraction = (event) => {
+      // Check if dropdown exists and is open
+      if (!dropdownRef.current || !isOpen) return;
+
+      // Check if the click/touch is outside the dropdown
+      const isOutsideDropdown = !dropdownRef.current.contains(event.target);
+      
+      // Check if the click/touch is not on the dropdown trigger
+      const isNotOnTrigger = !event.target.closest("[data-dropdown-trigger]");
+      
+      // If both conditions are met, close the dropdown
+      if (isOutsideDropdown && isNotOnTrigger) {
+        // Prevent any interference with other event handlers
+        event.stopPropagation();
+        onClose(); 
       }
     };
 
@@ -146,19 +151,28 @@ export default function UserDropdown({ isOpen, onClose }) {
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // Use both mousedown and touchstart for comprehensive coverage
+      // mousedown catches regular clicks
+      document.addEventListener("mousedown", handleOutsideInteraction, true);
+      // touchstart catches touch interactions
+      document.addEventListener("touchstart", handleOutsideInteraction, true);
+      // click as a fallback for any missed interactions
+      document.addEventListener("click", handleOutsideInteraction, true);
+      
+      // Scroll and resize handlers
       window.addEventListener("scroll", handleScroll, true);
       window.addEventListener("resize", handleResize);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleOutsideInteraction, true);
+      document.removeEventListener("touchstart", handleOutsideInteraction, true);
+      document.removeEventListener("click", handleOutsideInteraction, true);
       window.removeEventListener("scroll", handleScroll, true);
       window.removeEventListener("resize", handleResize);
     };
   }, [isOpen, onClose]);
 
-  // Handle escape key
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === "Escape" && isOpen) {
@@ -181,7 +195,6 @@ export default function UserDropdown({ isOpen, onClose }) {
 
     try {
       await router.push(item.href);
-      // Don't close here, wait for pathname update
     } catch (error) {
       console.error("Navigation error:", error);
       setLoadingStates(prev => ({ ...prev, [item.id]: false }));
@@ -197,7 +210,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       onClose();
       prevPathRef.current = pathname;
     }
-  }, [pathname]); // Remove onClose from dependencies
+  }, [pathname]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -225,41 +238,38 @@ export default function UserDropdown({ isOpen, onClose }) {
   const containerVariants = {
     hidden: {
       opacity: 0,
-      scale: 0.9,
-      y: -20,
-      filter: "blur(4px)",
+      scale: 0.95,
+      y: -10,
     },
     visible: {
       opacity: 1,
       scale: 1,
       y: 0,
-      filter: "blur(0px)",
       transition: {
         type: "spring",
-        stiffness: 300,
+        stiffness: 400,
         damping: 25,
-        staggerChildren: 0.05,
+        staggerChildren: 0.02,
       },
     },
     exit: {
       opacity: 0,
       scale: 0.95,
-      y: -10,
-      filter: "blur(2px)",
+      y: -5,
       transition: {
-        duration: 0.2,
+        duration: 0.15,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
+    hidden: { opacity: 0, x: -10 },
     visible: {
       opacity: 1,
       x: 0,
       transition: {
         type: "spring",
-        stiffness: 400,
+        stiffness: 500,
         damping: 30,
       },
     },
@@ -279,10 +289,10 @@ export default function UserDropdown({ isOpen, onClose }) {
             initial='hidden'
             animate='visible'
             exit='exit'
-            className='absolute right-0 top-full mt-2 w-full sm:w-62 bg-white shadow-2xl border-2 border-gray-900 overflow-hidden z-[60]'
+            className='absolute right-0 top-full mt-1 w-48 bg-white shadow-lg border border-gray-200 rounded-xs overflow-hidden z-[60]'
           >
             {/* User Profile Section */}
-            <motion.div variants={itemVariants} className='p-1 bg-gray-900 text-white border-b border-gray-800'>
+            <motion.div variants={itemVariants} className='p-3 border-b border-gray-100 bg-gray-50'>
               <div className='flex items-center gap-3'>
                 <Avatar
                   src={user?.photoURL || user?.avatar}
@@ -293,18 +303,18 @@ export default function UserDropdown({ isOpen, onClose }) {
                 />
                 <div className='flex-1 min-w-0'>
                   <motion.p
-                    initial={{ opacity: 0, y: 5 }}
+                    initial={{ opacity: 0, y: 2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className='text-sm font-bold text-white truncate'
+                    transition={{ delay: 0.05 }}
+                    className='text-sm font-medium text-gray-900 truncate'
                   >
                     {user?.name || user?.displayName || "User"}
                   </motion.p>
                   <motion.p
-                    initial={{ opacity: 0, y: 5 }}
+                    initial={{ opacity: 0, y: 2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className='text-xs text-gray-300 truncate'
+                    transition={{ delay: 0.1 }}
+                    className='text-xs text-gray-500 truncate'
                   >
                     {user?.email || "user@example.com"}
                   </motion.p>
@@ -313,7 +323,7 @@ export default function UserDropdown({ isOpen, onClose }) {
             </motion.div>
 
             {/* Menu Items */}
-            <div className='py-1 bg-white'>
+            <div className='py-1'>
               {allMenuItems.map((item, index) => {
                 const IconComponent = item.icon;
                 const isLoading = loadingStates[item.id];
@@ -326,71 +336,45 @@ export default function UserDropdown({ isOpen, onClose }) {
                     custom={index}
                     onClick={() => handleMenuClick(item)}
                     disabled={isLoading}
-                    whileHover={
-                      !isLoading && !isActive
-                        ? {
-                          backgroundColor: "#f8f9fa", // Use hex instead of rgb()
-                          x: 4,
-                          transition: { duration: 0.2 },
-                        }
-                        : {}
-                    }
-                    whileTap={!isLoading && !isActive ? { scale: 0.98 } : {}}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm border-b border-gray-100 transition-colors duration-200 relative ${isLoading
-                      ? "cursor-not-allowed opacity-60"
-                      : isActive
-                        ? "bg-blue-50 border-l-4 border-l-blue-500 cursor-default"
-                        : "cursor-pointer"
-                      }`}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-none ${
+                      isLoading
+                        ? "cursor-not-allowed opacity-60"
+                        : isActive
+                          ? "bg-gray-100 text-black font-medium cursor-default"
+                          : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                    }`}
                   >
                     <motion.div
-                      className='relative w-4 h-4'
+                      className='w-3.5 h-3.5 flex items-center justify-center'
                       animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
-                      transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
+                      transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.2 }}
                     >
                       {isLoading ? (
-                        <Loader2 className='w-4 h-4 text-blue-600 animate-spin' />
+                        <Loader2 className='w-3.5 h-3.5 text-gray-600' />
                       ) : (
-                        <IconComponent className={`w-4 h-4 ${isActive ? "text-blue-600" : "text-gray-900"}`} />
+                        <IconComponent className={`w-3.5 h-3.5 ${isActive ? "text-black" : "text-gray-600"}`} />
                       )}
                     </motion.div>
 
-                    <span className={`flex-1 font-medium ${isLoading
-                      ? "opacity-75 text-gray-600"
-                      : isActive
-                        ? "text-blue-600 font-semibold"
-                        : "text-gray-900"
-                      }`}>
+                    <span className='flex-1 font-medium'>
                       {item.label}
                     </span>
 
                     {item.badge && !isLoading && (
                       <motion.span
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        whileHover={{ scale: 1.1 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        whileHover={{ scale: 1.05 }}
                         transition={{
                           type: "spring",
-                          stiffness: 500,
-                          damping: 30,
-                          delay: 0.3 + index * 0.1,
+                          stiffness: 400,
+                          damping: 25,
+                          delay: 0.1 + index * 0.02,
                         }}
-                        className={`text-xs px-1.5 py-0.5 font-bold min-w-[20px] text-center ${isActive
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-900 text-white"
-                          }`}
+                        className='text-xs px-1.5 py-1 bg-black text-white rounded-full min-w-[16px] text-center leading-none font-medium'
                       >
                         {item.badge}
                       </motion.span>
-                    )}
-
-                    {isLoading && (
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        className='absolute bottom-0 left-0 h-0.5 bg-blue-600'
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                      />
                     )}
                   </motion.button>
                 );
@@ -398,43 +382,28 @@ export default function UserDropdown({ isOpen, onClose }) {
             </div>
 
             {/* Logout Section */}
-            <motion.div variants={itemVariants} className='border-t-2 border-gray-900 bg-gray-900'>
+            <motion.div variants={itemVariants} className='border-t border-gray-100 pt-1'>
               <motion.button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                whileHover={
-                  !isLoggingOut
-                    ? {
-                        backgroundColor: "#1f2937", // Use hex instead of rgb()
-                        x: 4,
-                        transition: { duration: 0.2 },
-                      }
-                    : {}
-                }
-                whileTap={!isLoggingOut ? { scale: 0.98 } : {}}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors duration-200 relative overflow-hidden ${isLoggingOut ? "cursor-not-allowed text-gray-400" : "text-white cursor-pointer"
-                  }`}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-none ${
+                  isLoggingOut 
+                    ? "cursor-not-allowed text-gray-400" 
+                    : "text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                }`}
               >
                 <motion.div
-                  className='relative w-4 h-4 z-10'
+                  className='w-4 h-4 flex items-center justify-center'
                   animate={isLoggingOut ? { rotate: 360 } : { rotate: 0 }}
-                  transition={isLoggingOut ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.3 }}
+                  transition={isLoggingOut ? { duration: 1, repeat: Infinity, ease: "linear" } : { duration: 0.2 }}
                 >
-                  {isLoggingOut ? <Loader2 className='w-4 h-4 animate-spin' /> : <LogOut className='w-4 h-4' />}
+                  {isLoggingOut ? (
+                    <Loader2 className='w-4 h-4' />
+                  ) : (
+                    <LogOut className='w-4 h-4' />
+                  )}
                 </motion.div>
-                <span className='z-10 relative'>{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
-                {isLoggingOut && (
-                  <motion.div
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "100%" }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                    className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent'
-                  />
-                )}
+                <span>{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
               </motion.button>
             </motion.div>
           </motion.div>

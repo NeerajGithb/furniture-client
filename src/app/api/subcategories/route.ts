@@ -17,6 +17,7 @@ async function fetchSubCategoriesWithRetry(retryCount = 3): Promise<SubCategoryR
       await connectDB();
       const subcategories = await SubCategory.find()
         .populate('categoryId', 'name slug')
+        .sort({ name: 1 })
         .lean();
       
       return {

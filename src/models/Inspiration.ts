@@ -1,27 +1,47 @@
-import mongoose, { Schema, Document, model, Model } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
+import { ICategory } from "./category";
 
 export interface IInspiration extends Document {
-  title: string;          // Display name: "Living Room"
-  slug: string;           // URL-friendly: "living-room"
-  description?: string;   // Optional tagline or short text
-  bannerImage?: string;   // Hero/banner image URL
-  categoryIds: Schema.Types.ObjectId[]; // Link to categories
+  title: string;
+  slug: string;
+  description: string;
+  heroImage: { url: string; alt: string; publicId: string };
+  tags: string[];
+  keywords: string[];
+  categories: (Schema.Types.ObjectId | ICategory)[]; // 👈 FIXED
   createdAt: Date;
   updatedAt: Date;
 }
 
 const inspirationSchema = new Schema<IInspiration>(
   {
-    title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true },
-    description: { type: String },
-    bannerImage: { type: String },
-    categoryIds: [{ type: Schema.Types.ObjectId, ref: "Category" }],
+    title: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true },
+    description: { type: String, required: true, trim: true },
+    heroImage: {
+      url: { type: String, required: true },
+      alt: { type: String, required: true, trim: true },
+      publicId: { type: String, required: true },
+    },
+    tags: { type: [String], required: true, default: [] },
+    keywords: { type: [String], required: true, default: [] },
+    categories: [{ type: Schema.Types.ObjectId, ref: "Category", required: true }],
   },
   { timestamps: true }
 );
 
-const Inspiration: Model<IInspiration> =
-  mongoose.models.Inspiration || model<IInspiration>("Inspiration", inspirationSchema);
+inspirationSchema.index({ slug: 1 });
+inspirationSchema.index({ categories: 1 });
+inspirationSchema.index({ createdAt: -1 });
+inspirationSchema.index({
+  title: "text",
+  description: "text",
+  tags: "text",
+  keywords: "text",
+});
+
+const Inspiration =
+  mongoose.models.Inspiration ||
+  mongoose.model<IInspiration>("Inspiration", inspirationSchema);
 
 export default Inspiration;

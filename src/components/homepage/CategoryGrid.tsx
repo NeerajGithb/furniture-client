@@ -1,10 +1,11 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useProductStore } from '@/stores/productStore';
+import { memo } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { useProductStore } from "@/stores/productStore";
+
 const selectResetProductState = (state: any) => state.resetProductState;
 
 const CategoryGrid = () => {
@@ -19,11 +20,15 @@ const CategoryGrid = () => {
   const loading = useProductStore(storeSelectors.loading);
   const error = useProductStore(storeSelectors.error);
 
-  const showSkeletons = loading || (!loading && categories.length === 0 && !error);
+  const showSkeletons =
+    loading || (!loading && categories.length === 0 && !error);
+
+  // Limit to 2 rows * 5 cols = 10
+  const visibleCategories = categories.slice(0, 10);
 
   if (error) {
     return (
-      <section className="px-4  mx-auto">
+      <section className="px-4 max-w-7xl mx-auto">
         <div className="text-center mb-8">
           <h2 className="text-2xl md:text-3xl font-light text-black mb-2 tracking-wide">
             Shop by Category
@@ -35,7 +40,7 @@ const CategoryGrid = () => {
   }
 
   return (
-    <section className="px-4  mx-auto">
+    <section className="px-4 max-w-7xl mx-auto">
       <motion.div
         className="text-center mb-8"
         initial={{ opacity: 0, y: 20 }}
@@ -50,41 +55,44 @@ const CategoryGrid = () => {
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
         {showSkeletons
-          ? Array.from({ length: 6 }).map((_, i) => (
+          ? Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-square bg-gray-200 rounded-sm mb-3"></div>
-                <div className="h-4 bg-gray-200 mx-auto w-full"></div>
+                <div className="aspect-[4/3] bg-gray-200 rounded-md mb-3"></div>
+                <div className="h-4 bg-gray-200 mx-auto w-3/4 rounded"></div>
               </div>
             ))
-          : categories.map((category, index) => (
+          : visibleCategories.map((category, index) => (
               <motion.div
                 key={category._id}
-                className="group cursor-pointer"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.05 }}
-                whileHover={{ y: -5 }}
               >
                 <Link
                   onClick={() => resetProductState()}
-                  href={`/products?category=${category.slug}`}>
-                  <div className="relative aspect-square overflow-hidden bg-gray-100 shadow-sm">
+                  href={`/products?c=${category.slug}`}
+                  className="block h-full overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.1"
+                >
+                  {/* Image */}
+                  <div className="relative aspect-square w-full">
                     <Image
-                      src={category.mainImage?.url || '/placeholder.png'}
+                      src={category.mainImage?.url || "/placeholder.png"}
                       alt={category.mainImage?.alt || category.name}
                       fill
-                      className="object-cover transition-all duration-500 group-hover:scale-105"
+                      className="object-cover"
                       loading="lazy"
                     />
                   </div>
-                  <div className="py-3 text-center">
-                    <h3 className="text-sm md:text-base font-medium text-black group-hover:text-gray-700 transition-colors tracking-wide">
+
+                  {/* Content */}
+                  <div className="py-2 text-center">
+                    <h3 className="text-sm md:text-base font-medium text-black tracking-wide transition-colors duration-200 group-hover:text-gray-700">
                       {category.name}
                     </h3>
                     {category.description && (
-                      <p className="text-xs text-gray-500 mt-1 truncate">
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">
                         {category.description}
                       </p>
                     )}

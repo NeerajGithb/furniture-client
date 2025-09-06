@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import AuthModal from '@/components/AuthModal';
+import AuthModal from '@/components/models/AuthModal';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function SignInPage() {

@@ -17,14 +17,14 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
   const [isMobile, setIsMobile] = useState(false);
 
   const getItemsPerView = () => {
-    if (typeof window === 'undefined') return 5;
+    if (typeof window === 'undefined') return 4;
     if (window.innerWidth < 640) return 1;
     if (window.innerWidth < 768) return 2;
     if (window.innerWidth < 1024) return 3;
-    return 5;
+    return 4;
   };
 
-  const [itemsPerView, setItemsPerView] = useState(5);
+  const [itemsPerView, setItemsPerView] = useState(4);
   const scrollStep = isMobile ? 1 : 3;
 
   const [row1Index, setRow1Index] = useState<number>(0);
@@ -134,14 +134,13 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
       itemsPerView === 1 ? 'grid-cols-1' :
       itemsPerView === 2 ? 'grid-cols-2' :
       itemsPerView === 3 ? 'grid-cols-3' :
-      'grid-cols-5'
+      'grid-cols-4'
     }`;
 
     return (
-      <div className="mb-6 sm:mb-8">
-        <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-gray-800 px-2 sm:px-0">{rowLabel}</h3>
-        <div className="relative overflow-hidden px-2 sm:px-0">
-          <div className={gridClass}>
+      <div className=" max-w-6xl mx-auto">
+        <div className="relative overflow-hidden p-2">
+          <div className={gridClass} >
             {itemsToShow.map((item, index) => {
               if (item === 'view-more') {
                 return (
@@ -181,7 +180,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
               }
               
               return (
-                <div key={(item as Product)._id}>
+                <div key={(item as Product)._id} >
                   <ProductCard product={item as Product} />
                 </div>
               );
@@ -269,7 +268,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             Handpicked pieces for discerning taste
           </p>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 mx-auto">
           <div>
             <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-gray-800 px-2 sm:px-0">
               Featured Collection
@@ -339,9 +338,9 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
   return (
     <section className="px-4 mx-auto">
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Our Top Picks</h2>
         <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
-          Handpicked pieces for discerning taste
+          Showcasing our finest designs, crafted to perfection
         </p>
       </div>
 
@@ -350,15 +349,6 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
           renderProductRow(row1Products, row1Index, setRow1Index, "Featured Collection")}
         {row2Products.length > 0 &&
           renderProductRow(row2Products, row2Index, setRow2Index, "Trending Now")}
-      </div>
-
-      <div className="text-center mt-8 sm:mt-12 px-2 sm:px-0">
-        <Link
-          href="/products"
-          className="inline-block border border-black text-black px-6 sm:px-8 py-2 sm:py-3 text-xs sm:text-sm font-medium hover:bg-black hover:text-white transition-colors touch-manipulation"
-        >
-          View All Products
-        </Link>
       </div>
     </section>
   );

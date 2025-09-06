@@ -4,55 +4,44 @@ import { useEffect } from "react";
 import { useHomeStore } from "@/stores/homeStore";
 import { motion } from "framer-motion";
 import ProductCard from "../product/ProductCard";
-import { Product } from "@/types/Product";
 
-interface NewArrivalsProps {
+interface RelatedProductsProps {
   inspirationSlug: string;
-  categoryName?: string;
   limit?: number;
-  sort?: "newest" | "oldest" | "popular";
 }
 
-const NewArrivals = ({
-  inspirationSlug,
-  categoryName,
-  limit = 20,
-  sort = "newest",
-}: NewArrivalsProps) => {
+const RelatedProducts = ({ inspirationSlug, limit = 20 }: RelatedProductsProps) => {
   const {
     fetchRelatedProducts,
-    relatedProducts,
+    getRelatedProducts,
     relatedProductsLoading,
     relatedProductsError,
   } = useHomeStore();
 
+  const relatedProducts = getRelatedProducts(inspirationSlug);
+
   useEffect(() => {
-    if (inspirationSlug) {
-      fetchRelatedProducts(inspirationSlug, limit, sort);
+    if (inspirationSlug && relatedProducts.length === 0 && !relatedProductsLoading) {
+      fetchRelatedProducts(inspirationSlug, limit);
     }
-  }, [inspirationSlug, limit, sort, fetchRelatedProducts]);
+  }, [inspirationSlug, limit, relatedProducts.length, relatedProductsLoading, fetchRelatedProducts]);
 
   if (relatedProductsLoading) {
     return (
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              New Arrivals
+              Related Products
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {categoryName
-                ? `Latest products in ${categoryName}`
-                : "Discover our newest additions"}
+              Discover products that complement this inspiration
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg overflow-hidden shadow-sm"
-              >
+              <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
                 <div className="aspect-square bg-gray-200 animate-pulse" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-gray-200 rounded animate-pulse" />
@@ -66,19 +55,29 @@ const NewArrivals = ({
     );
   }
 
-  // If relatedProducts is an array, use it directly; if it's an object, get the array using the inspirationSlug as key
-  const productsArray = Array.isArray(relatedProducts)
-    ? relatedProducts
-    : relatedProducts && Array.isArray(relatedProducts[inspirationSlug])
-    ? relatedProducts[inspirationSlug]
-    : [];
+  if (relatedProductsError) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Related Products
+            </h2>
+            <p className="text-gray-600">
+              Unable to load related products. Please try again later.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  if (relatedProductsError || !productsArray.length) {
+  if (!relatedProducts.length) {
     return null;
   }
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -87,17 +86,15 @@ const NewArrivals = ({
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            New Arrivals
+            Related Products
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {categoryName
-              ? `Latest products in ${categoryName}`
-              : "Discover our newest additions"}
+            Discover products that perfectly complement this inspiration
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productsArray.map((product: Product, index: number) => (
+          {relatedProducts.map((product, index) => (
             <motion.div
               key={product._id}
               initial={{ opacity: 0, y: 20 }}
@@ -113,4 +110,4 @@ const NewArrivals = ({
   );
 };
 
-export default NewArrivals;
+export default RelatedProducts;

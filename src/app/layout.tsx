@@ -1,10 +1,17 @@
 // app/layout.js
 import "./globals.css";
 import Providers from "@/context/Providers";
-import ToastProvider from "@/components/ToastProvider";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import ToastProvider from "@/provider/ToastProvider";
+import Header from "@/components/ui/Header";
+import Footer from "@/components/ui/Footer";
 import { Suspense } from "react";
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+});
 
 export default function RootLayout({
   children,
@@ -12,18 +19,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable}`}>
       <body className="bg-gray-100 text-gray-900">
-        <Suspense fallback={<div>Loading...</div>}>
-          <Providers>
-            <ToastProvider />
-            <Header />
-            <div className="max-w-[1700px] mx-auto w-full">
-              <main>{children}</main>
-            </div>
-          </Providers>
-        </Suspense>
-        <Footer />
+        <div
+          style={{
+            fontFamily:
+              "var(--font-body), Inter, system-ui, -apple-system, sans-serif",
+          }}
+        >
+          <Suspense fallback={<div>Loading...</div>}>
+            <Providers>
+              <ToastProvider />
+              <Header />
+              <div className="max-w-[1700px] mx-auto w-full">
+                <main>{children}</main>
+              </div>
+            </Providers>
+          </Suspense>
+          <Footer />
+        </div>
       </body>
     </html>
   );

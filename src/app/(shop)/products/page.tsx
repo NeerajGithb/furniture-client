@@ -6,15 +6,15 @@ import {
   X,
   Filter,
   SlidersHorizontal,
-  Search,
   AlertCircle,
   ShoppingBag,
-  RefreshCw,
 } from "lucide-react";
 import ProductGrid from "@/components/product/ProductGrid";
 import { useRouter, useSearchParams } from "next/navigation";
-import FilterSidebar from "@/components/FilterSidebar";
+import FilterSidebar from "@/components/filter/FilterSidebar";
 import { useProductStore } from "@/stores/productStore";
+import GridSkeleton from "@/components/sceleton/GridSkeleton";
+import EmptyState from "@/components/state/EmptyState";
 
 // Cache stable selectors - this is the key fix
 const selectProducts = (state: any) => state.products;
@@ -27,7 +27,6 @@ const selectLoadingMore = (state: any) => state.loadingMore;
 const selectError = (state: any) => state.error;
 const selectTotalProducts = (state: any) => state.totalProducts;
 const selectHasMore = (state: any) => state.hasMore;
-const selectPagination = (state: any) => state.pagination;
 const selectInitialize = (state: any) => state.initialize;
 const selectFetchProducts = (state: any) => state.fetchProducts;
 const selectResetProductState = (state: any) => state.resetProductState;
@@ -42,132 +41,6 @@ const SORT_OPTIONS = [
   { value: "discount", label: "Highest Discount" },
 ] as const;
 
-const GridSkeleton = () => (
-  <div className="">
-    <div className="flex items-center justify-center w-full h-[60vh]">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col items-center gap-6"
-      >
-        {/* Spinner */}
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-300"></div>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="absolute inset-0 rounded-full border-4 border-transparent border-t-black"
-          ></motion.div>
-        </div>
-
-        {/* Loading text with shimmer */}
-        <motion.div
-          initial={{ opacity: 0.6 }}
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-lg font-medium text-gray-700 tracking-wide"
-        >
-          Loading products...
-        </motion.div>
-
-        {/* Progress bar style shimmer */}
-        <div className="w-48 h-2 bg-gray-200 rounded overflow-hidden">
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-            className="w-1/2 h-full bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400"
-          ></motion.div>
-        </div>
-      </motion.div>
-    </div>
-  </div>
-);
-
-type EmptyStateProps = {
-  hasFilters: boolean;
-  onClearFilters: () => void;
-  isError?: boolean;
-  errorMessage?: string;
-};
-
-const EmptyState = ({
-  hasFilters,
-  onClearFilters,
-  isError = false,
-  errorMessage = "",
-}: EmptyStateProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center py-8 sm:py-12 px-4"
-  >
-    <div className="bg-white rounded-sm shadow-sm border border-gray-100 p-6 sm:p-8 text-center max-w-md mx-auto">
-      {isError ? (
-        <>
-          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Something went wrong
-          </h3>
-          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            {errorMessage || "We encountered an error while loading products."}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Try Again
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag className="w-6 h-6 text-gray-400" />
-          </div>
-          {hasFilters ? (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products found
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We couldn't find any products matching your filters. Try
-                adjusting your search criteria.
-              </p>
-              <button
-                onClick={onClearFilters}
-                className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                <Search className="w-4 h-4" />
-                Clear All Filters
-              </button>
-            </>
-          ) : (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products available
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We don't have any products available at the moment. Please check
-                back later.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Refresh Page
-              </button>
-            </>
-          )}
-        </>
-      )}
-    </div>
-  </motion.div>
-);
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -209,9 +82,9 @@ const ProductsPage = () => {
   // Stable filter parameters - memoized
   const filterParams = useMemo(
     () => ({
-      selectedCategory: searchParams.get("category") || "",
-      selectedSubcategory: searchParams.get("subcategory") || "",
-      selectedMaterial: searchParams.get("material") || "",
+      selectedCategory: searchParams.get("c") || "",
+      selectedSubcategory: searchParams.get("sc") || "",
+      selectedMaterial: searchParams.get("m") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
@@ -360,13 +233,13 @@ const ProductsPage = () => {
     (filterKey: string) => {
       const params = new URLSearchParams(searchParams);
 
-      if (filterKey === "category") {
-        params.delete("category");
-        params.delete("subcategory");
+      if (filterKey === "c") {
+        params.delete("c");
+        params.delete("sc");
         params.delete("minPrice");
         params.delete("maxPrice");
-      } else if (filterKey === "subcategory") {
-        params.delete("subcategory");
+      } else if (filterKey === "sc") {
+        params.delete("sc");
         params.delete("minPrice");
         params.delete("maxPrice");
       } else if (filterKey === "price") {
@@ -443,7 +316,7 @@ const ProductsPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white ">
       <div className="mx-auto">
         <div className="flex">
           {/* Left Sidebar Filters - Desktop */}
@@ -451,7 +324,7 @@ const ProductsPage = () => {
 
           {/* Main Content */}
           <main className="flex-1 min-w-0">
-            <div className="px-3 py-2 sm:px-4 bg-gradient-to-b from-gray-50 to-white shadow-sm">
+            <div className="py-2 ">
               {/* Fixed Header Section */}
               <div className="flex flex-col justify-between">
                 {/* Results Header - Fixed Height */}
@@ -537,7 +410,7 @@ const ProductsPage = () => {
                       {findCategoryName(filterParams.selectedCategory)}
                       <X
                         className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("category")}
+                        onClick={() => removeFilter("c")}
                       />
                     </span>
                   )}
@@ -547,7 +420,7 @@ const ProductsPage = () => {
                       {findSubcategoryName(filterParams.selectedSubcategory)}
                       <X
                         className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("subcategory")}
+                        onClick={() => removeFilter("sc")}
                       />
                     </span>
                   )}

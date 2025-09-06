@@ -22,7 +22,7 @@ import {
   Heart,
 } from "lucide-react";
 
-import ConfettiEffect from "@/components/ConfettiEffect";
+import ConfettiEffect from "@/components/ui/ConfettiEffect";
 
 // Order flow status
 const STATUS_ORDER: OrderStatus[] = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"];

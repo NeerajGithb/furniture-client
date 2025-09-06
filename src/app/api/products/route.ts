@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '24')));
 
     // Essential filters
-    const category = searchParams.get('category')?.trim();
-    const subcategory = searchParams.get('subcategory')?.trim();
+    const category = searchParams.get('c')?.trim();
+    const subcategory = searchParams.get('sc')?.trim();
     const minPrice = searchParams.get('minPrice') ? Math.max(0, parseFloat(searchParams.get('minPrice')!)) : null;
     const maxPrice = searchParams.get('maxPrice') ? Math.max(0, parseFloat(searchParams.get('maxPrice')!)) : null;
     const material = searchParams.get('material')?.trim();

@@ -8,7 +8,7 @@ import Image from "next/image";
 import { ChevronRight, X } from "lucide-react";
 import { Avatar } from "./Avatar";
 import { usePathname } from "next/navigation";
-import AuthModal from "./AuthModal";
+import AuthModal from "../models/AuthModal";
 
 const categories = [
   { name: "Sofas", slug: "sofas", image: "/images/categories/sofa.jpg" },

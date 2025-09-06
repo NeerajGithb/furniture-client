@@ -43,7 +43,7 @@ const InspirationPage = () => {
       </motion.section>
 
       {/* Inspiration Categories Grid */}
-      <CategoryGrid categories={categories} loading={loadingCategories} />
+      <CategoryGrid inspiration={{ categories: categories as any }} loading={loadingCategories} />
 
       {/* Featured Room Styles */}
       <section className="bg-neutral-50 px-4 py-16">

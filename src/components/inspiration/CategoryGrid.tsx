@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface CategoryGridProps {
-  inspiration: IInspiration;
+  inspiration: any;
   loading: boolean;
 }
 
@@ -35,7 +35,7 @@ const CARD_WIDTH = "w-[220px]";
 const CARD_HEIGHT = "h-[260px]";
 
 const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
-  const categories: Category[] = (inspiration.categories || []).map((c) =>
+  const categories: Category[] = (inspiration.categories || []).map((c : any) =>
     typeof c === "string"
       ? {
           _id: c,

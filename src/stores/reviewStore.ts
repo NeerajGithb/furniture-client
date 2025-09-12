@@ -1,4 +1,5 @@
 // stores/reviewStore.ts - Production-ready version with universal voting capability
+import { handleApiResponse } from '@/utils/fetchWithCredentials';
 import { create } from 'zustand';
 
 export interface Review {
@@ -100,7 +101,7 @@ const parseErrorResponse = async (response: Response): Promise<string> => {
   try {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      const errorData = await response.json();
+      const errorData = await handleApiResponse(response);
       return errorData.error || errorData.message || 'An unexpected error occurred';
     } else {
       const text = await response.text();
@@ -117,7 +118,7 @@ const safeJsonParse = async (response: Response) => {
   try {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      return await handleApiResponse(response);
     } else {
       // If no JSON content, return a default success response
       return { message: 'Operation completed successfully' };

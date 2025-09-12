@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import ProductCard from "../product/ProductCard";
 import { Product } from "@/types/Product";
+import { handleApiResponse } from "@/utils/fetchWithCredentials";
 
 interface ProductShowcaseProps {
   productsData?: Product[];
@@ -57,7 +58,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
           }
           
-          const data = await res.json();
+          const data = await handleApiResponse(res);
           setProducts(data.products || []);
         } catch (err) {
           console.error("Failed to fetch showcase products:", err);

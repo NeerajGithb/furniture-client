@@ -8,7 +8,7 @@ export interface IInspiration extends Document {
   heroImage: { url: string; alt: string; publicId: string };
   tags: string[];
   keywords: string[];
-  categories: (Schema.Types.ObjectId | ICategory)[]; // 👈 FIXED
+  categories: (Schema.Types.ObjectId | ICategory)[]; 
   createdAt: Date;
   updatedAt: Date;
 }

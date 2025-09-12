@@ -1,7 +1,7 @@
 // stores/wishlistStore.ts
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
-import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 
 export interface WishlistItem {
   _id: string;
@@ -39,7 +39,7 @@ interface WishlistStore {
   updatingItems: Set<string>;
 
   // Actions
-  initializeWishlist: () => Promise<void>;
+  initializeWishlists: () => Promise<void>;
   addToWishlist: (productId: string) => Promise<boolean>;
   removeFromWishlist: (productId: string) => Promise<boolean>;
   batchRemoveFromWishlist: (productIds: string[]) => Promise<boolean>;
@@ -58,7 +58,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   updatingItems: new Set(),
 
   // Initialize wishlist on app start
-  initializeWishlist: async () => {
+  initializeWishlists: async () => {
     if (get().initialized) return;
 
     try {
@@ -78,7 +78,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         throw new Error('Failed to fetch wishlist');
       }
 
-      const data: WishlistData = await response.json();
+      const data: WishlistData = await handleApiResponse(response);
 
       set({
         wishlist: data,
@@ -101,7 +101,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     try {
       const response = await fetchWithCredentials('/api/wishlist');
       if (response.ok) {
-        const data: WishlistData = await response.json();
+        const data: WishlistData = await handleApiResponse(response);
         set({ wishlist: data });
         console.log('Wishlist refreshed');
       }
@@ -155,7 +155,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await handleApiResponse(response);
         throw new Error(data.error || 'Failed to add to wishlist');
       }
 
@@ -208,7 +208,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await handleApiResponse(response);
         throw new Error(data.error || 'Failed to remove from wishlist');
       }
 
@@ -262,7 +262,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await handleApiResponse(response);
         throw new Error(data.error || 'Failed to remove items from wishlist');
       }
 
@@ -299,7 +299,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await handleApiResponse(response);
         throw new Error(data.error || 'Failed to clear wishlist');
       }
 

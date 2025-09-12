@@ -9,6 +9,7 @@ import { useOrderStore } from './orderStore';
 import { useProductStore } from './productStore';
 import { useProfileStore } from './profileStore';
 import { useWishlistStore } from './wishlistStore';
+import { useHomeStore } from './homeStore';
 
 interface GlobalStoreManager {
   // State
@@ -34,11 +35,14 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
       
       // Initialize all stores in parallel
       await Promise.all([
-        useProductStore.getState().initialize(),
-        useAddressStore.getState().fetchAddresses(),
+        useProductStore.getState().initializeProducts(),
+        useAddressStore.getState().initializeAddresses(),
         useCartStore.getState().initializeCart(),
-        useOrderStore.getState().fetchOrders({}, true),
-        useWishlistStore.getState().initializeWishlist(),
+        useOrderStore.getState().initializeOrders(),
+        useWishlistStore.getState().initializeWishlists(),
+        useProfileStore.getState().initializeProfile(),
+        useHomeStore.getState().fetchInspirations(),
+        
       ]);
     } catch (error) {
       console.error('Global initialization error:', error);

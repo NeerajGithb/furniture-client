@@ -1,6 +1,6 @@
 // stores/orderStore.ts
 import { create } from "zustand";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { toast } from "react-hot-toast";
 
 // Types
@@ -116,6 +116,7 @@ interface OrderStore {
   lastFetchTime: number;
   
   // Actions
+  initializeOrders: (userId?: string) => Promise<void>;
   fetchOrders: (filters?: OrderFilters, forceRefresh?: boolean) => Promise<void>;
   fetchOrderById: (id: string) => Promise<void>;
   fetchOrderByNumber: (orderNumber: string) => Promise<void>;
@@ -151,6 +152,34 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   hasMore: false,
   lastFetchTime: 0,
 
+  // Add to the OrderStore interface
+
+// Add to the store implementation
+initializeOrders: async (userId?: string) => {
+  const state = get();
+  
+  // Skip if already initialized recently
+  if (state.orders.length > 0 && Date.now() - state.lastFetchTime < CACHE_DURATION) {
+    return;
+  }
+
+  set({ loading: true, error: null });
+
+  try {
+    // Build initial filters
+    const filters: OrderFilters = {
+      limit: 20,
+      page: 1
+    };
+
+    await get().fetchOrders(filters, true);
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Failed to initialize orders";
+    set({ error: errorMessage, loading: false });
+    console.error("Order initialization error:", errorMessage);
+  }
+},
   // Fetch orders with improved error handling
   fetchOrders: async (filters = {}, forceRefresh = false) => {
     const state = get();
@@ -179,11 +208,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const response = await fetchWithCredentials(url);
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch orders');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       
       // Handle both new fetch and pagination
       const newOrders = Array.isArray(data.orders) ? data.orders : [];
@@ -227,11 +256,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const response = await fetchWithCredentials(`/api/orders/${id}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch order');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       set({ order: data.order, loading: false, error: null });
 
     } catch (error) {
@@ -255,11 +284,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch order');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       set({ order: data.order, loading: false, error: null });
 
     } catch (error) {
@@ -330,11 +359,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to create order');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       const newOrder = data.order;
 
       // Replace temporary order with real order
@@ -383,11 +412,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to update status');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       const updatedOrder = data.order;
 
       // Update with actual response
@@ -418,11 +447,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to update notes');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       const updatedOrder = data.order;
 
       // Update order in state
@@ -476,11 +505,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to cancel order');
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       const updatedOrder = data.order;
 
       // Update with actual response
@@ -519,7 +548,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to delete order');
       }
 

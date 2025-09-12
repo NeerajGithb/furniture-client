@@ -13,7 +13,7 @@ interface StoreProviderProps {
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const { user, loading: userLoading } = useCurrentUser();
   const { initializeCart, initialized: cartInitialized } = useCartStore();
-  const { initializeWishlist, initialized: wishlistInitialized } = useWishlistStore();
+  const { initializeWishlists, initialized: wishlistInitialized } = useWishlistStore();
 
   useEffect(() => {
     // Only initialize stores after we know the user status
@@ -24,7 +24,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           initializeCart();
         }
         if (!wishlistInitialized) {
-          initializeWishlist();
+          initializeWishlists();
         }
       } else {
         // User is not authenticated - mark as initialized with empty state
@@ -33,11 +33,11 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           initializeCart(); // Will handle unauthenticated case
         }
         if (!wishlistInitialized) {
-          initializeWishlist(); // Will handle unauthenticated case
+          initializeWishlists(); // Will handle unauthenticated case
         }
       }
     }
-  }, [user, userLoading, cartInitialized, wishlistInitialized, initializeCart, initializeWishlist]);
+  }, [user, userLoading, cartInitialized, wishlistInitialized, initializeCart, initializeWishlists]);
 
   return <>{children}</>;
 };

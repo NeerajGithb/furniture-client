@@ -1,6 +1,6 @@
 // stores/addressStore.ts - Fixed Production Ready Version
 import { create } from "zustand";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { toast } from "react-hot-toast";
 
 // Types
@@ -130,7 +130,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         throw new Error(`HTTP Error: ${response.status}`);
       }
       
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       
       // Validate response structure
       if (!data || !Array.isArray(data.addresses)) {
@@ -230,7 +230,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         body: JSON.stringify(payload),
       });
 
-      const responseData = await response.json();
+      const responseData = await handleApiResponse(response);
       
       if (!response.ok) {
         throw new Error(responseData.error || `HTTP Error: ${response.status}`);
@@ -331,7 +331,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         body: JSON.stringify(cleanUpdates),
       });
 
-      const responseData = await response.json();
+      const responseData = await handleApiResponse(response);
       
       if (!response.ok) {
         throw new Error(responseData.error || `HTTP Error: ${response.status}`);
@@ -395,7 +395,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorData = await handleApiResponse(response).catch(() => ({}));
         throw new Error(errorData.error || `HTTP Error: ${response.status}`);
       }
       

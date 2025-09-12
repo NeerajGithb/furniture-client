@@ -24,6 +24,7 @@ import { useWishlistStore } from "@/stores/wishlistStore";
 import { useProductStore } from "@/stores/productStore";
 import { useHomeStore } from "@/stores/homeStore";
 import UserDropdown from "./UserDropdown";
+import { useMediaQuery } from "@/utils/useMediaQuery";
 
 const cartCountSelector = (state) => state.cart?.items?.length || 0;
 const wishlistCountSelector = (state) => state.wishlist?.items?.length || 0;
@@ -37,7 +38,7 @@ const Avatar = memo(({ src, alt, fallbackText }) => {
 
   if (!src || imageError) {
     return (
-      <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-xs font-normal text-white">
+      <div className="w-8 h-8 min-h-8 min-w-8 bg-black rounded-full flex items-center justify-center text-xs font-normal text-white">
         {fallbackText}
       </div>
     );
@@ -49,7 +50,7 @@ const Avatar = memo(({ src, alt, fallbackText }) => {
       alt={alt}
       width={28}
       height={28}
-      className="w-7 h-7 rounded-full object-cover"
+      className="w-7 min-h-7 min-w-7 h-7 rounded-full object-cover aspect-square"
       onError={handleError}
     />
   );
@@ -71,7 +72,7 @@ const useScrollState = () => {
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          const isScrolled = window.scrollY > 80; // Increased threshold to prevent flickering
+          const isScrolled = window.scrollY > 80;
           if (isScrolled !== scrolled) {
             setScrolled(isScrolled);
           }
@@ -81,9 +82,7 @@ const useScrollState = () => {
       }
     };
 
-    // Set initial state
     setScrolled(window.scrollY > 80);
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrolled]);
@@ -92,10 +91,16 @@ const useScrollState = () => {
 };
 
 const InspirationItem = memo(
-  ({ inspiration, isActive, onEnter, onActivate }) => {
+  ({ inspiration, isActive, onEnter, onActivate, onGetPosition }) => {
+    const itemRef = useRef(null);
+
     const handleMouseEnter = useCallback(() => {
       onEnter(inspiration.name);
-    }, [inspiration.name, onEnter]);
+      if (itemRef.current) {
+        const rect = itemRef.current.getBoundingClientRect();
+        onGetPosition(rect);
+      }
+    }, [inspiration.name, onEnter, onGetPosition]);
 
     const handleClick = useCallback(() => {
       onActivate(null);
@@ -105,20 +110,22 @@ const InspirationItem = memo(
 
     return (
       <motion.li
+        ref={itemRef}
         onMouseEnter={handleMouseEnter}
         className="relative group flex-shrink-0"
         whileHover={{ y: -1 }}
         transition={{ duration: 0.1 }}
       >
         <button
-          className="flex items-center gap-1.5 text-sm font-normal text-gray-800 hover:text-black transition-colors duration-150 py-[10px] px-3 rounded hover:bg-gray-50 whitespace-nowrap"
+          className="flex items-center gap-1.5 text-sm font-normal text-gray-800 hover:text-black transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 whitespace-nowrap min-w-0"
           onClick={handleClick}
           title={inspiration.name}
         >
-          <span className="font-semibold">{displayName}</span>
+          <span className="font-semibold truncate">{displayName}</span>
           <motion.div
             animate={{ rotate: isActive ? 180 : 0 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="flex-shrink-0"
           >
             <ChevronDown size={12} className="text-gray-600" />
           </motion.div>
@@ -137,7 +144,14 @@ const InspirationItem = memo(
 InspirationItem.displayName = "InspirationItem";
 
 const InspirationMegaMenu = memo(
-  ({ inspiration, categories, subcategories, onClose, onClearTimeout }) => {
+  ({
+    inspiration,
+    categories,
+    subcategories,
+    onClose,
+    onClearTimeout,
+    tabPosition,
+  }) => {
     const [showAllCategories, setShowAllCategories] = useState(false);
     const [expandedSubcategories, setExpandedSubcategories] = useState({});
 
@@ -159,8 +173,8 @@ const InspirationMegaMenu = memo(
     if (!inspiration) return null;
 
     const inspirationCategories = inspiration.categories || [];
-    const maxVisibleCategories = 6;
-    const maxVisibleSubcategories = 10;
+    const maxVisibleCategories = 5;
+    const maxVisibleSubcategories = 8;
 
     const visibleCategories = showAllCategories
       ? inspirationCategories
@@ -169,127 +183,226 @@ const InspirationMegaMenu = memo(
     const hasMoreCategories =
       inspirationCategories.length > maxVisibleCategories;
 
-    const getGridColumns = (count) => {
-      if (count === 1) return "grid-cols-1 max-w-xs";
-      if (count === 2) return "grid-cols-2 max-w-lg";
-      if (count === 3) return "grid-cols-3 max-w-2xl";
-      if (count === 4) return "grid-cols-4 max-w-4xl";
-      return "grid-cols-6 max-w-[1400px]";
+    const getDropdownWidthValue = (count, viewportWidth) => {
+      if (viewportWidth < 640) return Math.min(viewportWidth - 32, 320);
+      if (viewportWidth < 768) return Math.min(viewportWidth - 32, 480);
+      if (viewportWidth < 1024) return Math.min(viewportWidth - 64, 640);
+
+      if (count === 0 || count === 1) return 180;
+      if (count === 2) return 460;
+      if (count === 3) return 640;
+      if (count === 4) return 660;
+      if (count === 5) return 760;
+      return Math.min(1400, count * 160);
     };
+
+    const getGridColumns = (count, viewportWidth) => {
+      if (viewportWidth < 640) return "grid-cols-1";
+      if (viewportWidth < 768) return count > 1 ? "grid-cols-2" : "grid-cols-1";
+      if (viewportWidth < 1024)
+        return count > 2 ? "grid-cols-3" : `grid-cols-${Math.max(1, count)}`;
+
+      if (count === 0 || count === 1) return "grid-cols-1";
+      if (count === 2) return "grid-cols-2";
+      if (count === 3) return "grid-cols-3";
+      if (count === 4) return "grid-cols-4";
+      return "grid-cols-5";
+    };
+
+    const getDropdownPosition = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = viewportWidth < 640 ? 12 : 16;
+
+      if (viewportWidth < 640) {
+        return {
+          left: `${padding}px`,
+          right: `${padding}px`,
+          transform: "none",
+          width: "auto",
+          maxHeight: `${Math.min(viewportHeight * 0.7, 500)}px`,
+          overflowY: "auto",
+        };
+      }
+
+      const dropdownWidth = getDropdownWidthValue(
+        visibleCategories.length,
+        viewportWidth
+      );
+
+      if (!tabPosition) {
+        return {
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: `${dropdownWidth}px`,
+          maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
+          overflowY: "auto",
+        };
+      }
+
+      const tabCenter = tabPosition.left + tabPosition.width / 2;
+      let leftPosition = tabCenter - dropdownWidth / 2;
+
+      const minLeft = padding;
+      if (leftPosition < minLeft) {
+        leftPosition = minLeft;
+      }
+
+      const maxLeft = viewportWidth - dropdownWidth - padding;
+      if (leftPosition > maxLeft) {
+        leftPosition = maxLeft;
+      }
+
+      if (dropdownWidth > viewportWidth - padding * 2) {
+        return {
+          left: `${padding}px`,
+          right: `${padding}px`,
+          transform: "none",
+          width: "auto",
+          maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
+          overflowY: "auto",
+        };
+      }
+
+      return {
+        left: `${leftPosition}px`,
+        transform: "none",
+        width: `${dropdownWidth}px`,
+        maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
+        overflowY: "auto",
+      };
+    };
+
+    const positionStyle = getDropdownPosition();
+    const viewportWidth = window.innerWidth;
 
     return (
       <motion.div
         key={inspiration.name}
-        initial={{ opacity: 0, y: -10, scale: 0.99 }}
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.99 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        className="absolute top-full left-0 w-full bg-white shadow-xl border-t border-gray-200 z-40"
+        exit={{ opacity: 0, y: -10, scale: 0.98 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="absolute top-full z-40 bg-white shadow-lg border border-gray-200 rounded-xs"
+        style={{
+          left: positionStyle.left,
+          right: positionStyle.right || "auto",
+          width: positionStyle.width || "auto",
+          transform: positionStyle.transform,
+          maxHeight: positionStyle.maxHeight,
+          overflowY: positionStyle.overflowY,
+          maxWidth: "calc(100vw - 24px)",
+        }}
         onMouseEnter={handleMouseEnter}
       >
-        <div
-          className={`relative ${getGridColumns(
-            visibleCategories.length
-          )} mx-auto px-4 py-6`}
-        >
-          <motion.div
-            className={`grid ${
-              getGridColumns(visibleCategories.length).split(" ")[0]
-            } gap-4`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.08, duration: 0.2 }}
-          >
-            {visibleCategories.map((category, categoryIndex) => {
-              const categorySubcategories =
-                subcategories?.filter((sub) => {
-                  const categoryId =
-                    typeof sub.categoryId === "object"
-                      ? sub.categoryId._id
-                      : sub.categoryId;
-                  return categoryId === category._id;
-                }) || [];
+        <div className="p-4">
+          {visibleCategories.length > 0 ? (
+            <motion.div
+              className={`grid ${getGridColumns(
+                visibleCategories.length,
+                viewportWidth
+              )} gap-2`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.2 }}
+            >
+              {visibleCategories.map((category, categoryIndex) => {
+                const categorySubcategories =
+                  subcategories?.filter((sub) => {
+                    const categoryId =
+                      typeof sub.categoryId === "object"
+                        ? sub.categoryId?._id
+                        : sub.categoryId;
+                    return categoryId === category._id;
+                  }) || [];
 
-              const isExpanded = expandedSubcategories[category._id];
-              const visibleSubs = isExpanded
-                ? categorySubcategories
-                : categorySubcategories.slice(0, maxVisibleSubcategories);
+                const isExpanded = expandedSubcategories[category._id];
+                const visibleSubs = isExpanded
+                  ? categorySubcategories
+                  : categorySubcategories.slice(0, maxVisibleSubcategories);
 
-              const hasMoreSubs =
-                categorySubcategories.length > maxVisibleSubcategories;
+                const hasMoreSubs =
+                  categorySubcategories.length > maxVisibleSubcategories;
 
-              return (
-                <div
-                  key={category._id}
-                  className="group relative border-l border-gray-100 pl-3"
-                >
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Link
-                        href={`/${category.slug}`}
-                        onClick={handleLinkClick}
-                        className="block text-sm font-bold text-black hover:text-gray-600 transition-colors duration-150 mb-2 leading-tight"
-                        title={category.name}
-                      >
-                        {category.name}
-                      </Link>
-                      <div className="h-px bg-gray-100" />
-                    </div>
-
-                    <div>
-                      {categorySubcategories.length > 0 ? (
-                        <>
-                          {visibleSubs.map((subcategory) => (
-                            <Link
-                              key={subcategory._id}
-                              href={`/products?c=${category.slug}&sc=${subcategory.slug}`}
-                              onClick={handleLinkClick}
-                              className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-0.5 font-normal"
-                              title={subcategory.name}
-                            >
-                              {subcategory.name}
-                            </Link>
-                          ))}
-
-                          {hasMoreSubs && (
-                            <button
-                              onClick={() => toggleSubcategories(category._id)}
-                              className="flex items-center gap-1 text-xs text-black hover:text-gray-600 font-semibold py-1 mt-1 transition-all duration-150"
-                            >
-                              {isExpanded
-                                ? "Show less"
-                                : `+${
-                                    categorySubcategories.length -
-                                    maxVisibleSubcategories
-                                  } more`}
-                              <motion.div
-                                animate={{ rotate: isExpanded ? 180 : 0 }}
-                                transition={{ duration: 0.15 }}
-                              >
-                                <ChevronDown size={10} />
-                              </motion.div>
-                            </button>
-                          )}
-                        </>
-                      ) : (
+                return (
+                  <div key={category._id} className="group relative min-w-0">
+                    <div className="space-y-3">
+                      <div className="relative">
                         <Link
-                          href={`/${category.slug}`}
+                          href={`/${category.slug || ""}`}
                           onClick={handleLinkClick}
-                          className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-0.5 font-normal"
+                          className="block text-sm font-bold text-black hover:text-gray-600 transition-colors duration-150 mb-2 leading-tight truncate"
+                          title={category.name}
                         >
-                          View all
+                          {category.name}
                         </Link>
-                      )}
+                        <div className="h-px bg-gray-200" />
+                      </div>
+
+                      <div className="space-y-1">
+                        {categorySubcategories.length > 0 ? (
+                          <>
+                            {visibleSubs.map((subcategory) => (
+                              <Link
+                                key={subcategory._id}
+                                href={`/${subcategory.slug}`}
+                                onClick={handleLinkClick}
+                                className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-1.5 font-normal hover:bg-gray-50 rounded px-2 truncate"
+                                title={subcategory.name}
+                              >
+                                {subcategory.name}
+                              </Link>
+                            ))}
+
+                            {hasMoreSubs && (
+                              <button
+                                onClick={() =>
+                                  toggleSubcategories(category._id)
+                                }
+                                className="flex items-center gap-1 text-xs text-black hover:text-gray-600 font-semibold py-1.5 mt-2 transition-all duration-150 hover:bg-gray-50 rounded px-2 w-full text-left"
+                              >
+                                <span className="truncate">
+                                  {isExpanded
+                                    ? "Show less"
+                                    : `+${
+                                        categorySubcategories.length -
+                                        maxVisibleSubcategories
+                                      } more`}
+                                </span>
+                                <motion.div
+                                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="flex-shrink-0"
+                                >
+                                  <ChevronDown size={10} />
+                                </motion.div>
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <Link
+                            href={`/${category.slug}`}
+                            onClick={handleLinkClick}
+                            className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-1.5 font-normal hover:bg-gray-50 rounded px-2"
+                          >
+                            View all
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </motion.div>
+                );
+              })}
+            </motion.div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-500">No categories available</p>
+            </div>
+          )}
 
           {hasMoreCategories && !showAllCategories && (
             <motion.div
-              className="mt-4 text-center"
+              className="mt-6 text-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -301,12 +414,13 @@ const InspirationMegaMenu = memo(
                 <div className="relative flex justify-center">
                   <button
                     onClick={() => setShowAllCategories(true)}
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-black hover:text-gray-600 bg-white hover:bg-gray-50 px-4 py-2 rounded border border-gray-200 hover:border-gray-300 transition-all duration-150 shadow-sm"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-black hover:text-gray-600 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-150 shadow-sm whitespace-nowrap"
                   >
-                    <Plus size={14} />
-                    Show {inspirationCategories.length -
-                      maxVisibleCategories}{" "}
-                    more
+                    <Plus size={14} className="flex-shrink-0" />
+                    <span>
+                      Show {inspirationCategories.length - maxVisibleCategories}{" "}
+                      more
+                    </span>
                   </button>
                 </div>
               </div>
@@ -336,20 +450,20 @@ const Header = () => {
   const initializeRef = useRef(false);
   useEffect(() => {
     if (!initializeRef.current) {
-      useProductStore.getState().initialize();
+      useProductStore.getState().initializeProducts();
       fetchInspirations();
       initializeRef.current = true;
     }
   }, [fetchInspirations]);
 
   const [activeInspiration, setActiveInspiration] = useState(null);
+  const [tabPosition, setTabPosition] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
   const scrolled = useScrollState();
-
+  const isMdDown = useMediaQuery("(max-width: 767px)");
   const cartCount = useCartStore(cartCountSelector);
   const wishlistCount = useWishlistStore(wishlistCountSelector);
 
@@ -377,8 +491,15 @@ const Header = () => {
     setActiveInspiration(inspirationName);
   }, []);
 
+  const handleGetTabPosition = useCallback((rect) => {
+    setTabPosition(rect);
+  }, []);
+
   const handleInspirationLeave = useCallback(() => {
-    timeoutRef.current = setTimeout(() => setActiveInspiration(null), 120);
+    timeoutRef.current = setTimeout(() => {
+      setActiveInspiration(null);
+      setTabPosition(null);
+    }, 150);
   }, []);
 
   const clearInspirationTimeout = useCallback(() => {
@@ -390,6 +511,7 @@ const Header = () => {
 
   const closeMegaMenu = useCallback(() => {
     setActiveInspiration(null);
+    setTabPosition(null);
   }, []);
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
@@ -416,11 +538,11 @@ const Header = () => {
   const InspirationNavigation = useMemo(() => {
     if (loadingInspirations) {
       return (
-        <div className="flex items-center justify-center gap-3 py-2 h-10">
+        <div className="flex items-center justify-center gap-3 py-2 h-12 overflow-hidden">
           {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="flex items-center gap-1">
-              <div className="w-12 h-2 bg-gray-200 rounded animate-pulse"></div>
-              <div className="w-2 h-2 bg-gray-200 rounded animate-pulse"></div>
+            <div key={i} className="flex items-center gap-1 flex-shrink-0">
+              <div className="w-16 h-3 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-3 h-3 bg-gray-200 rounded animate-pulse"></div>
             </div>
           ))}
         </div>
@@ -428,18 +550,21 @@ const Header = () => {
     }
 
     return (
-      <div className="h-10 flex items-center justify-center overflow-hidden">
-        <ul className="flex items-center justify-start lg:justify-center gap-2 overflow-x-auto scrollbar-hide px-2 lg:px-0 w-full list-none">
-          {transformedInspirations.map((inspiration) => (
-            <InspirationItem
-              key={inspiration.name}
-              inspiration={inspiration}
-              isActive={activeInspiration === inspiration.name}
-              onEnter={handleInspirationEnter}
-              onActivate={setActiveInspiration}
-            />
-          ))}
-        </ul>
+      <div className="h-12 flex items-center justify-center overflow-hidden">
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <ul className="flex items-center justify-start lg:justify-center gap-1 px-2 lg:px-0 list-none min-w-max">
+            {transformedInspirations.map((inspiration) => (
+              <InspirationItem
+                key={inspiration.name}
+                inspiration={inspiration}
+                isActive={activeInspiration === inspiration.name}
+                onEnter={handleInspirationEnter}
+                onActivate={setActiveInspiration}
+                onGetPosition={handleGetTabPosition}
+              />
+            ))}
+          </ul>
+        </div>
       </div>
     );
   }, [
@@ -447,16 +572,17 @@ const Header = () => {
     JSON.stringify(transformedInspirations),
     activeInspiration,
     handleInspirationEnter,
+    handleGetTabPosition,
   ]);
 
   const TabletInspirations = useMemo(() => {
     if (loadingInspirations) {
       return (
-        <div className="h-10 flex items-center justify-center gap-2 px-3">
+        <div className="h-12 flex items-center justify-center gap-2 px-3 overflow-hidden">
           {Array.from({ length: 4 }, (_, i) => (
             <div
               key={i}
-              className="w-16 h-2 bg-gray-200 rounded animate-pulse"
+              className="w-20 h-3 bg-gray-200 rounded animate-pulse flex-shrink-0"
             ></div>
           ))}
         </div>
@@ -464,18 +590,18 @@ const Header = () => {
     }
 
     return (
-      <div className="h-10 flex items-center justify-center px-3">
-        <div className="flex items-center justify-start md:justify-center gap-3 text-xs overflow-x-auto scrollbar-hide w-full">
+      <div className="h-12 flex items-center justify-center px-3 overflow-hidden">
+        <div className="flex items-center justify-start md:justify-center gap-2 text-sm overflow-x-auto scrollbar-hide w-full">
           {transformedInspirations.slice(0, 5).map((inspiration) => {
             const displayName =
-              inspiration.name.length > 12
-                ? `${inspiration.name.slice(0, 12)}...`
+              inspiration.name.length > 15
+                ? `${inspiration.name.slice(0, 15)}...`
                 : inspiration.name;
             return (
               <div key={inspiration.name} className="flex-shrink-0">
                 <Link
                   href={`/inspirations/${inspiration.slug}`}
-                  className="text-gray-800 hover:text-black font-normal transition-colors duration-150 py-2 px-2 rounded hover:bg-gray-50 capitalize whitespace-nowrap"
+                  className="text-gray-800 hover:text-black font-normal transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 capitalize whitespace-nowrap block"
                   title={inspiration.name}
                 >
                   {displayName}
@@ -487,7 +613,7 @@ const Header = () => {
             <div className="flex-shrink-0">
               <Link
                 href="/inspirations"
-                className="text-gray-600 hover:text-black text-xs transition-colors duration-150 py-2 px-2 whitespace-nowrap"
+                className="text-gray-600 hover:text-black text-sm transition-colors duration-150 py-2.5 px-3 whitespace-nowrap block"
               >
                 More
               </Link>
@@ -498,46 +624,56 @@ const Header = () => {
     );
   }, [loadingInspirations, JSON.stringify(transformedInspirations)]);
 
+  const fixedHeaderClasses =
+    "fixed top-0 left-0 right-0 z-50 shadow-[0_2px_1px_rgba(0,0,0,0.15)]";
+  const headerClasses = `h-[52px] md:h-14 flex items-center bg-white md:shadow-xs ${
+    isMdDown ? fixedHeaderClasses : ""
+  }`;
+
   return (
     <>
-      <header className="relative z-30 bg-white border-b border-gray-200">
-        <div className="h-14 flex items-center">
-          <div className="px-3 sm:px-4 lg:px-6 w-full max-w-[1500px] mx-auto">
-            <div className="flex items-center justify-between h-full">
+      <header className="relative z-30 bg-white border-b border-gray-100">
+        <div className={headerClasses}>
+          <div className="px-3 sm:px-4 lg:px-6 w-full max-w-[1600px] mx-auto">
+            <div className="flex items-center justify-between h-full gap-2 sm:gap-4">
+              {/* Left section */}
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
                 <motion.button
                   onClick={openSidebar}
-                  className="sm:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
+                  className="sm:hidden p-1 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
                   aria-label="Open menu"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Menu size={18} />
+                  <Menu size={20} />
                 </motion.button>
 
                 <Link
                   href="/"
-                  className="flex items-center gap-2 hover:opacity-90 transition-opacity duration-150"
+                  className="flex items-center gap-2 hover:opacity-90 transition-opacity duration-150 min-w-0"
                 >
                   <Image
                     src="/logo.png"
                     alt="VFurniture"
-                    width={24}
-                    height={24}
-                    className="rounded w-6 h-6 sm:w-7 sm:h-7"
+                    width={28}
+                    height={28}
+                    className="rounded w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0"
                   />
-                  <span className="text-sm sm:text-base font-bold tracking-tight">
+                  <span className="text-sm sm:text-base font-bold tracking-tight whitespace-nowrap">
                     <span className="text-black">V</span>
                     <span className="text-gray-900">Furniture</span>
                   </span>
                 </Link>
               </div>
 
+              {/* Center search - hidden on mobile */}
               <div className="hidden md:flex flex-1 max-w-[600px] mx-4 lg:mx-6">
                 <SearchBar className="w-full" />
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2">
+              {/* Right section */}
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                {/* Desktop navigation */}
                 <nav className="hidden xl:flex items-center gap-1 mr-2">
                   {NAV_ITEMS.map(({ href, label }) => {
                     const isActive = pathname === href;
@@ -545,7 +681,7 @@ const Header = () => {
                       <Link
                         key={href}
                         href={href}
-                        className={`relative group text-sm font-normal px-2 py-1.5 transition-colors duration-150 rounded ${
+                        className={`relative group text-sm font-normal px-3 py-2 transition-colors duration-150 rounded whitespace-nowrap ${
                           isActive
                             ? "text-black bg-gray-50"
                             : "text-gray-800 hover:text-black hover:bg-gray-50"
@@ -562,143 +698,236 @@ const Header = () => {
                   })}
                 </nav>
 
-                <div className="flex items-center gap-1 sm:gap-2">
-                  <motion.button
-                    onClick={openSearch}
-                    className="md:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
-                    aria-label="Search"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                <div className="flex items-center gap-1 sm:gap-2 relative max-md:w-full">
+                  {/* Static icons container with smooth transform */}
+                  <motion.div 
+                    className="flex items-center gap-1 sm:gap-2"
+                    animate={{ 
+                      x: scrolled && isMdDown ? -44 : 0 
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 400, 
+                      damping: 30,
+                      duration: 0.3
+                    }}
                   >
-                    <Search size={18} />
-                  </motion.button>
+                    {/* Wishlist */}
+                    <Link
+                      href="/wishlist"
+                      className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+                      aria-label="Wishlist"
+                    >
+                      <Heart size={18} />
+                      {wishlistCount > 0 && (
+                        <motion.span
+                          className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 15,
+                          }}
+                        >
+                          {wishlistCount > 9 ? "9+" : wishlistCount}
+                        </motion.span>
+                      )}
+                    </Link>
 
-                  <Link
-                    href="/wishlist"
-                    className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
-                    aria-label="Wishlist"
-                  >
-                    <Heart size={18} />
-                    {wishlistCount > 0 && (
-                      <motion.span
-                        className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 15,
-                        }}
-                      >
-                        {wishlistCount > 9 ? "9+" : wishlistCount}
-                      </motion.span>
-                    )}
-                  </Link>
+                    {/* Cart */}
+                    <Link
+                      href="/cart"
+                      className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+                      aria-label="Shopping cart"
+                    >
+                      <ShoppingCart size={18} />
+                      {cartCount > 0 && (
+                        <motion.span
+                          className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 15,
+                          }}
+                        >
+                          {cartCount > 9 ? "9+" : cartCount}
+                        </motion.span>
+                      )}
+                    </Link>
 
-                  <Link
-                    href="/cart"
-                    className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
-                    aria-label="Shopping cart"
-                  >
-                    <ShoppingCart size={18} />
-                    {cartCount > 0 && (
-                      <motion.span
-                        className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 15,
-                        }}
-                      >
-                        {cartCount > 9 ? "9+" : cartCount}
-                      </motion.span>
-                    )}
-                  </Link>
-
-                  {authLoading ? (
-                    <div className="w-10 h-10 flex items-center justify-center">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                    </div>
-                  ) : user ? (
-                    <div className="relative">
+                    {/* User section */}
+                    {authLoading ? (
+                      <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                      </div>
+                    ) : user ? (
+                      <div className="relative flex-shrink-0">
+                        <motion.button
+                          onClick={toggleDropdown}
+                          onMouseEnter={openDropdown}
+                          data-dropdown-trigger="true"
+                          className="p-1 rounded hover:bg-gray-50 transition-colors duration-150"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Avatar
+                            src={user?.photoURL || ""}
+                            alt="User Avatar"
+                            fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
+                          />
+                        </motion.button>
+                        <UserDropdown
+                          isOpen={isDropdownOpen}
+                          onClose={closeDropdown}
+                        />
+                      </div>
+                    ) : (
                       <motion.button
-                        onClick={toggleDropdown}
-                        onMouseEnter={openDropdown}
-                        data-dropdown-trigger="true" // Add this attribute
-                        className="p-1 rounded hover:bg-gray-50 transition-colors duration-150"
+                        onClick={openAuth}
+                        className="flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        aria-label="Login"
                       >
-                        <Avatar
-                          src={user?.photoURL || ""}
-                          alt="User Avatar"
-                          fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
-                        />
+                        <User size={18} />
+                        <span className="hidden lg:inline ml-1.5 text-xs whitespace-nowrap">
+                          Login
+                        </span>
                       </motion.button>
-                      <UserDropdown
-                        isOpen={isDropdownOpen}
-                        onClose={closeDropdown}
-                      />
-                    </div>
-                  ) : (
+                    )}
+
+                    {/* Mobile/Tablet menu button */}
                     <motion.button
-                      onClick={openAuth}
-                      className="flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
+                      onClick={openSidebar}
+                      className="hidden sm:flex xl:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+                      aria-label="Open menu"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      aria-label="Login"
                     >
-                      <User size={18} />
-                      <span className="hidden lg:inline ml-1.5 text-xs">
-                        Login
-                      </span>
+                      <Menu size={20} />
                     </motion.button>
-                  )}
-                  <motion.button
-                    onClick={openSidebar}
-                    className="hidden sm:flex xl:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150"
-                    aria-label="Open menu"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Menu size={18} />
-                  </motion.button>
+                  </motion.div>
+
+                  {/* Search button - positioned absolutely for overlay effect */}
+                  <AnimatePresence>
+                    {scrolled && isMdDown && (
+                      <motion.div
+                        className="absolute right-0 top-1/2 transform -translate-y-1/2"
+                        initial={{ opacity: 0, x: 44 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 44 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 30,
+                          duration: 0.3
+                        }}
+                      >
+                        <motion.button
+                          onClick={openSearch}
+                          className="md:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0 bg-white"
+                          aria-label="Search"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Search size={18} />
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <AnimatePresence mode="wait">
+          {scrolled && !isMdDown && (
+            <motion.div
+              className="fixed top-0 left-0 right-0 z-[10001] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
+              onMouseLeave={handleInspirationLeave}
+              initial={{ y: -100, opacity: 0 }}
+              animate={{
+                y: 0,
+                opacity: 1,
+                transition: {
+                  duration: 0.8,
+                  ease: "easeInOut",
+                },
+              }}
+              exit={{
+                y: -100,
+                opacity: 0,
+                transition: {
+                  duration: 0,
+                  ease: "easeIn",
+                },
+              }}
+            >
+              <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6">
+                {/* Desktop sticky navigation */}
+                <nav className="hidden lg:block">{InspirationNavigation}</nav>
+
+                {/* Tablet sticky navigation */}
+                <nav className="hidden md:block lg:hidden">
+                  {TabletInspirations}
+                </nav>
+              </div>
+
+              {/* Sticky mega menu dropdown */}
+              <AnimatePresence>
+                {activeInspirationData && (
+                  <InspirationMegaMenu
+                    inspiration={activeInspirationData}
+                    categories={categories}
+                    subcategories={subcategories}
+                    onClose={closeMegaMenu}
+                    onClearTimeout={clearInspirationTimeout}
+                    tabPosition={tabPosition}
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Secondary navigation bar */}
         <div
-          className="relative bg-white border-t border-gray-100"
+          className="relative bg-white md:border-t md:border-gray-100 max-md:mt-[52px]"
           onMouseLeave={handleInspirationLeave}
         >
-          <div className="max-w-[1500px] mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="max-w-[1600px] mx-auto px-2 lg:px-6">
+            {/* Desktop navigation */}
             <nav className="hidden lg:block">{InspirationNavigation}</nav>
 
+            {/* Tablet navigation */}
             <nav className="hidden md:block lg:hidden">
               {TabletInspirations}
             </nav>
 
-            <div className="md:hidden py-2 h-10 flex items-center">
+            {/* Mobile search bar */}
+            <div className="md:hidden py-2 h-14 flex items-center">
               <button
                 onClick={openSearch}
-                className="flex-1 flex items-center bg-gray-50 border border-gray-200 px-3 py-2.5 cursor-text hover:bg-gray-100 transition-colors duration-150 text-left rounded"
+                className="flex-1 flex items-center justify-between bg-white border border-gray-200 px-2 py-2  cursor-text hover:bg-gray-100 transition-colors duration-150 text-left rounded-xs"
                 aria-label="Search furniture"
               >
+                <span className="text-sm text-gray-500 truncate">
+                  What are you looking for?
+                </span>
+
                 <Search
                   size={16}
-                  className="text-gray-500 mr-2 flex-shrink-0"
+                  className="text-gray-600 flex-shrink-0"
                 />
-                <span className="text-xs text-gray-500 truncate">
-                  Search furniture...
-                </span>
               </button>
             </div>
           </div>
 
+          {/* Mega menu dropdown */}
           <AnimatePresence>
             {activeInspirationData && (
               <InspirationMegaMenu
@@ -707,75 +936,14 @@ const Header = () => {
                 subcategories={subcategories}
                 onClose={closeMegaMenu}
                 onClearTimeout={clearInspirationTimeout}
+                tabPosition={tabPosition}
               />
             )}
           </AnimatePresence>
         </div>
       </header>
 
-      {/* Sticky Header - Only render when scrolled */}
-      <AnimatePresence mode="wait">
-        {scrolled && (
-          <motion.div
-            className="fixed top-0 left-0 right-0 z-[10001] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
-            onMouseLeave={handleInspirationLeave}
-            initial={{ y: -100, opacity: 0 }}
-            animate={{
-              y: 0,
-              opacity: 1,
-              transition: {
-                duration: 0.8, // smoother slide-in
-                ease: "easeInOut",
-              },
-            }}
-            exit={{
-              y: -100,
-              opacity: 0,
-              transition: {
-                duration: 0, // sudden/fast exit
-                ease: "easeIn",
-              },
-            }}
-          >
-            <div className="max-w-[1500px] mx-auto px-3 sm:px-4 lg:px-6">
-              <nav className="hidden lg:block">{InspirationNavigation}</nav>
-
-              <nav className="hidden md:block lg:hidden">
-                {TabletInspirations}
-              </nav>
-
-              <div className="md:hidden py-2 h-10 flex items-center">
-                <button
-                  onClick={openSearch}
-                  className="flex-1 flex items-center bg-gray-50 border border-gray-200 px-3 py-2.5 cursor-text hover:bg-gray-100 transition-colors duration-150 text-left rounded"
-                  aria-label="Search furniture"
-                >
-                  <Search
-                    size={16}
-                    className="text-gray-500 mr-2 flex-shrink-0"
-                  />
-                  <span className="text-xs text-gray-500 truncate">
-                    Search furniture...
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {activeInspirationData && (
-                <InspirationMegaMenu
-                  inspiration={activeInspirationData}
-                  categories={categories}
-                  subcategories={subcategories}
-                  onClose={closeMegaMenu}
-                  onClearTimeout={clearInspirationTimeout}
-                />
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Modals and overlays */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
       <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
       <AuthModal isOpen={isAuthOpen} onClose={closeAuth} />

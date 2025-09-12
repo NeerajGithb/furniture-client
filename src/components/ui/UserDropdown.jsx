@@ -8,7 +8,7 @@ import { Settings, User, ShoppingBag, MapPin, LayoutDashboard, LogOut, Loader2 }
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { useOrderStore } from "@/stores/orderStore";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { resetApp } from "@/stores/globalStoreManager";
 
 const Avatar = ({ src, alt, fallbackText }) => {
@@ -217,7 +217,7 @@ export default function UserDropdown({ isOpen, onClose }) {
 
     try {
       const res = await fetchWithCredentials("/api/auth/logout", { method: "POST" });
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         toast.error(data?.error || "Logout failed");

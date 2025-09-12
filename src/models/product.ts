@@ -1,12 +1,12 @@
 import mongoose, { Schema, Document, CallbackError } from 'mongoose';
 
 export interface IProduct extends Document {
-    // Existing fields (keeping your current structure)
     name: string;
     description?: string;
     categoryId: Schema.Types.ObjectId;
     subCategoryId: Schema.Types.ObjectId;
     itemId: string;
+    sku?: string;
     originalPrice: number;
     finalPrice: number;
     emiPrice?: number;
@@ -26,6 +26,7 @@ export interface IProduct extends Document {
     };
     weight?: number;
     isPublished?: boolean;
+    isActive?: boolean;
     ratings?: number;
     
     // Enhanced fields for better search (from your document)
@@ -63,6 +64,12 @@ export interface IProduct extends Document {
     metaTitle?: string;
     metaDescription?: string;
     
+    // NEW LIGHT SEO / FRONTEND FIELDS
+    keywords?: string[];
+    bulletPoints?: string[];
+    highlights?: string[];
+    faq?: { question: string; answer: string }[];
+    
     totalSold?: number;
     viewCount?: number;
     wishlistCount?: number;
@@ -72,16 +79,16 @@ export interface IProduct extends Document {
     returnPolicy?: string;
     
     // SEARCH-SPECIFIC ENHANCEMENTS
-    categorySlug?: string;        // Denormalized for faster search
-    subcategorySlug?: string;     // Denormalized for faster search
-    searchKeywords?: string[];    // Additional keywords for search
+    categorySlug?: string;
+    subcategorySlug?: string;
+    searchKeywords?: string[];
     attributes?: {
-        seater?: number;          // For furniture like sofas, chairs
-        color?: string;           // Primary color (normalized)
-        material?: string;        // Primary material (normalized)
-        style?: string;           // Modern, Traditional, Contemporary
-        room?: string;            // Living Room, Bedroom, Office
-        [key: string]: any;       // Flexible attributes
+        seater?: number;
+        color?: string;
+        material?: string;
+        style?: string;
+        room?: string;
+        [key: string]: any;
     };
     
     createdAt: Date;
@@ -105,6 +112,7 @@ const ProductSchema: Schema<IProduct> = new Schema(
         categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
         subCategoryId: { type: Schema.Types.ObjectId, ref: 'SubCategory', required: true },
         itemId: { type: String, required: true, unique: true },
+        sku: { type: String, unique: true, sparse: true },
         originalPrice: { type: Number, required: true },
         finalPrice: { type: Number, required: true },
 
@@ -136,6 +144,7 @@ const ProductSchema: Schema<IProduct> = new Schema(
         },
         weight: { type: Number },
         isPublished: { type: Boolean, default: false },
+        isActive: { type: Boolean, default: true },
         ratings: { type: Number, min: 0, max: 5, default: 0 },
         
         // Enhanced fields for better UX
@@ -169,9 +178,15 @@ const ProductSchema: Schema<IProduct> = new Schema(
             inStock: { type: Number }
         }],
         
-        slug: { type: String, unique: true },
+        slug: { type: String, unique: true, sparse: true },
         metaTitle: { type: String },
         metaDescription: { type: String },
+        
+        // NEW light SEO fields
+        keywords: [{ type: String }],
+        bulletPoints: [{ type: String }],
+        highlights: [{ type: String }],
+        faq: [{ question: { type: String }, answer: { type: String } }],
         
         totalSold: { type: Number, default: 0 },
         viewCount: { type: Number, default: 0 },
@@ -207,11 +222,11 @@ ProductSchema.index({
     "searchKeywords": "text"
 }, {
     weights: {
-        name: 10,           // Highest weight for product name
-        brand: 5,           // High weight for brand
-        tags: 3,            // Medium weight for tags
-        searchKeywords: 3,  // Medium weight for search keywords
-        description: 1      // Lowest weight for description
+        name: 10,
+        brand: 5,
+        tags: 3,
+        searchKeywords: 3,
+        description: 1
     },
     name: "product_text_search"
 });
@@ -230,7 +245,17 @@ ProductSchema.index({ isPublished: 1, totalSold: -1 });
 ProductSchema.index({ isPublished: 1, "reviews.average": -1 });
 ProductSchema.index({ isPublished: 1, viewCount: -1 });
 
-// Stock-aware index (partial index for performance)
+// Admin panel indexes
+ProductSchema.index({ categoryId: 1, subCategoryId: 1 });
+ProductSchema.index({ isPublished: 1 });
+ProductSchema.index({ isFeatured: 1 });
+ProductSchema.index({ isNewArrival: 1 });
+ProductSchema.index({ isBestSeller: 1 });
+ProductSchema.index({ 'reviews.average': -1 });
+ProductSchema.index({ totalSold: -1 });
+ProductSchema.index({ brand: 1 });
+
+// Stock-aware index
 ProductSchema.index(
     { isPublished: 1, inStockQuantity: 1 }, 
     { 
@@ -248,7 +273,6 @@ ProductSchema.index({ categoryId: 1, isPublished: 1 });
 ProductSchema.index({ subCategoryId: 1, isPublished: 1 });
 
 // Unique indexes
-ProductSchema.index({ slug: 1 }, { unique: true, sparse: true });
 ProductSchema.index({ itemId: 1 }, { unique: true });
 
 // ===== PRE-SAVE HOOKS =====
@@ -263,7 +287,6 @@ ProductSchema.pre<IProduct>('save', async function(next: (err?: CallbackError) =
                 .replace(/[^a-z0-9]+/g, '-')
                 .replace(/(^-|-$)/g, '');
             
-            // Ensure unique slug
             let slug = baseSlug;
             let counter = 1;
             
@@ -297,19 +320,16 @@ ProductSchema.pre<IProduct>('save', async function(next: (err?: CallbackError) =
         // Auto-generate search keywords
         const keywords = new Set<string>();
         
-        // Add name tokens
         if (this.name) {
             this.name.toLowerCase().split(/\s+/).forEach(word => {
                 if (word.length > 2) keywords.add(word);
             });
         }
         
-        // Add brand
         if (this.brand) {
             keywords.add(this.brand.toLowerCase());
         }
         
-        // Add material and color
         if (this.material) {
             keywords.add(this.material.toLowerCase());
         }
@@ -320,7 +340,6 @@ ProductSchema.pre<IProduct>('save', async function(next: (err?: CallbackError) =
             });
         }
         
-        // Add attribute keywords
         if (this.attributes) {
             Object.values(this.attributes).forEach(value => {
                 if (typeof value === 'string' && value.length > 2) {
@@ -329,7 +348,6 @@ ProductSchema.pre<IProduct>('save', async function(next: (err?: CallbackError) =
             });
         }
         
-        // Add tags
         if (this.tags) {
             this.tags.forEach(tag => {
                 keywords.add(tag.toLowerCase());
@@ -367,11 +385,20 @@ ProductSchema.pre<IProduct>('save', async function(next: (err?: CallbackError) =
     }
 });
 
-// Update search score periodically (can be run via cron job)
+// Auto-generate SKU
+ProductSchema.pre<IProduct>('validate', function(next: (err?: CallbackError) => void) {
+    if (!this.sku) {
+        const namePart = this.name ? this.name.toUpperCase().replace(/\s+/g, '-') : 'PRODUCT';
+        const randomPart = Math.random().toString(36).substring(2, 18).toUpperCase();
+        this.sku = `${namePart}-${randomPart}`;
+    }
+    next();
+});
+
+// Update search score method
 ProductSchema.methods.updateSearchScore = function(this: IProduct): number {
-    // Calculate dynamic search score based on performance metrics
     const popularityScore = Math.log(1 + (this.totalSold || 0) * 0.7 + (this.viewCount || 0) * 0.3);
-    const recencyScore = Math.exp(-(Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30)); // 30-day decay
+    const recencyScore = Math.exp(-(Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30));
     const ratingScore = (this.reviews?.average || 0) / 5;
     const stockScore = (this.inStockQuantity || 0) > 0 ? 1 : 0.5;
     

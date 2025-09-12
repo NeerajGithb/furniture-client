@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { resetApp } from "@/stores/globalStoreManager";
 
 const navItems = [
@@ -59,7 +59,7 @@ export default function ProfileLayout({
 
     try {
       const res = await fetchWithCredentials("/api/auth/logout", { method: "POST" });
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         toast.error(data?.error || "Logout failed");

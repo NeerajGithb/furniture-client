@@ -13,7 +13,7 @@ import { FaEnvelope, FaEye, FaEyeSlash, FaLock, FaUser } from "react-icons/fa";
 import { LogIn, UserPlus, X, ArrowLeft, Shield, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ErrorMessage from "../ui/ErrorMessage";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { initializeApp } from "@/stores/globalStoreManager";
 
 export default function AuthModal({ isOpen, onClose }) {
@@ -168,7 +168,7 @@ export default function AuthModal({ isOpen, onClose }) {
         body: JSON.stringify(body),
       });
 
-      const json = await res.json();
+      const json = await handleApiResponse(res);
       if (!res.ok) throw { status: res.status, body: json };
       console.log(`[Mongo] Success: ${url}`, json);
       return json;
@@ -184,7 +184,7 @@ export default function AuthModal({ isOpen, onClose }) {
         });
 
         if (res.ok) {
-          const data = await res.json();
+          const data = await handleApiResponse(res);
           if (data?.user) {
             initializeApp();
             setUser(data.user);
@@ -232,7 +232,7 @@ export default function AuthModal({ isOpen, onClose }) {
             body: JSON.stringify({ email }),
           });
 
-          const data = await res.json();
+          const data = await handleApiResponse(res);
           if (data.exists && data.hasOAuth) {
             setIsOAuth(true);
           }
@@ -270,7 +270,7 @@ export default function AuthModal({ isOpen, onClose }) {
         }),
       });
 
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         handleAuthError(res.status, data, setEmailPassError, true);
@@ -285,7 +285,7 @@ export default function AuthModal({ isOpen, onClose }) {
       });
 
       if (meRes.ok) {
-        const meData = await meRes.json();
+        const meData = await mehandleApiResponse(res);
         if (meData?.user) {
           initializeApp();
           setUser(meData.user);
@@ -321,7 +321,7 @@ export default function AuthModal({ isOpen, onClose }) {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to send reset code");
@@ -352,7 +352,7 @@ export default function AuthModal({ isOpen, onClose }) {
         }),
       });
 
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         throw new Error(data.error || "Invalid verification code");
@@ -392,7 +392,7 @@ export default function AuthModal({ isOpen, onClose }) {
         }),
       });
 
-      const data = await res.json();
+      const data = await handleApiResponse(res);
 
       if (!res.ok) {
         throw new Error(data.error || "Password reset failed");

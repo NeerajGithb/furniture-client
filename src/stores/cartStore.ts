@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 
 export interface CartItem {
   _id: string;
@@ -150,7 +150,7 @@ export const useCartStore = create<CartStore>()(
             throw new Error(`Failed to fetch cart: ${response.status}`);
           }
 
-          const cartData: Cart = await response.json();
+          const cartData: Cart = await handleApiResponse(response);
           
           // Ensure cart data is valid
           if (!cartData || !Array.isArray(cartData.items)) {
@@ -200,7 +200,7 @@ export const useCartStore = create<CartStore>()(
           const response = await fetchWithCredentials('/api/cart');
 
           if (response.ok) {
-            const cartData: Cart = await response.json();
+            const cartData: Cart = await handleApiResponse(response);
             
             if (!cartData || !Array.isArray(cartData.items)) {
               console.warn('Invalid cart data received during refresh:', cartData);
@@ -301,7 +301,7 @@ export const useCartStore = create<CartStore>()(
           });
 
           if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
+            const data = await handleApiResponse(response).catch(() => ({}));
             throw new Error(data.error || `HTTP Error: ${response.status}`);
           }
 
@@ -376,7 +376,7 @@ export const useCartStore = create<CartStore>()(
           });
 
           if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
+            const data = await handleApiResponse(response).catch(() => ({}));
             throw new Error(data.error || `HTTP Error: ${response.status}`);
           }
 
@@ -440,7 +440,7 @@ export const useCartStore = create<CartStore>()(
           });
 
           if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
+            const data = await handleApiResponse(response).catch(() => ({}));
             throw new Error(data.error || `HTTP Error: ${response.status}`);
           }
 

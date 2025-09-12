@@ -32,7 +32,7 @@ const WishlistPage = () => {
     wishlist,
     loading,
     initialized,
-    initializeWishlist,
+    initializeWishlists,
     removeFromWishlist,
     clearWishlist,
     isUpdating: isWishlistUpdating
@@ -52,10 +52,10 @@ const WishlistPage = () => {
   // Initialize stores when user is available
   useEffect(() => {
     if (user?._id && !initialized) {
-      initializeWishlist();
+      initializeWishlists();
       initializeCart();
     }
-  }, [user, initialized, initializeWishlist, initializeCart]);
+  }, [user, initialized, initializeWishlists, initializeCart]);
 
   const handleRemoveFromWishlist = async (productId: string) => {
     await removeFromWishlist(productId);

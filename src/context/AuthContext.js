@@ -1,6 +1,6 @@
 "use client";
 
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { initializeApp, resetApp } from "@/stores/globalStoreManager";
 
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const data = await res.json();
+      const data = await handleApiResponse(res);
       if (data?.user) {
         setUser(data.user);
         startAutoRefresh();

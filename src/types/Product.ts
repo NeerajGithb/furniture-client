@@ -3,6 +3,7 @@ export interface Product {
   _id: string;
   name: string;
   itemId: string;
+  sku?: string;
   originalPrice: number;
   finalPrice: number;
   createdAt: Date;
@@ -60,6 +61,7 @@ export interface Product {
 
   // ✅ Status
   isPublished?: boolean;
+  isActive?: boolean;
   isFeatured?: boolean;
   isNewArrival?: boolean;
   isBestSeller?: boolean;
@@ -105,16 +107,35 @@ export interface Product {
   metaTitle?: string;
   metaDescription?: string;
 
+  // ✅ NEW LIGHT SEO / FRONTEND FIELDS
+  keywords?: string[];
+  bulletPoints?: string[];
+  highlights?: string[];
+  faq?: Array<{ question: string; answer: string }>;
+
   // ✅ Business / sales data
   totalSold?: number;
   viewCount?: number;
   wishlistCount?: number;
 
-  //new
-  images?:string;
-  onSale?:string;
-  price?:number;
-  stock?:number;
+  // ✅ SEARCH-SPECIFIC ENHANCEMENTS
+  categorySlug?: string;
+  subcategorySlug?: string;
+  searchKeywords?: string[];
+  attributes?: {
+    seater?: number;
+    color?: string;
+    material?: string;
+    style?: string;
+    room?: string;
+    [key: string]: any;
+  };
+
+  // ✅ Frontend compatibility fields
+  images?: string;
+  onSale?: string;
+  price?: number;
+  stock?: number;
 }
 
 // 🎯 Lightweight type for cards
@@ -140,6 +161,13 @@ export interface ProductFilters {
     slug: string;
   }>;
   materials: string[];
+  brands: string[];
+  colors: string[];
+  attributes: {
+    seater?: number[];
+    style?: string[];
+    room?: string[];
+  };
   priceRange: {
     minPrice: number;
     maxPrice: number;
@@ -160,6 +188,11 @@ export interface ProductsApiResponse {
     category: string | null;
     subcategory: string | null;
     material: string | null;
+    brand: string | null;
+    color: string | null;
+    seater: number | null;
+    style: string | null;
+    room: string | null;
     priceRange: { min: number | null; max: number | null } | null;
     inStock: boolean | null;
     onSale: boolean | null;

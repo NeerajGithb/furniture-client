@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, X, SlidersHorizontal } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useProductStore } from "@/stores/productStore";
 
 interface Category {
@@ -14,7 +14,7 @@ interface Subcategory {
   _id: string;
   name: string;
   slug: string;
-  categoryId: string | { _id: string }; // Handle both formats
+  categoryId: string | { _id: string };
 }
 
 interface Filters {
@@ -75,7 +75,6 @@ const FilterSection = ({
   </div>
 );
 
-// Simplified Dual Range Slider - No internal state
 const DualRangeSlider = ({
   min,
   max,
@@ -89,88 +88,220 @@ const DualRangeSlider = ({
   onChange: (value: [number, number]) => void;
   step?: number;
 }) => {
-  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newMin = Math.max(
-      min,
-      Math.min(Number(e.target.value), value[1] - step)
-    );
-    onChange([newMin, value[1]]);
-  };
+  // Local state for immediate UI updates during sliding
+  const [localValue, setLocalValue] = useState<[number, number]>(value);
+  const [isSliding, setIsSliding] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newMax = Math.max(
-      value[0] + step,
-      Math.min(Number(e.target.value), max)
-    );
-    onChange([value[0], newMax]);
-  };
-
-  const getPercentage = (val: number) => {
-    if (max === min) return 0;
-    return ((val - min) / (max - min)) * 100;
-  };
-
-  // Format price for display - hide 0 and max default values
-  const formatPriceDisplay = (price: number, isMin: boolean) => {
-    if (isMin && price === min) {
-      return "0";
+  // Update local state when external value changes (only if not currently sliding)
+  useEffect(() => {
+    if (!isSliding) {
+      setLocalValue(value);
     }
-    if (!isMin && price === max) {
-      return "1,00,000";
+  }, [value, isSliding]);
+
+  const handleValueChange = useCallback(
+    (newValue: [number, number], immediate: boolean = false) => {
+      // Always update local state for smooth UI
+      setLocalValue(newValue);
+
+      if (immediate) {
+        // For mouse up events, apply immediately after a short delay
+        setTimeout(() => {
+          onChange(newValue);
+        }, 500); // 500ms delay after stopping interaction
+        return;
+      }
+
+      // Don't trigger onChange while actively sliding
+      if (isSliding) {
+        return;
+      }
+
+      // Clear existing timeout
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      // Debounce the actual onChange call for other events
+      debounceTimeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+      }, 800);
+    },
+    [onChange, isSliding]
+  );
+
+  const handleMinChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newMin = Math.max(
+        min,
+        Math.min(Number(e.target.value), localValue[1] - step)
+      );
+      handleValueChange([newMin, localValue[1]]);
+    },
+    [min, localValue, step, handleValueChange]
+  );
+
+  const handleMaxChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newMax = Math.max(
+        localValue[0] + step,
+        Math.min(Number(e.target.value), max)
+      );
+      handleValueChange([localValue[0], newMax]);
+    },
+    [max, localValue, step, handleValueChange]
+  );
+
+  const handleMouseDown = useCallback(() => {
+    setIsSliding(true);
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    setIsSliding(false);
+    // Clear any pending debounced calls and apply with delay
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
+    handleValueChange(localValue, true);
+  }, [localValue, handleValueChange]);
+
+  const handleTouchStart = useCallback(() => {
+    setIsSliding(true);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsSliding(false);
+    // Clear any pending debounced calls and apply with delay
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    handleValueChange(localValue, true);
+  }, [localValue, handleValueChange]);
+
+  const getPercentage = useCallback(
+    (val: number) => {
+      if (max === min) return 0;
+      return ((val - min) / (max - min)) * 100;
+    },
+    [min, max]
+  );
+
+  const formatPriceDisplay = useCallback((price: number) => {
     return price.toLocaleString("en-IN");
-  };
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="space-y-4">
       <div className="relative h-6 flex items-center">
-        {/* Track */}
+        {/* Track background */}
         <div className="absolute w-full h-1 bg-gray-200 rounded-full"></div>
 
-        {/* Active track */}
+        {/* Active range */}
         <div
-          className="absolute h-1 bg-lime-500 rounded-full"
+          className="absolute h-1 bg-lime-500 rounded-full transition-all duration-75 ease-out"
           style={{
-            left: `${getPercentage(value[0])}%`,
-            width: `${getPercentage(value[1]) - getPercentage(value[0])}%`,
+            left: `${getPercentage(localValue[0])}%`,
+            width: `${
+              getPercentage(localValue[1]) - getPercentage(localValue[0])
+            }%`,
           }}
-        ></div>
+        />
 
-        {/* Min thumb */}
+        {/* Min range input */}
         <input
           type="range"
           min={min}
           max={max}
-          value={value[0]}
+          value={localValue[0]}
           step={step}
           onChange={handleMinChange}
-          className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lime-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none 
+            [&::-webkit-slider-thumb]:w-4 
+            [&::-webkit-slider-thumb]:h-4 
+            [&::-webkit-slider-thumb]:bg-white 
+            [&::-webkit-slider-thumb]:border-2 
+            [&::-webkit-slider-thumb]:border-lime-500 
+            [&::-webkit-slider-thumb]:rounded-full 
+            [&::-webkit-slider-thumb]:pointer-events-auto 
+            [&::-webkit-slider-thumb]:cursor-grab 
+            [&::-webkit-slider-thumb]:shadow-md 
+            [&::-webkit-slider-thumb]:hover:shadow-lg
+            [&::-webkit-slider-thumb]:active:cursor-grabbing
+            [&::-webkit-slider-thumb]:transition-shadow
+            [&::-moz-range-thumb]:appearance-none
+            [&::-moz-range-thumb]:w-4
+            [&::-moz-range-thumb]:h-4
+            [&::-moz-range-thumb]:bg-white
+            [&::-moz-range-thumb]:border-2
+            [&::-moz-range-thumb]:border-lime-500
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:cursor-grab
+            [&::-moz-range-thumb]:shadow-md"
         />
 
-        {/* Max thumb */}
+        {/* Max range input */}
         <input
           type="range"
           min={min}
           max={max}
-          value={value[1]}
+          value={localValue[1]}
           step={step}
           onChange={handleMaxChange}
-          className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-lime-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md"
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="absolute w-full h-1 bg-transparent appearance-none pointer-events-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none 
+            [&::-webkit-slider-thumb]:w-4 
+            [&::-webkit-slider-thumb]:h-4 
+            [&::-webkit-slider-thumb]:bg-white 
+            [&::-webkit-slider-thumb]:border-2 
+            [&::-webkit-slider-thumb]:border-lime-500 
+            [&::-webkit-slider-thumb]:rounded-full 
+            [&::-webkit-slider-thumb]:pointer-events-auto 
+            [&::-webkit-slider-thumb]:cursor-grab 
+            [&::-webkit-slider-thumb]:shadow-md 
+            [&::-webkit-slider-thumb]:hover:shadow-lg
+            [&::-webkit-slider-thumb]:active:cursor-grabbing
+            [&::-webkit-slider-thumb]:transition-shadow
+            [&::-moz-range-thumb]:appearance-none
+            [&::-moz-range-thumb]:w-4
+            [&::-moz-range-thumb]:h-4
+            [&::-moz-range-thumb]:bg-white
+            [&::-moz-range-thumb]:border-2
+            [&::-moz-range-thumb]:border-lime-500
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:cursor-grab
+            [&::-moz-range-thumb]:shadow-md"
         />
       </div>
-
-      {/* Value labels */}
       <div className="flex justify-between items-center text-sm">
         <div className="flex flex-col items-start">
           <span className="text-xs text-gray-500 mb-1">Min. Price</span>
           <span className="font-bold text-gray-900">
-            ₹ {formatPriceDisplay(value[0], true)}
+            ₹ {formatPriceDisplay(localValue[0])}
           </span>
         </div>
         <div className="flex flex-col items-end">
           <span className="text-xs text-gray-500 mb-1">Max. Price</span>
           <span className="font-bold text-gray-900">
-            ₹ {formatPriceDisplay(value[1], false)}
+            ₹ {formatPriceDisplay(localValue[1])}
           </span>
         </div>
       </div>
@@ -183,10 +314,13 @@ const FilterSidebar = ({
   isMobile = false,
   onClose,
 }: FilterSidebarProps) => {
-  console.log("FilterSidebar rendered");
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+
+  // Get current slug from pathname
+  const currentSlug = pathname.slice(1);
 
   useEffect(() => {
     let ticking = false;
@@ -198,7 +332,6 @@ const FilterSidebar = ({
           const scrolled = window.scrollY > 100;
           if (scrolled !== lastScrolled) {
             lastScrolled = scrolled;
-
             if (sidebarRef.current) {
               sidebarRef.current.classList.toggle("top-[50px]", scrolled);
               sidebarRef.current.classList.toggle("top-0", !scrolled);
@@ -214,11 +347,9 @@ const FilterSidebar = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Get data from product store
   const { categories, subcategories, materials, priceRange } =
     useProductStore();
 
-  // Expanded sections state - ALL COLLAPSED BY DEFAULT
   const [expandedSections, setExpandedSections] = useState({
     price: false,
     category: false,
@@ -228,21 +359,36 @@ const FilterSidebar = ({
     sort: false,
   });
 
-  // Use store data if available, fallback to props
+  const isValidCategory = (c: any): c is Category =>
+    c &&
+    typeof c === "object" &&
+    typeof c._id === "string" &&
+    typeof c.slug === "string";
+
+  const isValidSubcategory = (s: any): s is Subcategory =>
+    s &&
+    typeof s === "object" &&
+    typeof s._id === "string" &&
+    typeof s.slug === "string" &&
+    (typeof s.categoryId === "string" ||
+      (typeof s.categoryId === "object" &&
+        s.categoryId !== null &&
+        typeof s.categoryId._id === "string"));
+
   const safeFilters = useMemo(
     () => ({
       categories:
-        categories && categories.length > 0
-          ? categories
-          : filters?.categories || [],
+        Array.isArray(categories) && categories.length > 0
+          ? categories.filter(isValidCategory)
+          : filters?.categories.filter(isValidCategory) || [],
       subcategories:
-        subcategories && subcategories.length > 0
-          ? subcategories
-          : filters?.subcategories || [],
+        Array.isArray(subcategories) && subcategories.length > 0
+          ? subcategories.filter(isValidSubcategory)
+          : filters?.subcategories.filter(isValidSubcategory) || [],
       materials:
-        materials && materials.length > 0
-          ? materials
-          : filters?.materials || [],
+        Array.isArray(materials) && materials.length > 0
+          ? materials.filter((m) => typeof m === "string")
+          : filters?.materials.filter((m) => typeof m === "string") || [],
       priceRange:
         priceRange && priceRange.maxPrice > 0
           ? priceRange
@@ -251,7 +397,42 @@ const FilterSidebar = ({
     [categories, subcategories, materials, priceRange, filters]
   );
 
-  // Constants for price range with validation
+  // Analyze current slug to determine if it's category or subcategory
+  const slugAnalysis = useMemo(() => {
+    if (!currentSlug || currentSlug === "products") {
+      return { type: null, data: null, parentCategory: null };
+    }
+
+    // Check if slug matches a category
+    const matchedCategory = safeFilters.categories.find(
+      (cat) => cat.slug === currentSlug
+    );
+    if (matchedCategory) {
+      return { type: "category", data: matchedCategory, parentCategory: null };
+    }
+
+    // Check if slug matches a subcategory
+    const matchedSubcategory = safeFilters.subcategories.find(
+      (sub) => sub.slug === currentSlug
+    );
+    if (matchedSubcategory) {
+      const parentCategory = safeFilters.categories.find((cat) => {
+        const categoryId =
+          typeof matchedSubcategory.categoryId === "object"
+            ? matchedSubcategory.categoryId._id
+            : matchedSubcategory.categoryId;
+        return cat._id === categoryId;
+      });
+      return {
+        type: "subcategory",
+        data: matchedSubcategory,
+        parentCategory,
+      };
+    }
+
+    return { type: null, data: null, parentCategory: null };
+  }, [currentSlug, safeFilters.categories, safeFilters.subcategories]);
+
   const DEFAULT_MIN_PRICE = safeFilters.priceRange.minPrice;
   const DEFAULT_MAX_PRICE = safeFilters.priceRange.maxPrice;
   const PRICE_STEP = 1;
@@ -263,22 +444,32 @@ const FilterSidebar = ({
     }));
   };
 
-  // Get URL parameters directly from searchParams
-  const urlParams = useMemo(
-    () => ({
-      selectedCategory: searchParams.get("c") || "",
-      selectedSubcategory: searchParams.get("sc") || "",
-      selectedMaterial: searchParams.get("m") || "",
+  // Get URL parameters with slug-based defaults
+  const urlParams = useMemo(() => {
+    let selectedCategory = "";
+    let selectedSubcategory = "";
+
+    // Set category/subcategory based on slug analysis
+    if (slugAnalysis.type === "category") {
+      selectedCategory = currentSlug;
+      selectedSubcategory = searchParams.get("subcategory") || "";
+    } else if (slugAnalysis.type === "subcategory") {
+      selectedCategory = slugAnalysis.parentCategory?.slug || "";
+      selectedSubcategory = currentSlug;
+    }
+
+    return {
+      selectedCategory,
+      selectedSubcategory,
+      selectedMaterial: searchParams.get("material") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
       onSaleOnly: searchParams.get("onSale") === "true",
       sortBy: searchParams.get("sort") || "newest",
-    }),
-    [searchParams]
-  );
+    };
+  }, [searchParams, currentSlug, slugAnalysis]);
 
-  // URL-first price values - read directly from URL
   const currentMinPrice = urlParams.minPrice
     ? parseInt(urlParams.minPrice)
     : DEFAULT_MIN_PRICE;
@@ -286,7 +477,6 @@ const FilterSidebar = ({
     ? parseInt(urlParams.maxPrice)
     : DEFAULT_MAX_PRICE;
 
-  // Validate the URL values
   const validatedPriceRange: [number, number] = useMemo(() => {
     const min = Math.max(
       DEFAULT_MIN_PRICE,
@@ -299,7 +489,6 @@ const FilterSidebar = ({
     return [min, max];
   }, [currentMinPrice, currentMaxPrice, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]);
 
-  // Validate and normalize price values
   const validatePriceRange = useCallback(
     (min: number, max: number): [number, number] => {
       const validMin = Math.max(
@@ -315,18 +504,18 @@ const FilterSidebar = ({
     [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
   );
 
-  // Simple updateFilters function
   const updateFilters = useCallback(
     (newFilters: Record<string, string | null>) => {
       try {
         const params = new URLSearchParams(searchParams.toString());
 
         Object.entries(newFilters).forEach(([key, value]) => {
-          // Only map category and subcategory keys
-          let paramKey = key;
-          if (key === "category") paramKey = "c";
-          else if (key === "subcategory") paramKey = "sc";
+          // Skip c and sc params - they're controlled by URL slug
+          if (key === "category" || key === "subcategory") {
+            return;
+          }
 
+          let paramKey = key;
           if (value && value !== "" && value !== "false") {
             params.set(paramKey, value);
           } else {
@@ -334,78 +523,97 @@ const FilterSidebar = ({
           }
         });
 
-        const newUrl = `/products?${params.toString()}`;
+        const newUrl = `/${currentSlug}?${params.toString()}`;
         router.push(newUrl);
       } catch (error) {
         console.error("Error updating filters:", error);
       }
     },
-    [router, searchParams]
+    [router, searchParams, currentSlug]
   );
 
-  // Find selected category
   const selectedCategory = useMemo(() => {
     return safeFilters.categories.find(
       (cat) => cat.slug === urlParams.selectedCategory
     );
   }, [safeFilters.categories, urlParams.selectedCategory]);
 
-  // Filter subcategories based on selected category
   const availableSubcategories = useMemo(() => {
     if (!urlParams.selectedCategory || !selectedCategory) {
       return safeFilters.subcategories;
     }
 
-    const categorySubcategories = safeFilters.subcategories.filter(
-      (sub) =>
-        (typeof sub.categoryId === "object" &&
-          sub.categoryId._id === selectedCategory._id) ||
-        (typeof sub.categoryId === "string" &&
-          sub.categoryId === selectedCategory._id)
-    );
+    const categorySubcategories = safeFilters.subcategories.filter((sub) => {
+      const categoryId =
+        typeof sub.categoryId === "object"
+          ? sub.categoryId._id
+          : sub.categoryId;
+      return categoryId === selectedCategory._id;
+    });
 
     return categorySubcategories;
   }, [safeFilters.subcategories, urlParams.selectedCategory, selectedCategory]);
 
-  // Filter change handlers
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
-      updateFilters({
-        category: categorySlug || null,
-        subcategory: null, // Clear subcategory when category changes
-        minPrice: null, // Reset price when category changes
-        maxPrice: null, // Reset price when category changes
-      });
+      if (!categorySlug) {
+        router.push("/products");
+      } else {
+        router.push(`/${categorySlug}`);
+      }
     },
-    [updateFilters]
+    [router]
   );
 
   const handleSubcategoryChange = useCallback(
     (subcategorySlug: string) => {
-      updateFilters({
-        subcategory: subcategorySlug || null,
-        minPrice: null, // Reset price when subcategory changes
-        maxPrice: null, // Reset price when subcategory changes
-      });
+      if (slugAnalysis.type === "category") {
+        // If we're on a category page, navigate to subcategory or remove sc param
+        if (!subcategorySlug) {
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete("subcategory");
+          const queryString = params.toString();
+          router.push(
+            queryString ? `/${currentSlug}?${queryString}` : `/${currentSlug}`
+          );
+        } else {
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("subcategory", subcategorySlug);
+          params.delete("minPrice");
+          params.delete("maxPrice");
+          router.push(`/${currentSlug}?${params.toString()}`);
+        }
+      } else {
+        // Navigate to subcategory page
+        if (!subcategorySlug) {
+          router.push(`/${urlParams.selectedCategory}`);
+        } else {
+          router.push(`/${subcategorySlug}`);
+        }
+      }
     },
-    [updateFilters]
+    [
+      router,
+      searchParams,
+      currentSlug,
+      slugAnalysis.type,
+      urlParams.selectedCategory,
+    ]
   );
 
   const handleMaterialChange = useCallback(
     (material: string) => {
       updateFilters({
-        material: material || null,
+        m: material || null,
       });
     },
     [updateFilters]
   );
 
-  // Direct URL update for price changes - no debouncing, no local state
   const handlePriceRangeChange = useCallback(
     (newRange: [number, number]) => {
       const [validMin, validMax] = validatePriceRange(newRange[0], newRange[1]);
 
-      // Direct URL update
       const shouldUpdateMin = validMin !== DEFAULT_MIN_PRICE;
       const shouldUpdateMax = validMax !== DEFAULT_MAX_PRICE;
 
@@ -437,30 +645,25 @@ const FilterSidebar = ({
 
   const clearAllFilters = useCallback(() => {
     try {
-      router.push("/products");
+      router.push(`/${currentSlug || "products"}`);
       onClose?.();
     } catch (error) {
       console.error("Error clearing filters:", error);
     }
-  }, [router, onClose]);
+  }, [router, currentSlug, onClose]);
 
-  // Check if there are active filters
-  const hasActiveFilters = useMemo(
-    () =>
-      !!(
-        urlParams.selectedCategory ||
-        urlParams.selectedSubcategory ||
-        urlParams.selectedMaterial ||
-        urlParams.minPrice ||
-        urlParams.maxPrice ||
-        urlParams.inStockOnly ||
-        urlParams.onSaleOnly ||
-        (urlParams.sortBy && urlParams.sortBy !== "newest")
-      ),
-    [urlParams]
-  );
+  const hasActiveFilters = useMemo(() => {
+    return !!(
+      (urlParams.selectedSubcategory && slugAnalysis.type === "category") ||
+      urlParams.selectedMaterial ||
+      urlParams.minPrice ||
+      urlParams.maxPrice ||
+      urlParams.inStockOnly ||
+      urlParams.onSaleOnly ||
+      (urlParams.sortBy && urlParams.sortBy !== "newest")
+    );
+  }, [urlParams, slugAnalysis.type]);
 
-  // Sort options
   const sortOptions = [
     { value: "newest", label: "Newest First" },
     { value: "price-low", label: "Price: Low to High" },
@@ -471,11 +674,9 @@ const FilterSidebar = ({
     { value: "discount", label: "Highest Discount" },
   ];
 
-  // Count active filters for mobile display
   const activeFiltersCount = useMemo(() => {
     return [
-      urlParams.selectedCategory,
-      urlParams.selectedSubcategory,
+      urlParams.selectedSubcategory && slugAnalysis.type === "category",
       urlParams.selectedMaterial,
       urlParams.minPrice,
       urlParams.maxPrice,
@@ -483,11 +684,10 @@ const FilterSidebar = ({
       urlParams.onSaleOnly,
       urlParams.sortBy !== "newest" ? urlParams.sortBy : null,
     ].filter(Boolean).length;
-  }, [urlParams]);
+  }, [urlParams, slugAnalysis.type]);
 
   const sidebarContent = (
     <div className="p-4">
-      {/* Filter Header */}
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-gray-700" />
@@ -513,7 +713,6 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* PRICE RANGE FILTER */}
       <FilterSection
         title="Price Range"
         isExpanded={expandedSections.price}
@@ -530,7 +729,6 @@ const FilterSidebar = ({
         </div>
       </FilterSection>
 
-      {/* Category Filter */}
       <FilterSection
         title="Category"
         isExpanded={expandedSections.category}
@@ -569,7 +767,6 @@ const FilterSidebar = ({
         </div>
       </FilterSection>
 
-      {/* Subcategory Filter */}
       {availableSubcategories.length > 0 && (
         <FilterSection
           title="Subcategory"
@@ -580,37 +777,40 @@ const FilterSidebar = ({
             <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
-                name={`${isMobile ? "mobile-" : ""}subcategory`}
-                checked={!urlParams.selectedSubcategory}
-                onChange={() => handleSubcategoryChange("")}
+                name={`${isMobile ? "mobile-" : ""}subcategory`} // Fixed: was "material"
+                checked={!urlParams.selectedSubcategory} // Fixed: was checking material
+                onChange={() => handleSubcategoryChange("")} // Fixed: was handleMaterialChange
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
                 All Subcategories
               </span>
             </label>
-            {availableSubcategories.map((subcategory) => (
-              <label
-                key={subcategory._id}
-                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
-              >
-                <input
-                  type="radio"
-                  name={`${isMobile ? "mobile-" : ""}subcategory`}
-                  checked={urlParams.selectedSubcategory === subcategory.slug}
-                  onChange={() => handleSubcategoryChange(subcategory.slug)}
-                  className="mr-2.5 accent-black scale-90"
-                />
-                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-                  {subcategory.name}
-                </span>
-              </label>
-            ))}
+            {availableSubcategories.map(
+              (
+                subcategory // Fixed: was using materials
+              ) => (
+                <label
+                  key={subcategory._id}
+                  className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name={`${isMobile ? "mobile-" : ""}subcategory`} // Fixed: was "material"
+                    checked={urlParams.selectedSubcategory === subcategory.slug} // Fixed: was checking material
+                    onChange={() => handleSubcategoryChange(subcategory.slug)} // Fixed: was handleMaterialChange
+                    className="mr-2.5 accent-black scale-90"
+                  />
+                  <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                    {subcategory.name}
+                  </span>
+                </label>
+              )
+            )}
           </div>
         </FilterSection>
       )}
 
-      {/* Material Filter */}
       {safeFilters.materials.length > 0 && (
         <FilterSection
           title="Material"
@@ -651,7 +851,6 @@ const FilterSidebar = ({
         </FilterSection>
       )}
 
-      {/* Availability & Sale Filter */}
       <FilterSection
         title="Availability"
         isExpanded={expandedSections.availability}
@@ -685,7 +884,6 @@ const FilterSidebar = ({
         </div>
       </FilterSection>
 
-      {/* Sort By Filter */}
       <FilterSection
         title="Sort By"
         isExpanded={expandedSections.sort}
@@ -712,7 +910,6 @@ const FilterSidebar = ({
         </div>
       </FilterSection>
 
-      {/* Apply Filters Button for Mobile */}
       {isMobile && (
         <button
           onClick={onClose}

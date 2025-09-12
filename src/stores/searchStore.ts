@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Product } from '@/types/Product';
+import { handleApiResponse } from '@/utils/fetchWithCredentials';
 
 interface RelatedCategory {
   _id: string;
@@ -154,7 +155,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = await handleApiResponse(response);
       console.log('Search response data:', data);
 
       if (!data.ok) {

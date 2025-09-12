@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { Category, Product, SubCategory } from '@/types/Product';
-import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 
 
 
@@ -125,7 +125,7 @@ interface ProductStore {
   setAddingToWishlist: (isAdding: boolean) => void;
 
   // Initialize
-  initialize: () => Promise<void>;
+  initializeProducts: () => Promise<void>;
 
   // Reset
   resetProductState: () => void;
@@ -193,7 +193,7 @@ export const useProductStore = create<ProductStore>()(
     subcategoriesInitialized: false,
 
     // Initialize store - fetch categories and subcategories once
-    initialize: async () => {
+    initializeProducts: async () => {
       const state = get();
       if (state.initialized) return;
 
@@ -219,7 +219,7 @@ export const useProductStore = create<ProductStore>()(
         const response = await fetchWithCredentials(`/api/products/${productId}`);
         if (!response.ok) throw new Error(`Failed to fetch product: ${response.status}`);
 
-        const productData = await response.json();
+        const productData = await handleApiResponse(response);
         set({ product: productData, loading: false });
 
         // Background fetch related products
@@ -251,7 +251,7 @@ export const useProductStore = create<ProductStore>()(
 
         if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
-        const data: ProductResponse = await response.json();
+        const data: ProductResponse = await handleApiResponse(response);
         console.log('Fetched products data:', data);
         set(state => {
           // For filtered results, use the pagination total as the source of truth
@@ -325,7 +325,7 @@ export const useProductStore = create<ProductStore>()(
         const response = await fetchWithCredentials(`/api/products?${params}`);
         if (!response.ok) throw new Error(`Failed to fetch related products: ${response.status}`);
 
-        const data: ProductResponse = await response.json();
+        const data: ProductResponse = await handleApiResponse(response);
         const productsArray: Product[] = data.products || [];
 
         set({
@@ -351,7 +351,7 @@ export const useProductStore = create<ProductStore>()(
         const response = await fetchWithCredentials(`/api/products?${params}`);
         if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
-        const data: ProductResponse = await response.json();
+        const data: ProductResponse = await handleApiResponse(response);
         const productsArray: Product[] = data.products || [];
 
         set({
@@ -379,7 +379,7 @@ export const useProductStore = create<ProductStore>()(
         const response = await fetchWithCredentials('/api/categories');
         if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
 
-        const categories = await response.json();
+        const categories = await handleApiResponse(response);
         set({ categories, loadingCategories: false, categoriesInitialized: true });
 
       } catch (err) {
@@ -405,7 +405,7 @@ export const useProductStore = create<ProductStore>()(
           throw new Error(`Failed to fetch category: ${response.status}`);
         }
 
-        const categoryData = await response.json();
+        const categoryData = await handleApiResponse(response);
         set({ loadingCategory: false });
         return categoryData;
 
@@ -430,7 +430,7 @@ export const useProductStore = create<ProductStore>()(
         const response = await fetchWithCredentials('/api/subcategories');
         if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
 
-        const subcategories = await response.json();
+        const subcategories = await handleApiResponse(response);
         set({ subcategories, loadingSubcategories: false, subcategoriesInitialized: true });
 
       } catch (err) {

@@ -27,7 +27,7 @@ const selectLoadingMore = (state: any) => state.loadingMore;
 const selectError = (state: any) => state.error;
 const selectTotalProducts = (state: any) => state.totalProducts;
 const selectHasMore = (state: any) => state.hasMore;
-const selectInitialize = (state: any) => state.initialize;
+const selectInitializeProducts = (state: any) => state.initializeProducts;
 const selectFetchProducts = (state: any) => state.fetchProducts;
 const selectResetProductState = (state: any) => state.resetProductState;
 // Stable sort options
@@ -40,7 +40,6 @@ const SORT_OPTIONS = [
   { value: "rating", label: "Customer Rating" },
   { value: "discount", label: "Highest Discount" },
 ] as const;
-
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -58,7 +57,7 @@ const ProductsPage = () => {
   const totalProducts = useProductStore(selectTotalProducts);
   const hasMore = useProductStore(selectHasMore);
 
-  const initialize = useProductStore(selectInitialize);
+  const initializeProducts = useProductStore(selectInitializeProducts);
   const fetchProducts = useProductStore(selectFetchProducts);
   const resetProductState = useProductStore(selectResetProductState);
 
@@ -75,16 +74,16 @@ const ProductsPage = () => {
   // Initialize store once
   useEffect(() => {
     if (!isInitialized) {
-      initialize().then(() => setIsInitialized(true));
+      initializeProducts().then(() => setIsInitialized(true));
     }
-  }, [initialize, isInitialized]);
+  }, [initializeProducts, isInitialized]);
 
   // Stable filter parameters - memoized
   const filterParams = useMemo(
     () => ({
-      selectedCategory: searchParams.get("c") || "",
-      selectedSubcategory: searchParams.get("sc") || "",
-      selectedMaterial: searchParams.get("m") || "",
+      selectedCategory: searchParams.get("category") || "",
+      selectedSubcategory: searchParams.get("subcategory") || "",
+      selectedMaterial: searchParams.get("material") || "",
       minPrice: searchParams.get("minPrice") || "",
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
@@ -233,13 +232,13 @@ const ProductsPage = () => {
     (filterKey: string) => {
       const params = new URLSearchParams(searchParams);
 
-      if (filterKey === "c") {
-        params.delete("c");
-        params.delete("sc");
+      if (filterKey === "category") {
+        params.delete("category");
+        params.delete("subcategory");
         params.delete("minPrice");
         params.delete("maxPrice");
-      } else if (filterKey === "sc") {
-        params.delete("sc");
+      } else if (filterKey === "subcategory") {
+        params.delete("subcategory");
         params.delete("minPrice");
         params.delete("maxPrice");
       } else if (filterKey === "price") {
@@ -307,10 +306,19 @@ const ProductsPage = () => {
   // Filters object - stable with null checks
   const filters = useMemo(
     () => ({
-      categories: categories || [],
-      subcategories: subcategories || [],
-      materials: materials || [],
-      priceRange: priceRange || { minPrice: 0, maxPrice: 100000 },
+      categories: Array.isArray(categories)
+        ? categories.filter((c) => c && typeof c === "object" && c._id)
+        : [],
+      subcategories: Array.isArray(subcategories)
+        ? subcategories.filter((s) => s && typeof s === "object" && s._id)
+        : [],
+      materials: Array.isArray(materials)
+        ? materials.filter((m) => m && typeof m === "object" && m._id)
+        : [],
+      priceRange:
+        priceRange && typeof priceRange === "object"
+          ? priceRange
+          : { minPrice: 0, maxPrice: 100000 },
     }),
     [categories, subcategories, materials, priceRange]
   );
@@ -410,7 +418,7 @@ const ProductsPage = () => {
                       {findCategoryName(filterParams.selectedCategory)}
                       <X
                         className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("c")}
+                        onClick={() => removeFilter("category")}
                       />
                     </span>
                   )}
@@ -420,7 +428,7 @@ const ProductsPage = () => {
                       {findSubcategoryName(filterParams.selectedSubcategory)}
                       <X
                         className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("sc")}
+                        onClick={() => removeFilter("subcategory")}
                       />
                     </span>
                   )}

@@ -4,13 +4,44 @@ import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import User from "@/models/User";
 import { connectDB } from "@/lib/dbConnect";
 
+// GET - Fetch user profile
+export const GET = withAuth(async (req: NextRequest, user: AuthenticatedUser) => {
+  try {
+    await connectDB();
+
+    const userProfile = await User.findById(user.userId).select("-password -__v");
+
+    if (!userProfile) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      id: userProfile._id,
+      name: userProfile.name,
+      email: userProfile.email,
+      phone: userProfile.phone || "",
+      photoURL: userProfile.photoURL || "",
+      createdAt: userProfile.createdAt,
+    });
+
+  } catch (error: any) {
+    console.error("Profile fetch error:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
+      { status: 500 }
+    );
+  }
+});
+
+// PATCH - Update user profile
 export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) => {
   try {
-
-    // Parse request body
     const { name, phone, photoURL } = await req.json();
 
-    // Validation
     if (!name?.trim()) {
       return NextResponse.json(
         { success: false, message: "Name is required" },
@@ -18,7 +49,6 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) 
       );
     }
 
-    // Validate phone number if provided
     if (phone && phone.trim()) {
       const phoneRegex = /^[+]?[1-9][\d\s\-()]{7,15}$/;
       if (!phoneRegex.test(phone.trim())) {
@@ -29,10 +59,8 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) 
       }
     }
 
-    // Connect to database
     await connectDB();
 
-    // Update user profile
     const updateData: {
       name: string;
       phone: string;
@@ -44,7 +72,6 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) 
       updatedAt: new Date(),
     };
 
-    // Add profile image if provided
     if (photoURL) {
       updateData.photoURL = photoURL;
     }
@@ -68,7 +95,12 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) 
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
-      user: updatedUser,
+      id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone || "",
+      photoURL: updatedUser.photoURL || "",
+      createdAt: updatedUser.createdAt,
     });
 
   } catch (error: any) {

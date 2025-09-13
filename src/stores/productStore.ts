@@ -262,14 +262,12 @@ export const useProductStore = create<ProductStore>()(
           return {
             products: reset ? data.products : [...state.products, ...data.products],
             pagination: data.pagination,
-            // Use filtered total, not the general catalog total
             totalProducts: filteredTotal,
             currentPage: currentPage,
-            // Base hasMore strictly on filtered pagination
             hasMore: currentPage < totalPages,
             availableFilters: data.filters,
-            materials: data.filters.materials || state.materials,
-            priceRange: data.filters.priceRange || state.priceRange,
+            materials: Array.isArray(data.filters.materials) ? data.filters.materials : [],
+            priceRange: data.filters.priceRange || { minPrice: 0, maxPrice: 100000 },
             loadingProducts: false,
             loadingMore: false,
           };

@@ -7,8 +7,8 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Optional: Add smooth scrolling */
@@ -23,7 +23,7 @@
 
 .scroll-container::before,
 .scroll-container::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -34,12 +34,37 @@
 
 .scroll-container::before {
   left: 0;
-  background: linear-gradient(to right, rgba(255,255,255,0.8), transparent);
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
 }
 
 .scroll-container::after {
   right: 0;
-  background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+  background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+}
+
+/* Add this to your global CSS (e.g., globals.css) */
+.scrollbar-thin {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(100, 100, 100, 0.5) transparent; /* Firefox */
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 1px; /* Very thin scrollbar for WebKit browsers */
+  height: 1px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 100, 100, 0.5);
+  border-radius: 1px;
+  border: 1px solid transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 100, 100, 0.7);
 }
 
 @layer utilities {

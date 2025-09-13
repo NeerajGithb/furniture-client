@@ -61,23 +61,23 @@ const RoomInspiration = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <h1 className="text-3xl md:text-4xl font-light text-black mb-6 tracking-tight leading-none">
-          Shop By Room
+        <h1 className="text-xl md:text-2xl font-light text-black mb-6 tracking-tight leading-none">
+          SHOP BY ROOM
         </h1>
         <div className="w-16 h-px bg-black mx-auto mb-6"></div>
-        <p className="text-neutral-600 text-sm font-light max-w-md mx-auto leading-relaxed">
+        <p className="text-neutral-600 text-xs md:text-sm font-light max-w-md mx-auto leading-relaxed">
           Discover curated room inspirations to transform your space with style
-          and functionality. Explore ideas for every room in your home.
+          and functionality.
         </p>
       </motion.div>
 
       {/* Inspiration Grid */}
       <div className="md:px-4">
-        <div className="max-w-sm mx-auto md:max-w-7xl md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-8">
+        <div className="max-w-[450px] mx-auto md:max-w-7xl md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-8">
           {inspirations.slice(0, 8).map((inspiration, idx) => (
             <motion.div
               key={inspiration._id}
-              className="group mb-16 md:mb-8 last:mb-8"
+              className="group  mb-8 last:mb-8"
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
@@ -143,13 +143,13 @@ const RoomInspiration = () => {
 
       {/* Bottom CTA */}
       <motion.div
-        className="text-center py-20 px-6"
+        className="text-center py-5 md:py-10 px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}
       >
         <motion.button
-          className="bg-black text-white px-12 py-4 text-sm font-medium tracking-widest uppercase hover:bg-white hover:text-black border-2 border-black transition-all duration-300"
+          className="bg-black text-white px-8 py-2 text-sm font-medium tracking-widest uppercase hover:bg-white hover:text-black border-2 border-black transition-all duration-300"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >

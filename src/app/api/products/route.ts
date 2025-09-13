@@ -23,11 +23,12 @@ export async function GET(request: NextRequest) {
     const material = searchParams.get('material')?.trim();
     const inStock = searchParams.get('inStock') === 'true';
     const onSale = searchParams.get('onSale') === 'true';
+    const discount = searchParams.get('discount')?.trim(); // New discount parameter
     const sort = searchParams.get('sort') || 'newest';
 
     console.log(`[API] Processing request with params:`, {
-      page, limit, category, subcategory, minPrice, maxPrice, 
-      material, inStock, onSale, sort
+      page, limit, category, subcategory, minPrice, maxPrice,
+      material, inStock, onSale, discount, sort
     });
 
     // Build query object
@@ -88,6 +89,14 @@ export async function GET(request: NextRequest) {
       query.discountPercent = { $gt: 0 };
     }
 
+    // NEW: Discount filter
+    if (discount && discount !== '') {
+      const discountValue = parseInt(discount);
+      if (!isNaN(discountValue) && discountValue > 0) {
+        query.discountPercent = { $gte: discountValue };
+      }
+    }
+
     // Sorting options
     let sortQuery: any = { createdAt: -1 };
     switch (sort) {
@@ -139,11 +148,11 @@ export async function GET(request: NextRequest) {
       priceRange: { minPrice: number; maxPrice: number };
     };
     let filtersData: FiltersDataType = { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } };
-    
+
     if (page === 1) {
       const [categories, materials, priceStats] = await Promise.all([
         Category.find({}).select('name slug').lean<CategoryType[]>(),
-        Product.distinct('material', { 
+        Product.distinct('material', {
           material: { $nin: [null, '', undefined] },
           isPublished: { $ne: false }
         }),
@@ -162,7 +171,7 @@ export async function GET(request: NextRequest) {
       filtersData = {
         categories: categories || [],
         materials: (materials || []).filter(m => m && typeof m === 'string').sort(),
-        priceRange: { minPrice: 0, maxPrice: 100000 }
+        priceRange:  { minPrice: 0, maxPrice: 100000 }
       };
     }
 
@@ -182,6 +191,7 @@ export async function GET(request: NextRequest) {
         priceRange: (minPrice !== null || maxPrice !== null) ? { min: minPrice, max: maxPrice } : null,
         inStock: inStock || null,
         onSale: onSale || null,
+        discount: discount || null, // NEW: Include discount in applied filters
         sort
       },
       meta: {
@@ -192,10 +202,11 @@ export async function GET(request: NextRequest) {
     };
 
     console.log(`[API] Products fetched: ${products.length} / ${total} (${Date.now() - startTime}ms)`);
+    
     // Add cache headers for better performance
     const response = NextResponse.json(responseData);
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
-    
+
     return response;
 
   } catch (error) {

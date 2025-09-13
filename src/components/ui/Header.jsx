@@ -72,7 +72,7 @@ const useScrollState = () => {
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          const isScrolled = window.scrollY > 80;
+          const isScrolled = window.scrollY > 100;
           if (isScrolled !== scrolled) {
             setScrolled(isScrolled);
           }

@@ -88,12 +88,10 @@ const DualRangeSlider = ({
   onChange: (value: [number, number]) => void;
   step?: number;
 }) => {
-  // Local state for immediate UI updates during sliding
   const [localValue, setLocalValue] = useState<[number, number]>(value);
   const [isSliding, setIsSliding] = useState(false);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update local state when external value changes (only if not currently sliding)
   useEffect(() => {
     if (!isSliding) {
       setLocalValue(value);
@@ -102,28 +100,23 @@ const DualRangeSlider = ({
 
   const handleValueChange = useCallback(
     (newValue: [number, number], immediate: boolean = false) => {
-      // Always update local state for smooth UI
       setLocalValue(newValue);
 
       if (immediate) {
-        // For mouse up events, apply immediately after a short delay
         setTimeout(() => {
           onChange(newValue);
-        }, 500); // 500ms delay after stopping interaction
+        }, 500);
         return;
       }
 
-      // Don't trigger onChange while actively sliding
       if (isSliding) {
         return;
       }
 
-      // Clear existing timeout
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
 
-      // Debounce the actual onChange call for other events
       debounceTimeoutRef.current = setTimeout(() => {
         onChange(newValue);
       }, 800);
@@ -159,7 +152,6 @@ const DualRangeSlider = ({
 
   const handleMouseUp = useCallback(() => {
     setIsSliding(false);
-    // Clear any pending debounced calls and apply with delay
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -172,7 +164,6 @@ const DualRangeSlider = ({
 
   const handleTouchEnd = useCallback(() => {
     setIsSliding(false);
-    // Clear any pending debounced calls and apply with delay
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -191,7 +182,6 @@ const DualRangeSlider = ({
     return price.toLocaleString("en-IN");
   }, []);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (debounceTimeoutRef.current) {
@@ -203,10 +193,7 @@ const DualRangeSlider = ({
   return (
     <div className="space-y-4">
       <div className="relative h-6 flex items-center">
-        {/* Track background */}
         <div className="absolute w-full h-1 bg-gray-200 rounded-full"></div>
-
-        {/* Active range */}
         <div
           className="absolute h-1 bg-lime-500 rounded-full transition-all duration-75 ease-out"
           style={{
@@ -216,8 +203,6 @@ const DualRangeSlider = ({
             }%`,
           }}
         />
-
-        {/* Min range input */}
         <input
           type="range"
           min={min}
@@ -253,8 +238,6 @@ const DualRangeSlider = ({
             [&::-moz-range-thumb]:cursor-grab
             [&::-moz-range-thumb]:shadow-md"
         />
-
-        {/* Max range input */}
         <input
           type="range"
           min={min}
@@ -319,7 +302,6 @@ const FilterSidebar = ({
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
 
-  // Get current slug from pathname
   const currentSlug = pathname.slice(1);
 
   useEffect(() => {
@@ -329,7 +311,7 @@ const FilterSidebar = ({
     const handleScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          const scrolled = window.scrollY > 100;
+          const scrolled = window.scrollY > 80;
           if (scrolled !== lastScrolled) {
             lastScrolled = scrolled;
             if (sidebarRef.current) {
@@ -350,13 +332,19 @@ const FilterSidebar = ({
   const { categories, subcategories, materials, priceRange } =
     useProductStore();
 
-  const [expandedSections, setExpandedSections] = useState({
-    price: false,
-    category: false,
-    subcategory: false,
-    material: false,
-    availability: false,
-    sort: false,
+  const [expandedSections, setExpandedSections] = useState(() => {
+    const defaultExpanded = isMobile;
+
+    return {
+      priceSort: defaultExpanded,
+      priceRange: defaultExpanded,
+      quickPriceRanges: defaultExpanded,
+      material: defaultExpanded,
+      discount: defaultExpanded,
+      category: defaultExpanded,
+      subcategory: defaultExpanded,
+      availability: defaultExpanded,
+    };
   });
 
   const isValidCategory = (c: any): c is Category =>
@@ -397,13 +385,11 @@ const FilterSidebar = ({
     [categories, subcategories, materials, priceRange, filters]
   );
 
-  // Analyze current slug to determine if it's category or subcategory
   const slugAnalysis = useMemo(() => {
     if (!currentSlug || currentSlug === "products") {
       return { type: null, data: null, parentCategory: null };
     }
 
-    // Check if slug matches a category
     const matchedCategory = safeFilters.categories.find(
       (cat) => cat.slug === currentSlug
     );
@@ -411,7 +397,6 @@ const FilterSidebar = ({
       return { type: "category", data: matchedCategory, parentCategory: null };
     }
 
-    // Check if slug matches a subcategory
     const matchedSubcategory = safeFilters.subcategories.find(
       (sub) => sub.slug === currentSlug
     );
@@ -444,12 +429,10 @@ const FilterSidebar = ({
     }));
   };
 
-  // Get URL parameters with slug-based defaults
   const urlParams = useMemo(() => {
     let selectedCategory = "";
     let selectedSubcategory = "";
 
-    // Set category/subcategory based on slug analysis
     if (slugAnalysis.type === "category") {
       selectedCategory = currentSlug;
       selectedSubcategory = searchParams.get("subcategory") || "";
@@ -467,6 +450,7 @@ const FilterSidebar = ({
       inStockOnly: searchParams.get("inStock") === "true",
       onSaleOnly: searchParams.get("onSale") === "true",
       sortBy: searchParams.get("sort") || "newest",
+      discountRange: searchParams.get("discount") || "",
     };
   }, [searchParams, currentSlug, slugAnalysis]);
 
@@ -510,16 +494,14 @@ const FilterSidebar = ({
         const params = new URLSearchParams(searchParams.toString());
 
         Object.entries(newFilters).forEach(([key, value]) => {
-          // Skip c and sc params - they're controlled by URL slug
           if (key === "category" || key === "subcategory") {
             return;
           }
 
-          let paramKey = key;
           if (value && value !== "" && value !== "false") {
-            params.set(paramKey, value);
+            params.set(key, value);
           } else {
-            params.delete(paramKey);
+            params.delete(key);
           }
         });
 
@@ -538,21 +520,35 @@ const FilterSidebar = ({
     );
   }, [safeFilters.categories, urlParams.selectedCategory]);
 
+  // Fix: Improved subcategory filtering logic
   const availableSubcategories = useMemo(() => {
-    if (!urlParams.selectedCategory || !selectedCategory) {
-      return safeFilters.subcategories;
+    // If no category is selected, return empty array
+    if (!urlParams.selectedCategory) {
+      return [];
     }
 
-    const categorySubcategories = safeFilters.subcategories.filter((sub) => {
+    // Find the selected category
+    const currentCategory = safeFilters.categories.find(
+      (cat) => cat.slug === urlParams.selectedCategory
+    );
+
+    if (!currentCategory) {
+      return [];
+    }
+
+    // Filter subcategories that belong to the selected category
+    return safeFilters.subcategories.filter((sub) => {
       const categoryId =
         typeof sub.categoryId === "object"
           ? sub.categoryId._id
           : sub.categoryId;
-      return categoryId === selectedCategory._id;
+      return categoryId === currentCategory._id;
     });
-
-    return categorySubcategories;
-  }, [safeFilters.subcategories, urlParams.selectedCategory, selectedCategory]);
+  }, [
+    safeFilters.subcategories,
+    safeFilters.categories,
+    urlParams.selectedCategory,
+  ]);
 
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
@@ -564,47 +560,24 @@ const FilterSidebar = ({
     },
     [router]
   );
-
   const handleSubcategoryChange = useCallback(
     (subcategorySlug: string) => {
-      if (slugAnalysis.type === "category") {
-        // If we're on a category page, navigate to subcategory or remove sc param
-        if (!subcategorySlug) {
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete("subcategory");
-          const queryString = params.toString();
-          router.push(
-            queryString ? `/${currentSlug}?${queryString}` : `/${currentSlug}`
-          );
-        } else {
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("subcategory", subcategorySlug);
-          params.delete("minPrice");
-          params.delete("maxPrice");
-          router.push(`/${currentSlug}?${params.toString()}`);
-        }
+      if (!subcategorySlug) {
+        router.push("/products");
       } else {
-        // Navigate to subcategory page
-        if (!subcategorySlug) {
-          router.push(`/${urlParams.selectedCategory}`);
-        } else {
-          router.push(`/${subcategorySlug}`);
-        }
+        // If subcategory is selected
+        router.push(`/${subcategorySlug}`);
       }
     },
     [
       router,
-      searchParams,
-      currentSlug,
-      slugAnalysis.type,
-      urlParams.selectedCategory,
     ]
   );
 
   const handleMaterialChange = useCallback(
     (material: string) => {
       updateFilters({
-        m: material || null,
+        material: material || null,
       });
     },
     [updateFilters]
@@ -643,6 +616,34 @@ const FilterSidebar = ({
     [updateFilters]
   );
 
+  const handleQuickPriceRangeChange = useCallback(
+    (range: string) => {
+      if (!range) {
+        updateFilters({
+          minPrice: null,
+          maxPrice: null,
+        });
+        return;
+      }
+
+      const [min, max] = range.split("-").map(Number);
+      updateFilters({
+        minPrice: min !== DEFAULT_MIN_PRICE ? min.toString() : null,
+        maxPrice: max !== DEFAULT_MAX_PRICE ? max.toString() : null,
+      });
+    },
+    [updateFilters, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
+  );
+
+  const handleDiscountChange = useCallback(
+    (discount: string) => {
+      updateFilters({
+        discount: discount || null,
+      });
+    },
+    [updateFilters]
+  );
+
   const clearAllFilters = useCallback(() => {
     try {
       router.push(`/${currentSlug || "products"}`);
@@ -660,19 +661,43 @@ const FilterSidebar = ({
       urlParams.maxPrice ||
       urlParams.inStockOnly ||
       urlParams.onSaleOnly ||
+      urlParams.discountRange ||
       (urlParams.sortBy && urlParams.sortBy !== "newest")
     );
   }, [urlParams, slugAnalysis.type]);
 
   const sortOptions = [
-    { value: "newest", label: "Newest First" },
+    { value: "newest", label: "Latest" },
     { value: "price-low", label: "Price: Low to High" },
     { value: "price-high", label: "Price: High to Low" },
-    { value: "name-asc", label: "Name: A-Z" },
-    { value: "name-desc", label: "Name: Z-A" },
-    { value: "rating", label: "Customer Rating" },
-    { value: "discount", label: "Highest Discount" },
   ];
+
+  const quickPriceRanges = [
+    { value: "", label: "All Prices" },
+    { value: `${DEFAULT_MIN_PRICE}-9000`, label: "Under ₹9,000" },
+    { value: "10000-19999", label: "₹10,000 - ₹19,999" },
+    { value: "20000-39999", label: "₹20,000 - ₹39,999" },
+    { value: "40000-59999", label: "₹40,000 - ₹59,999" },
+    { value: `60000-${DEFAULT_MAX_PRICE}`, label: "Above ₹60,000" },
+  ];
+
+  const discountOptions = [
+    { value: "", label: "All Products" },
+    { value: "10", label: "10% or more" },
+    { value: "25", label: "25% or more" },
+    { value: "50", label: "50% or more" },
+    { value: "70", label: "70% or more" },
+  ];
+
+  const getSelectedQuickPriceRange = () => {
+    if (!urlParams.minPrice && !urlParams.maxPrice) return "";
+
+    const currentRange = `${currentMinPrice}-${currentMaxPrice}`;
+    return (
+      quickPriceRanges.find((range) => range.value === currentRange)?.value ||
+      ""
+    );
+  };
 
   const activeFiltersCount = useMemo(() => {
     return [
@@ -682,13 +707,14 @@ const FilterSidebar = ({
       urlParams.maxPrice,
       urlParams.inStockOnly,
       urlParams.onSaleOnly,
+      urlParams.discountRange,
       urlParams.sortBy !== "newest" ? urlParams.sortBy : null,
     ].filter(Boolean).length;
   }, [urlParams, slugAnalysis.type]);
 
   const sidebarContent = (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+    <div className="h-full">
+      <div className="flex items-center justify-between p-4 pb-3 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="w-4 h-4 text-gray-700" />
           <h2 className="font-semibold text-lg text-gray-900">Filters</h2>
@@ -713,222 +739,279 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      <FilterSection
-        title="Price Range"
-        isExpanded={expandedSections.price}
-        onToggle={() => toggleSection("price")}
+      <div
+        className="space-y-0 overflow-y-auto p-4 scrollbar-thin"
+        style={{ maxHeight: "calc(100vh - 120px)" }}
       >
-        <div className="py-2">
-          <DualRangeSlider
-            min={DEFAULT_MIN_PRICE}
-            max={DEFAULT_MAX_PRICE}
-            value={validatedPriceRange}
-            onChange={handlePriceRangeChange}
-            step={PRICE_STEP}
-          />
-        </div>
-      </FilterSection>
-
-      <FilterSection
-        title="Category"
-        isExpanded={expandedSections.category}
-        onToggle={() => toggleSection("category")}
-      >
-        <div className="space-y-1.5">
-          <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
-            <input
-              type="radio"
-              name={`${isMobile ? "mobile-" : ""}category`}
-              checked={!urlParams.selectedCategory}
-              onChange={() => handleCategoryChange("")}
-              className="mr-2.5 accent-black scale-90"
-            />
-            <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-              All Categories
-            </span>
-          </label>
-          {safeFilters.categories.map((category) => (
-            <label
-              key={category._id}
-              className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
-            >
-              <input
-                type="radio"
-                name={`${isMobile ? "mobile-" : ""}category`}
-                checked={urlParams.selectedCategory === category.slug}
-                onChange={() => handleCategoryChange(category.slug)}
-                className="mr-2.5 accent-black scale-90"
-              />
-              <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-                {category.name}
-              </span>
-            </label>
-          ))}
-        </div>
-      </FilterSection>
-
-      {availableSubcategories.length > 0 && (
         <FilterSection
-          title="Subcategory"
-          isExpanded={expandedSections.subcategory}
-          onToggle={() => toggleSection("subcategory")}
+          title="Sort By Price"
+          isExpanded={expandedSections.priceSort}
+          onToggle={() => toggleSection("priceSort")}
+        >
+          <div className="space-y-1.5">
+            {sortOptions.map((option) => (
+              <label
+                key={option.value}
+                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}sort`}
+                  checked={urlParams.sortBy === option.value}
+                  onChange={() => handleSortChange(option.value)}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  {option.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+
+        <FilterSection
+          title="Price Range"
+          isExpanded={expandedSections.priceRange}
+          onToggle={() => toggleSection("priceRange")}
+        >
+          <div className="py-2">
+            <DualRangeSlider
+              min={DEFAULT_MIN_PRICE}
+              max={DEFAULT_MAX_PRICE}
+              value={validatedPriceRange}
+              onChange={handlePriceRangeChange}
+              step={PRICE_STEP}
+            />
+          </div>
+        </FilterSection>
+
+        <FilterSection
+          title="Quick Price Ranges"
+          isExpanded={expandedSections.quickPriceRanges}
+          onToggle={() => toggleSection("quickPriceRanges")}
+        >
+          <div className="space-y-1.5">
+            {quickPriceRanges.map((range) => (
+              <label
+                key={range.value}
+                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}quickPrice`}
+                  checked={getSelectedQuickPriceRange() === range.value}
+                  onChange={() => handleQuickPriceRangeChange(range.value)}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  {range.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+
+        {safeFilters.materials.length > 0 && (
+          <FilterSection
+            title="Material"
+            isExpanded={expandedSections.material}
+            onToggle={() => toggleSection("material")}
+          >
+            <div className="space-y-1.5">
+              <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}material`}
+                  checked={urlParams.selectedMaterial === ""}
+                  onChange={() => handleMaterialChange("")}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  All Materials
+                </span>
+              </label>
+              {safeFilters.materials.slice(0, 8).map((material) => (
+                <label
+                  key={material}
+                  className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name={`${isMobile ? "mobile-" : ""}material`}
+                    checked={urlParams.selectedMaterial === material}
+                    onChange={() => handleMaterialChange(material)}
+                    className="mr-2.5 accent-black scale-90"
+                  />
+                  <span className="text-xs text-gray-700 group-hover:text-black transition-colors capitalize font-medium">
+                    {material}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </FilterSection>
+        )}
+
+        <FilterSection
+          title="Discount"
+          isExpanded={expandedSections.discount}
+          onToggle={() => toggleSection("discount")}
+        >
+          <div className="space-y-1.5">
+            {discountOptions.map((option) => (
+              <label
+                key={option.value}
+                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}discount`}
+                  checked={urlParams.discountRange === option.value}
+                  onChange={() => handleDiscountChange(option.value)}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  {option.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+
+        <FilterSection
+          title="Category"
+          isExpanded={expandedSections.category}
+          onToggle={() => toggleSection("category")}
         >
           <div className="space-y-1.5">
             <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
-                name={`${isMobile ? "mobile-" : ""}subcategory`} // Fixed: was "material"
-                checked={!urlParams.selectedSubcategory} // Fixed: was checking material
-                onChange={() => handleSubcategoryChange("")} // Fixed: was handleMaterialChange
+                name={`${isMobile ? "mobile-" : ""}category`}
+                checked={!urlParams.selectedCategory}
+                onChange={() => handleCategoryChange("")}
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-                All Subcategories
+                All Categories
               </span>
             </label>
-            {availableSubcategories.map(
-              (
-                subcategory // Fixed: was using materials
-              ) => (
+            {safeFilters.categories.map((category) => (
+              <label
+                key={category._id}
+                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
+              >
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}category`}
+                  checked={urlParams.selectedCategory === category.slug}
+                  onChange={() => handleCategoryChange(category.slug)}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  {category.name}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+
+        {availableSubcategories.length > 0 && (
+          <FilterSection
+            title="Subcategory"
+            isExpanded={expandedSections.subcategory}
+            onToggle={() => toggleSection("subcategory")}
+          >
+            <div className="space-y-1.5">
+              <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
+                <input
+                  type="radio"
+                  name={`${isMobile ? "mobile-" : ""}subcategory`}
+                  checked={!urlParams.selectedSubcategory}
+                  onChange={() => handleSubcategoryChange("")}
+                  className="mr-2.5 accent-black scale-90"
+                />
+                <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                  All Subcategories
+                </span>
+              </label>
+              {availableSubcategories.map((subcategory) => (
                 <label
                   key={subcategory._id}
                   className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
                 >
                   <input
                     type="radio"
-                    name={`${isMobile ? "mobile-" : ""}subcategory`} // Fixed: was "material"
-                    checked={urlParams.selectedSubcategory === subcategory.slug} // Fixed: was checking material
-                    onChange={() => handleSubcategoryChange(subcategory.slug)} // Fixed: was handleMaterialChange
+                    name={`${isMobile ? "mobile-" : ""}subcategory`}
+                    checked={urlParams.selectedSubcategory === subcategory.slug}
+                    onChange={() => handleSubcategoryChange(subcategory.slug)}
                     className="mr-2.5 accent-black scale-90"
                   />
                   <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
                     {subcategory.name}
                   </span>
                 </label>
-              )
-            )}
-          </div>
-        </FilterSection>
-      )}
+              ))}
+            </div>
+          </FilterSection>
+        )}
 
-      {safeFilters.materials.length > 0 && (
         <FilterSection
-          title="Material"
-          isExpanded={expandedSections.material}
-          onToggle={() => toggleSection("material")}
+          title="Availability"
+          isExpanded={expandedSections.availability}
+          onToggle={() => toggleSection("availability")}
         >
           <div className="space-y-1.5">
             <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
               <input
-                type="radio"
-                name={`${isMobile ? "mobile-" : ""}material`}
-                checked={urlParams.selectedMaterial === ""}
-                onChange={() => handleMaterialChange("")}
+                type="checkbox"
+                checked={urlParams.inStockOnly}
+                onChange={(e) =>
+                  handleCheckboxChange("inStock", e.target.checked)
+                }
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-                All Materials
+                In Stock Only
               </span>
             </label>
-            {safeFilters.materials.slice(0, 8).map((material) => (
-              <label
-                key={material}
-                className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
-              >
-                <input
-                  type="radio"
-                  name={`${isMobile ? "mobile-" : ""}material`}
-                  checked={urlParams.selectedMaterial === material}
-                  onChange={() => handleMaterialChange(material)}
-                  className="mr-2.5 accent-black scale-90"
-                />
-                <span className="text-xs text-gray-700 group-hover:text-black transition-colors capitalize font-medium">
-                  {material}
-                </span>
-              </label>
-            ))}
+            <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={urlParams.onSaleOnly}
+                onChange={(e) =>
+                  handleCheckboxChange("onSale", e.target.checked)
+                }
+                className="mr-2.5 accent-black scale-90"
+              />
+              <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
+                On Sale Only
+              </span>
+            </label>
           </div>
         </FilterSection>
-      )}
-
-      <FilterSection
-        title="Availability"
-        isExpanded={expandedSections.availability}
-        onToggle={() => toggleSection("availability")}
-      >
-        <div className="space-y-1.5">
-          <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
-            <input
-              type="checkbox"
-              checked={urlParams.inStockOnly}
-              onChange={(e) =>
-                handleCheckboxChange("inStock", e.target.checked)
-              }
-              className="mr-2.5 accent-black scale-90"
-            />
-            <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-              In Stock Only
-            </span>
-          </label>
-          <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
-            <input
-              type="checkbox"
-              checked={urlParams.onSaleOnly}
-              onChange={(e) => handleCheckboxChange("onSale", e.target.checked)}
-              className="mr-2.5 accent-black scale-90"
-            />
-            <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-              On Sale Only
-            </span>
-          </label>
-        </div>
-      </FilterSection>
-
-      <FilterSection
-        title="Sort By"
-        isExpanded={expandedSections.sort}
-        onToggle={() => toggleSection("sort")}
-      >
-        <div className="space-y-1.5">
-          {sortOptions.map((option) => (
-            <label
-              key={option.value}
-              className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors"
-            >
-              <input
-                type="radio"
-                name={`${isMobile ? "mobile-" : ""}sort`}
-                checked={urlParams.sortBy === option.value}
-                onChange={() => handleSortChange(option.value)}
-                className="mr-2.5 accent-black scale-90"
-              />
-              <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
-                {option.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </FilterSection>
+      </div>
 
       {isMobile && (
-        <button
-          onClick={onClose}
-          className="w-full mt-6 px-4 py-3 bg-black text-white rounded-sm text-sm font-medium hover:bg-gray-800 transition-all transform hover:scale-[1.02] shadow-lg"
-        >
-          Apply Filters
-          {hasActiveFilters && (
-            <span className="ml-2 bg-white text-black px-1.5 py-0.5 rounded-full text-xs font-semibold">
-              {activeFiltersCount}
-            </span>
-          )}
-        </button>
+        <div className="sticky bottom-0 bg-white pt-4 border-t border-gray-200 mt-4">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-3 bg-black text-white rounded-sm text-sm font-medium hover:bg-gray-800 transition-all transform hover:scale-[1.02] shadow-lg"
+          >
+            Apply Filters
+            {hasActiveFilters && (
+              <span className="ml-2 bg-white text-black px-1.5 py-0.5 rounded-full text-xs font-semibold">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+        </div>
       )}
     </div>
   );
 
   if (isMobile) {
     return (
-      <div className="w-80 bg-white h-full overflow-y-auto shadow-2xl">
+      <div className="w-80 bg-white h-full shadow-lg overflow-hidden min-h-screen">
         {sidebarContent}
       </div>
     );
@@ -943,7 +1026,10 @@ const FilterSidebar = ({
     >
       <div
         ref={sidebarRef}
-        className="sticky max-h-screen overflow-y-auto transition-all duration-300 top-0"
+        className="sticky max-h-screen overflow-y-auto scrollbar-thin transition-all duration-300 top-0"
+        style={{
+          transition: "top 0.8s ease-in-out",
+        }}
       >
         {sidebarContent}
       </div>

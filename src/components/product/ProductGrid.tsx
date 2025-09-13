@@ -28,7 +28,7 @@ ProductCardWrapper.displayName = "ProductCardWrapper";
 
 const SkeletonCard = memo(() => (
   <div
-    className="bg-white border border-gray-200 overflow-hidden shadow-sm w-full mx-auto"
+    className="bg-white border border-gray-200 overflow-hidden shadow-sm w-full mx-auto p-[6px]"
     style={{
       aspectRatio: "3/4",
       minWidth: "200px",
@@ -74,9 +74,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   // Fully responsive grid with proper column sizing
   const gridClasses = useMemo(
     () =>
-      `grid w-full gap-3 sm:gap-4 lg:gap-5 xl:gap-6 
-       grid-cols-1 min-[480px]:grid-cols-2 
-       sm:grid-cols-2 md:grid-cols-3 
+      `grid w-full gap-[2px] lg:gap-5 xl:gap-6 
+       grid-cols-2 md:grid-cols-3 
        lg:grid-cols-3 xl:grid-cols-4 
        ${home ? "2xl:grid-cols-4" : "2xl:grid-cols-5"}`,
     [home]
@@ -101,7 +100,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   }
 
   return (
-    <div className="w-full px-3">
+    <div className="w-full max-md:p-[3px] px-2 md:px-3 max-md:bg-gray-200">
       <div className={gridClasses}>
         {/* Show skeletons while loading and no data */}
         {loading && uniqueProducts.length === 0

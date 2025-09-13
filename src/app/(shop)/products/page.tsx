@@ -16,7 +16,7 @@ import { useProductStore } from "@/stores/productStore";
 import GridSkeleton from "@/components/sceleton/GridSkeleton";
 import EmptyState from "@/components/state/EmptyState";
 
-// Cache stable selectors - this is the key fix
+// Cache stable selectors
 const selectProducts = (state: any) => state.products;
 const selectCategories = (state: any) => state.categories;
 const selectSubcategories = (state: any) => state.subcategories;
@@ -30,6 +30,7 @@ const selectHasMore = (state: any) => state.hasMore;
 const selectInitializeProducts = (state: any) => state.initializeProducts;
 const selectFetchProducts = (state: any) => state.fetchProducts;
 const selectResetProductState = (state: any) => state.resetProductState;
+
 // Stable sort options
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -45,7 +46,7 @@ const ProductsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Use cached selectors to prevent hydration issues
+  // Use cached selectors
   const products = useProductStore(selectProducts);
   const categories = useProductStore(selectCategories);
   const subcategories = useProductStore(selectSubcategories);
@@ -78,7 +79,7 @@ const ProductsPage = () => {
     }
   }, [initializeProducts, isInitialized]);
 
-  // Stable filter parameters - memoized
+  // Stable filter parameters - memoized with discount support
   const filterParams = useMemo(
     () => ({
       selectedCategory: searchParams.get("category") || "",
@@ -88,12 +89,13 @@ const ProductsPage = () => {
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
       onSaleOnly: searchParams.get("onSale") === "true",
+      discountRange: searchParams.get("discount") || "",
       sortBy: searchParams.get("sort") || "newest",
     }),
     [searchParams]
   );
 
-  // Check active filters
+  // Check active filters with discount
   const hasActiveFilters = useMemo(() => {
     const {
       selectedCategory,
@@ -103,6 +105,7 @@ const ProductsPage = () => {
       maxPrice,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy,
     } = filterParams;
     return !!(
@@ -113,6 +116,7 @@ const ProductsPage = () => {
       maxPrice ||
       inStockOnly ||
       onSaleOnly ||
+      discountRange ||
       (sortBy && sortBy !== "newest")
     );
   }, [filterParams]);
@@ -121,14 +125,10 @@ const ProductsPage = () => {
   useEffect(() => {
     if (!isInitialized) return;
 
-    // Reset page and loading state
     setCurrentPage(1);
     isLoadingMoreRef.current = false;
-
-    // Clear existing products first
     resetProductState();
 
-    // Build and fetch with new params
     const params = new URLSearchParams(searchParams.toString());
     fetchProducts(params.toString(), true);
   }, [
@@ -138,7 +138,7 @@ const ProductsPage = () => {
     resetProductState,
   ]);
 
-  // Load more function with debouncing and better state management
+  // Load more function
   const loadMore = useCallback(async () => {
     if (
       isLoadingMoreRef.current ||
@@ -153,7 +153,6 @@ const ProductsPage = () => {
     isLoadingMoreRef.current = true;
     const nextPage = currentPage + 1;
 
-    // Use current searchParams directly to maintain filter context
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", nextPage.toString());
     params.set("limit", "20");
@@ -183,7 +182,7 @@ const ProductsPage = () => {
     loadMoreRef.current = loadMore;
   }, [loadMore]);
 
-  // Intersection Observer with better conditions and throttling
+  // Intersection Observer
   useEffect(() => {
     const target = observerTarget.current;
     if (
@@ -204,7 +203,6 @@ const ProductsPage = () => {
           loadMoreRef.current &&
           !isLoadingMoreRef.current
         ) {
-          // Add throttling to prevent rapid calls
           setTimeout(() => {
             if (loadMoreRef.current && !isLoadingMoreRef.current) {
               loadMoreRef.current();
@@ -214,7 +212,6 @@ const ProductsPage = () => {
       },
       {
         threshold: 0.1,
-        // Trigger when element is 200px from viewport
         rootMargin: "200px",
       }
     );
@@ -223,7 +220,7 @@ const ProductsPage = () => {
     return () => observer.disconnect();
   }, [hasMore, loadingProducts, loadingMore, products.length]);
 
-  // Stable navigation functions
+  // Navigation functions
   const clearAllFilters = useCallback(() => {
     router.push("/products");
   }, [router]);
@@ -253,7 +250,7 @@ const ProductsPage = () => {
     [router, searchParams]
   );
 
-  // Helper functions - memoized
+  // Helper functions
   const findCategoryName = useCallback(
     (slug: any) => {
       if (!categories) return slug;
@@ -279,7 +276,22 @@ const ProductsPage = () => {
     return SORT_OPTIONS.find((opt) => opt.value === value)?.label || value;
   }, []);
 
-  // Active filter count
+  // Get discount label
+  const getDiscountLabel = useCallback((value: string) => {
+    const discountOptions = [
+      { value: "", label: "All Products" },
+      { value: "10", label: "10% or more" },
+      { value: "25", label: "25% or more" },
+      { value: "50", label: "50% or more" },
+      { value: "70", label: "70% or more" },
+    ];
+    return (
+      discountOptions.find((opt) => opt.value === value)?.label ||
+      `${value}% or more`
+    );
+  }, []);
+
+  // Active filter count with discount
   const activeFilterCount = useMemo(() => {
     const {
       selectedCategory,
@@ -289,6 +301,7 @@ const ProductsPage = () => {
       maxPrice,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy,
     } = filterParams;
     return [
@@ -299,11 +312,12 @@ const ProductsPage = () => {
       maxPrice,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy !== "newest",
     ].filter(Boolean).length;
   }, [filterParams]);
 
-  // Filters object - stable with null checks
+  // Filters object
   const filters = useMemo(
     () => ({
       categories: Array.isArray(categories)
@@ -335,14 +349,13 @@ const ProductsPage = () => {
             <div className="py-2 ">
               {/* Fixed Header Section */}
               <div className="flex flex-col justify-between">
-                {/* Results Header - Fixed Height */}
+                {/* Results Header */}
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
                   className="relative flex items-center mb-2"
                 >
-                  {/* Results Count - Always Centered */}
                   <div className="w-full flex justify-center">
                     {error ? (
                       <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-full px-4 py-2 shadow-sm">
@@ -376,109 +389,124 @@ const ProductsPage = () => {
                       </motion.div>
                     ) : loadingProducts ? (
                       <div className="text-center">
-                        <div className="h-6 w-56 bg-gray-200 animate-pulse rounded"></div>
+                        <div className="h-6 w-56"></div>
                       </div>
                     ) : (
                       <div className="h-6"></div>
                     )}
                   </div>
-
-                  {/* Mobile Filter Button - Absolute positioned */}
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowMobileFilters(true)}
-                    className="lg:hidden absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-all text-sm font-medium"
-                  >
-                    <Filter className="w-4 h-4 text-gray-600" />
-                    <span>Filters</span>
-                    {hasActiveFilters && (
-                      <span className="bg-black text-white text-xs px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] h-[18px] flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </motion.button>
                 </motion.div>
               </div>
 
-              {/* Active Filters - Variable Height */}
+              {/* Mobile Filter Button */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden w-full flex items-center justify-between px-4 mx-1 py-3 border border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 shadow-sm hover:shadow-md hover:border-slate-400 hover:from-slate-100 hover:to-gray-100 transition-all duration-300 text-sm font-medium text-slate-800 hover:text-slate-900"
+              >
+                <span className="flex items-center gap-2.5">
+                  Sort & Filters
+                </span>
+                <div className="flex items-center gap-2">
+                  
+                  {hasActiveFilters && (
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-2 py-1 font-semibold min-w-[20px] h-[20px] flex items-center justify-center shadow-sm">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <SlidersHorizontal className="w-4 h-4 text-slate-800 " />
+                </div>
+              </motion.button>
+
+              {/* Active Filters with Discount Support */}
               {hasActiveFilters && (
                 <motion.div
-                  initial={{ opacity: 0, y: -8 }}
+                  initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex flex-wrap items-center gap-2 mb-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm"
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-wrap items-center gap-1.5 mb-4 p-2 mx-2 bg-gray-50 border border-gray-100"
                 >
-                  <span className="text-sm font-medium text-gray-600 flex items-center gap-2 mr-2">
-                    <SlidersHorizontal className="w-4 h-4" />
-                    Active Filters:
+                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1 mr-1">
+                    <SlidersHorizontal className="w-3 h-3" />
+                    Filters:
                   </span>
 
                   {filterParams.selectedCategory && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-full font-medium shadow-sm">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
                       {findCategoryName(filterParams.selectedCategory)}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("category")}
                       />
                     </span>
                   )}
 
                   {filterParams.selectedSubcategory && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-full font-medium shadow-sm">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
                       {findSubcategoryName(filterParams.selectedSubcategory)}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("subcategory")}
                       />
                     </span>
                   )}
 
                   {filterParams.selectedMaterial && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-full font-medium shadow-sm">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
                       {filterParams.selectedMaterial}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("material")}
                       />
                     </span>
                   )}
 
                   {(filterParams.minPrice || filterParams.maxPrice) && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-full font-medium shadow-sm">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
                       ₹{filterParams.minPrice || 0} - ₹
-                      {filterParams.maxPrice || "∞"}
+                      {filterParams.maxPrice || "100000"}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("price")}
                       />
                     </span>
                   )}
 
-                  {filterParams.inStockOnly && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white text-sm rounded-full font-medium shadow-sm">
-                      In Stock Only
+                  {filterParams.discountRange && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-700 text-white text-xs font-medium rounded-xs">
+                      {getDiscountLabel(filterParams.discountRange)}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
+                        onClick={() => removeFilter("discount")}
+                      />
+                    </span>
+                  )}
+
+                  {filterParams.inStockOnly && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-700 text-white text-xs font-medium rounded-xs">
+                      In Stock
+                      <X
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("inStock")}
                       />
                     </span>
                   )}
 
                   {filterParams.onSaleOnly && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white text-sm rounded-full font-medium shadow-sm">
-                      On Sale Only
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-700 text-white text-xs font-medium rounded-xs">
+                      On Sale
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("onSale")}
                       />
                     </span>
                   )}
 
                   {filterParams.sortBy !== "newest" && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-full font-medium shadow-sm">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-700 text-white text-xs font-medium rounded-xs">
                       {findSortLabel(filterParams.sortBy)}
                       <X
-                        className="w-3.5 h-3.5 cursor-pointer hover:text-red-400 transition-colors"
+                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
                         onClick={() => removeFilter("sort")}
                       />
                     </span>
@@ -486,14 +514,14 @@ const ProductsPage = () => {
 
                   <button
                     onClick={clearAllFilters}
-                    className="text-sm text-red-600 hover:text-red-800 font-medium underline ml-3 px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                    className="text-xs text-red-600 hover:text-red-800 font-medium underline ml-2 px-1 py-0.5 hover:bg-red-50 transition-colors"
                   >
                     Clear All
                   </button>
                 </motion.div>
               )}
 
-              {/* Content Area - Consistent spacing */}
+              {/* Content Area */}
               <div className="min-h-[400px]">
                 {loadingProducts && (!products || products.length === 0) ? (
                   <GridSkeleton />
@@ -535,7 +563,7 @@ const ProductsPage = () => {
                     animate={{ opacity: 1 }}
                     className="text-center py-12 mt-8"
                   >
-                    <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm max-w-md mx-auto">
+                    <div className="bg-white rounded-xs p-8 border border-gray-200 shadow-sm max-w-md mx-auto">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <ShoppingBag className="w-8 h-8 text-blue-600" />
                       </div>
@@ -564,10 +592,11 @@ const ProductsPage = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-60 z-50 lg:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden min-h-screen"
               onClick={() => setShowMobileFilters(false)}
             >
               <motion.div
+                className="w-70"
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -300, opacity: 0 }}

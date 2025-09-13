@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { usePathname } from "next/navigation";
 
 interface ProductCardProps {
   product: Product;
@@ -18,7 +19,8 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const { user } = useCurrentUser();
-
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const {
     addToCart,
     updatingItems: cartUpdatingItems,
@@ -168,11 +170,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{
+        opacity: 0,
+        ...(isHome ? { x: 20 } : { y: 20 }),
+      }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="group bg-white cursor-pointer relative w-full flex flex-col overflow-hidden p-2
-           transition-shadow duration-100 hover:shadow-[0_0_3px_rgba(0,0,0,0.2)]"
+      className="group bg-white cursor-pointer relative w-full flex flex-col overflow-hidden p-[6px] md:p-2
+           transition-shadow duration-100 hover:shadow-[0_0_3px_rgba(0,0,0,0.2)] max-md:shadow-[0_0_3px_rgba(0,0,0,0.2)]"
     >
       <div className="relative w-full overflow-hidden">
         <Link
@@ -284,7 +289,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       </div>
 
       {/* Product details - Flexible height */}
-      <div className="flex-1 px-1 py-2 flex flex-col min-h-0">
+      <div className="flex-1 px-3 mt-2 md:px-1 py-2 flex flex-col min-h-0">
         <div className="flex-1 min-h-0">
           {/* Product name */}
           <h3 className="font-semibold text-gray-900 text-xs sm:text-sm leading-tight mb-1 line-clamp-2">
@@ -300,7 +305,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         </div>
 
         {/* Price section - Fixed at bottom */}
-        <div className="mt-auto flex-shrink-0 mb-1.5">
+        <div className="mt-auto flex-shrink-0 mb-4 sm:mb-1.5">
           <div className="flex items-baseline gap-1.5">
             <span className="font-bold text-sm sm:text-base text-gray-900">
               ₹{product.finalPrice.toLocaleString()}
@@ -314,7 +319,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         </div>
 
         {/* Buttons section - Always takes space, visible only on hover */}
-        <div className="flex-shrink-0 h-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1">
+        <div className="hidden sm:block flex-shrink-0 h-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1">
           <div className="flex gap-1.5 h-full">
             {/* Add to Cart Button */}
             <button

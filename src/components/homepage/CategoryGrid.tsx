@@ -91,7 +91,7 @@ const CategoryGrid = () => {
                     >
                       <Link
                         onClick={() => resetProductState()}
-                        href={`/products?c=${category.slug}`}
+                        href={`/${category.slug}`}
                         className="block text-center group"
                       >
                         <div className="relative w-30 h-30 mb-2 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-105">
@@ -148,7 +148,7 @@ const CategoryGrid = () => {
               >
                 <Link
                   onClick={() => resetProductState()}
-                  href={`/products?c=${category.slug}`}
+                  href={`/${category.slug}`}
                   className="block h-full group"
                 >
                   <div className="relative aspect-square w-full overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">

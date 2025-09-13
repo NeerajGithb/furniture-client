@@ -9,11 +9,7 @@ import React, {
   use,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Filter,
-  AlertCircle,
-} from "lucide-react";
+import { X, Filter, AlertCircle, SlidersHorizontal } from "lucide-react";
 import ProductGrid from "@/components/product/ProductGrid";
 import { useRouter, useSearchParams } from "next/navigation";
 import FilterSidebar from "@/components/filter/FilterSidebar";
@@ -50,7 +46,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const { slug } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const products = useProductStore(selectProducts);
   const categories = useProductStore(selectCategories);
   const subcategories = useProductStore(selectSubcategories);
@@ -93,6 +89,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     }
 
     const matchedCategory = categories.find((cat: any) => cat.slug === slug);
+    console.log("category m :", matchedCategory);
     if (matchedCategory) {
       return {
         type: "category",
@@ -113,7 +110,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             : matchedSubcategory.categoryId;
         return cat._id === categoryId;
       });
-
+      console.log("matched : ", matchedSubcategory);
       return {
         type: "subcategory",
         data: matchedSubcategory,
@@ -150,6 +147,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
       onSaleOnly: searchParams.get("onSale") === "true",
+      discountRange: searchParams.get("discount") || "",
       sortBy: searchParams.get("sort") || "newest",
       selectedCategory: "",
       selectedSubcategory: "",
@@ -176,12 +174,12 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
 
   const hasActiveFilters = useMemo(() => {
     return !!(
-      filterParams.selectedSubcategory ||
       filterParams.selectedMaterial ||
       filterParams.minPrice ||
       filterParams.maxPrice ||
       filterParams.inStockOnly ||
       filterParams.onSaleOnly ||
+      filterParams.discountRange ||
       (filterParams.sortBy && filterParams.sortBy !== "newest")
     );
   }, [filterParams]);
@@ -215,6 +213,9 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     }
     if (filterParams.onSaleOnly) {
       params.set("onSale", "true");
+    }
+    if (filterParams.discountRange) {
+      params.set("discount", filterParams.discountRange);
     }
     if (filterParams.sortBy !== "newest") {
       params.set("sort", filterParams.sortBy);
@@ -265,6 +266,9 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     }
     if (filterParams.onSaleOnly) {
       params.set("onSale", "true");
+    }
+    if (filterParams.discountRange) {
+      params.set("discount", filterParams.discountRange);
     }
     if (filterParams.sortBy !== "newest") {
       params.set("sort", filterParams.sortBy);
@@ -349,7 +353,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       const params = new URLSearchParams(searchParams);
 
       if (filterKey === "subcategory") {
-        params.delete("subcategory");
         params.delete("minPrice");
         params.delete("maxPrice");
       } else if (filterKey === "price") {
@@ -392,14 +395,28 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     return SORT_OPTIONS.find((opt) => opt.value === value)?.label || value;
   }, []);
 
+  const getDiscountLabel = useCallback((value: string) => {
+    const discountOptions = [
+      { value: "", label: "All Products" },
+      { value: "10", label: "10% or more" },
+      { value: "25", label: "25% or more" },
+      { value: "50", label: "50% or more" },
+      { value: "70", label: "70% or more" },
+    ];
+    return (
+      discountOptions.find((opt) => opt.value === value)?.label ||
+      `${value}% or more`
+    );
+  }, []);
+
   const activeFilterCount = useMemo(() => {
     return [
-      filterParams.selectedSubcategory,
       filterParams.selectedMaterial,
       filterParams.minPrice,
       filterParams.maxPrice,
       filterParams.inStockOnly,
       filterParams.onSaleOnly,
+      filterParams.discountRange,
       filterParams.sortBy !== "newest",
     ].filter(Boolean).length;
   }, [filterParams]);
@@ -428,11 +445,24 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       return pageData.name;
     }
     if (pageType === "subcategory" && pageData) {
-      return `${slugAnalysis.parentCategory?.name || ""} - ${
-        pageData.name
-      }`.trim();
+      return pageData.name;
     }
     return "Products";
+  };
+
+  const getPageDescription = () => {
+    if (pageType === "category" && pageData) {
+      return pageData.description || `Browse products in ${pageData.name}`;
+    }
+    if (pageType === "subcategory" && pageData) {
+      return (
+        pageData.description ||
+        `Browse products in ${pageData.name} under ${
+          slugAnalysis.parentCategory?.name || "various categories"
+        }`
+      );
+    }
+    return "Browse our wide range of products";
   };
 
   if (!isInitialized || !pageType) {
@@ -460,53 +490,81 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
           <main className="flex-1 min-w-0">
             <div className="py-3">
               {/* Compact Header */}
-              <div className="px-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-lg font-semibold text-gray-900">
-                    {getPageTitle()}
-                  </h1>
+              <div className="px-4 mb-6 flex flex-col items-center text-center">
+                <h1 className="text-xl font-semibold text-gray-800">
+                  {getPageTitle()}
+                </h1>
 
-                  {/* Mobile Filter Button */}
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowMobileFilters(true)}
-                    className="lg:hidden flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <Filter className="w-3.5 h-3.5 text-gray-600" />
-                    <span>Filter</span>
-                    {hasActiveFilters && (
-                      <span className="bg-black text-white text-[10px] px-1 py-0.5 rounded-full font-semibold min-w-[14px] h-[14px] flex items-center justify-center">
-                        {activeFilterCount}
+                <div className="mt-3 flex items-center justify-center text-sm text-gray-600">
+                  {error ? (
+                    <div className="flex items-center gap-2 text-red-600 px-2 py-1">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-medium">
+                        Error loading products
                       </span>
-                    )}
-                  </motion.button>
+                    </div>
+                  ) : !loadingProducts && products?.length > 0 ? (
+                    <div>
+                      <span className="font-semibold text-gray-900">
+                        {(currentPage - 1) * 20 + 1}–
+                        {Math.min(currentPage * 20, totalProducts)}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-gray-900">
+                        {totalProducts?.toLocaleString() || 0}
+                      </span>{" "}
+                      {totalProducts === 1 ? "product" : "products"}
+                    </div>
+                  ) : loadingProducts ? (
+                    <div className="h-4 w-32 bg-gray-200 animate-pulse rounded-sm"></div>
+                  ) : null}
+                </div>
+
+                <div className="mt-2 max-w-4xl">
+                  {getPageDescription()?.length > 100 ? (
+                    <div className="flex items-start gap-2">
+                      <p
+                        className={`text-xs text-gray-500 leading-relaxed flex-1 ${
+                          !showFullDescription
+                            ? "line-clamp-1 md:line-clamp-2"
+                            : ""
+                        }`}
+                      >
+                        {getPageDescription()}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-blue-600 md:hidden hover:text-blue-700 hover:underline font-medium text-xs transition-colors flex-shrink-0 ml-1"
+                        onClick={() => setShowFullDescription((prev) => !prev)}
+                      >
+                        {showFullDescription ? "Less" : "More"}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      {getPageDescription()}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Centered Product Count */}
-              <div className="px-4 mb-3 flex justify-center">
-                {error ? (
-                  <div className="flex items-center gap-1.5 text-red-600 bg-red-50 rounded-md px-2.5 py-1.5 text-xs">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span className="font-medium">Error loading products</span>
-                  </div>
-                ) : !loadingProducts && products?.length > 0 ? (
-                  <div className="text-xs text-gray-600">
-                    <span className="font-medium text-gray-900">
-                      {(currentPage - 1) * 20 + 1}–
-                      {Math.min(currentPage * 20, totalProducts)}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-medium text-gray-900">
-                      {totalProducts?.toLocaleString() || 0}
-                    </span>{" "}
-                    {totalProducts === 1 ? "product" : "products"}
-                  </div>
-                ) : loadingProducts ? (
-                  <div className="h-4 w-32 bg-gray-50 animate-pulse rounded"></div>
-                ) : null}
-              </div>
-
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden w-full flex items-center justify-between px-4 mx-1 py-3 border border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 shadow-sm hover:shadow-md hover:border-slate-400 hover:from-slate-100 hover:to-gray-100 transition-all duration-300 text-sm font-medium text-slate-800 hover:text-slate-900"
+              >
+                <span className="flex items-center gap-2.5">
+                  Sort & Filters
+                </span>
+                <div className="flex items-center gap-2">
+                  {hasActiveFilters && (
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-2 py-1 font-semibold min-w-[20px] h-[20px] flex items-center justify-center shadow-sm">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <SlidersHorizontal className="w-4 h-4 text-slate-800 " />
+                </div>
+              </motion.button>
               {/* Compact Active Filters */}
               {hasActiveFilters && (
                 <div className="px-4 mb-4">
@@ -514,20 +572,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                     <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
                       Filters:
                     </span>
-
-                    {filterParams.selectedSubcategory &&
-                      pageType === "category" && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
-                          {findSubcategoryName(
-                            filterParams.selectedSubcategory
-                          )}
-                          <X
-                            className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
-                            onClick={() => removeFilter("subcategory")}
-                          />
-                        </span>
-                      )}
-
                     {filterParams.selectedMaterial && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
                         {filterParams.selectedMaterial}
@@ -545,6 +589,16 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                         <X
                           className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
                           onClick={() => removeFilter("price")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.discountRange && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                        {getDiscountLabel(filterParams.discountRange)}
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("discount")}
                         />
                       </span>
                     )}
@@ -664,17 +718,17 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             </div>
           </main>
         </div>
-
         <AnimatePresence>
           {showMobileFilters && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-60 z-50 lg:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden min-h-screen"
               onClick={() => setShowMobileFilters(false)}
             >
               <motion.div
+                className="w-70"
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -300, opacity: 0 }}

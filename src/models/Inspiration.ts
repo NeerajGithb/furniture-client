@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { ICategory } from "./category";
-
+import category, { ICategory } from "./category";
+void category;  // To ensure the model is registered
 export interface IInspiration extends Document {
   title: string;
   slug: string;
@@ -8,7 +8,7 @@ export interface IInspiration extends Document {
   heroImage: { url: string; alt: string; publicId: string };
   tags: string[];
   keywords: string[];
-  categories: (Schema.Types.ObjectId | ICategory)[]; 
+  categories: (Schema.Types.ObjectId | ICategory)[];
   createdAt: Date;
   updatedAt: Date;
 }

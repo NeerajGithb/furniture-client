@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import ProductCard from "../product/ProductCard";
 import { Product } from "@/types/Product";
-import { handleApiResponse } from "@/utils/fetchWithCredentials";
+import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 
 interface ProductShowcaseProps {
   productsData?: Product[];
@@ -78,7 +78,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
       const fetchShowcaseProducts = async () => {
         try {
           setError(null);
-          const res = await fetch("/api/products/showcase");
+          const res = await fetchWithCredentials("/api/products/showcase");
 
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);

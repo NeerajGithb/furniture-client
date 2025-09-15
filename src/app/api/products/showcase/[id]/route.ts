@@ -1,30 +1,30 @@
 // pages/api/products/showcase/[categoryId].ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
-import ProductModel from '@/models/product';
+import ProductModel from '@/models/product';    // ✅ Explicit import of Category
 import { Product } from '@/types/Product';
 import Inspiration, { IInspiration } from '@/models/Inspiration';
+import category from '@/models/category';
+void category; // To ensure the model is registered
 
-
+// Fetch an inspiration slug associated with the category
 async function getInspirationSlugByCategory(categoryId: string) {
-    // Make sure categoryId is an ObjectId
     const inspiration = await Inspiration.findOne({
-        categories: categoryId // Mongoose will match ObjectId in array
+        categories: categoryId
     })
-        .select('slug')          // only return slug
-        .lean<IInspiration>()    // type the result
-        .exec();
+    .select('slug')
+    .lean<IInspiration>()
+    .exec();
 
-    // Safe access
     return inspiration?.slug || null;
 }
 
 export async function GET(
     request: NextRequest,
-    context: { params: { id: string } } // <- declare it here
+    context: { params: { id: string } }
 ) {
     const startTime = Date.now();
-    const resolvedParams = context.params; // <-- resolve the promise
+    const resolvedParams = context.params;
     const categoryId = resolvedParams.id;
 
     if (!categoryId) {
@@ -38,19 +38,17 @@ export async function GET(
     try {
         await connectDB();
 
-        // Fetch all published products for the category
         const categoryProductsRaw = await ProductModel.find({
             categoryId,
             isPublished: { $ne: false },
             inStockQuantity: { $gt: 0 }
         })
-            .populate('categoryId', 'name slug')
-            .populate('subCategoryId', 'name slug')
-            .sort({ createdAt: -1 })
-            .lean()
-            .exec();
+        .populate('categoryId', 'name slug')    // ✅ Safe now
+        .populate('subCategoryId', 'name slug')
+        .sort({ createdAt: -1 })
+        .lean()
+        .exec();
 
-        // Map _id fields to string for TypeScript compatibility
         const categoryProducts: Product[] = categoryProductsRaw.map((p: any) => ({
             ...p,
             _id: p._id.toString(),
@@ -61,14 +59,15 @@ export async function GET(
                 ? { ...p.subCategoryId, _id: p.subCategoryId._id.toString() }
                 : undefined,
         }));
+
         const slug = await getInspirationSlugByCategory(categoryId);
         console.log('Inspiration slug:', slug);
-        // Apply diversity selection (max 50)
+
         const showcaseProducts = selectDiverseProducts(categoryProducts, 50);
 
         const response = NextResponse.json({
             products: showcaseProducts,
-            slug : slug,
+            slug,
             total: showcaseProducts.length,
             meta: {
                 fetchTime: Date.now() - startTime,
@@ -115,7 +114,6 @@ function selectDiverseProducts(products: Product[], maxCount = 50): Product[] {
         }
     }
 
-    // Fill remaining slots evenly
     const remainingSlots = maxCount - selected.length;
     if (remainingSlots > 0) {
         const remaining = products.filter(

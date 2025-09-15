@@ -1,8 +1,10 @@
-// pages/api/products/showcase/index.ts
+
+// pages/api/products/showcase/index.ts  
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import ProductModel from '@/models/product';
-import '@/models/category';  // ✅ Ensure Category schema is registered
+import '@/models/category';
+import '@/models/subcategory';  // Add this import
 import { Product } from '@/types/Product';
 
 export async function GET(request: NextRequest) {
@@ -33,8 +35,6 @@ export async function GET(request: NextRequest) {
     }));
 
     const showcaseProducts = selectDiverseProducts(allProducts, 50);
-
-    console.log(`[SHOWCASE API] Selected ${showcaseProducts.length} diverse products (${Date.now() - startTime}ms)`);
 
     const response = NextResponse.json({
       products: showcaseProducts,

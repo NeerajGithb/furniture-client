@@ -4,6 +4,8 @@ type EmptyStateProps = {
   onClearFilters: () => void;
   isError?: boolean;
   errorMessage?: string;
+  query?: string;
+  isFallback?: boolean;
 };
 type ProductsPageProps = {
   params: {

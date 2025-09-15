@@ -89,40 +89,13 @@ const DualRangeSlider = ({
   step?: number;
 }) => {
   const [localValue, setLocalValue] = useState<[number, number]>(value);
-  const [isSliding, setIsSliding] = useState(false);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  useEffect(() => {
-    if (!isSliding) {
-      setLocalValue(value);
-    }
-  }, [value, isSliding]);
-
-  const handleValueChange = useCallback(
-    (newValue: [number, number], immediate: boolean = false) => {
-      setLocalValue(newValue);
-
-      if (immediate) {
-        setTimeout(() => {
-          onChange(newValue);
-        }, 500);
-        return;
-      }
-
-      if (isSliding) {
-        return;
-      }
-
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-
-      debounceTimeoutRef.current = setTimeout(() => {
-        onChange(newValue);
-      }, 800);
-    },
-    [onChange, isSliding]
-  );
+  // Apply changes when user stops dragging
+  const applyChanges = useCallback(() => {
+    onChange(localValue);
+    setIsDragging(false);
+  }, [localValue, onChange]);
 
   const handleMinChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,9 +103,9 @@ const DualRangeSlider = ({
         min,
         Math.min(Number(e.target.value), localValue[1] - step)
       );
-      handleValueChange([newMin, localValue[1]]);
+      setLocalValue([newMin, localValue[1]]);
     },
-    [min, localValue, step, handleValueChange]
+    [min, localValue, step]
   );
 
   const handleMaxChange = useCallback(
@@ -141,34 +114,32 @@ const DualRangeSlider = ({
         localValue[0] + step,
         Math.min(Number(e.target.value), max)
       );
-      handleValueChange([localValue[0], newMax]);
+      setLocalValue([localValue[0], newMax]);
     },
-    [max, localValue, step, handleValueChange]
+    [max, localValue, step]
   );
 
+  // Mouse events
   const handleMouseDown = useCallback(() => {
-    setIsSliding(true);
+    setIsDragging(true);
   }, []);
 
   const handleMouseUp = useCallback(() => {
-    setIsSliding(false);
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
+    if (isDragging) {
+      applyChanges();
     }
-    handleValueChange(localValue, true);
-  }, [localValue, handleValueChange]);
+  }, [applyChanges, isDragging]);
 
+  // Touch events
   const handleTouchStart = useCallback(() => {
-    setIsSliding(true);
+    setIsDragging(true);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
-    setIsSliding(false);
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
+    if (isDragging) {
+      applyChanges();
     }
-    handleValueChange(localValue, true);
-  }, [localValue, handleValueChange]);
+  }, [applyChanges, isDragging]);
 
   const getPercentage = useCallback(
     (val: number) => {
@@ -182,18 +153,13 @@ const DualRangeSlider = ({
     return price.toLocaleString("en-IN");
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, []);
-
   return (
     <div className="space-y-4">
       <div className="relative h-6 flex items-center">
+        {/* Track */}
         <div className="absolute w-full h-1 bg-gray-200 rounded-full"></div>
+
+        {/* Active range */}
         <div
           className="absolute h-1 bg-lime-500 rounded-full transition-all duration-75 ease-out"
           style={{
@@ -203,6 +169,8 @@ const DualRangeSlider = ({
             }%`,
           }}
         />
+
+        {/* Min slider */}
         <input
           type="range"
           min={min}
@@ -238,6 +206,8 @@ const DualRangeSlider = ({
             [&::-moz-range-thumb]:cursor-grab
             [&::-moz-range-thumb]:shadow-md"
         />
+
+        {/* Max slider */}
         <input
           type="range"
           min={min}
@@ -274,6 +244,8 @@ const DualRangeSlider = ({
             [&::-moz-range-thumb]:shadow-md"
         />
       </div>
+
+      {/* Price display */}
       <div className="flex justify-between items-center text-sm">
         <div className="flex flex-col items-start">
           <span className="text-xs text-gray-500 mb-1">Min. Price</span>
@@ -291,7 +263,6 @@ const DualRangeSlider = ({
     </div>
   );
 };
-
 const FilterSidebar = ({
   filters,
   isMobile = false,
@@ -569,9 +540,7 @@ const FilterSidebar = ({
         router.push(`/${subcategorySlug}`);
       }
     },
-    [
-      router,
-    ]
+    [router]
   );
 
   const handleMaterialChange = useCallback(
@@ -579,8 +548,12 @@ const FilterSidebar = ({
       updateFilters({
         material: material || null,
       });
+      // Close mobile sidebar when filter is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 150);
+      }
     },
-    [updateFilters]
+    [updateFilters, isMobile, onClose]
   );
 
   const handlePriceRangeChange = useCallback(
@@ -594,8 +567,19 @@ const FilterSidebar = ({
         minPrice: shouldUpdateMin ? validMin.toString() : null,
         maxPrice: shouldUpdateMax ? validMax.toString() : null,
       });
+      // Close mobile sidebar when price filter is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 500);
+      }
     },
-    [updateFilters, validatePriceRange, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
+    [
+      updateFilters,
+      validatePriceRange,
+      DEFAULT_MIN_PRICE,
+      DEFAULT_MAX_PRICE,
+      isMobile,
+      onClose,
+    ]
   );
 
   const handleCheckboxChange = useCallback(
@@ -603,8 +587,12 @@ const FilterSidebar = ({
       updateFilters({
         [key]: value ? "true" : null,
       });
+      // Close mobile sidebar when checkbox filter is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 150);
+      }
     },
-    [updateFilters]
+    [updateFilters, isMobile, onClose]
   );
 
   const handleSortChange = useCallback(
@@ -612,8 +600,12 @@ const FilterSidebar = ({
       updateFilters({
         sort: value === "newest" ? null : value,
       });
+      // Close mobile sidebar when sort is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 150);
+      }
     },
-    [updateFilters]
+    [updateFilters, isMobile, onClose]
   );
 
   const handleQuickPriceRangeChange = useCallback(
@@ -623,16 +615,19 @@ const FilterSidebar = ({
           minPrice: null,
           maxPrice: null,
         });
-        return;
+      } else {
+        const [min, max] = range.split("-").map(Number);
+        updateFilters({
+          minPrice: min !== DEFAULT_MIN_PRICE ? min.toString() : null,
+          maxPrice: max !== DEFAULT_MAX_PRICE ? max.toString() : null,
+        });
       }
-
-      const [min, max] = range.split("-").map(Number);
-      updateFilters({
-        minPrice: min !== DEFAULT_MIN_PRICE ? min.toString() : null,
-        maxPrice: max !== DEFAULT_MAX_PRICE ? max.toString() : null,
-      });
+      // Close mobile sidebar when quick price filter is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 150);
+      }
     },
-    [updateFilters, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
+    [updateFilters, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE, isMobile, onClose]
   );
 
   const handleDiscountChange = useCallback(
@@ -640,8 +635,12 @@ const FilterSidebar = ({
       updateFilters({
         discount: discount || null,
       });
+      // Close mobile sidebar when discount filter is applied
+      if (isMobile && onClose) {
+        setTimeout(() => onClose(), 150);
+      }
     },
-    [updateFilters]
+    [updateFilters, isMobile, onClose]
   );
 
   const clearAllFilters = useCallback(() => {
@@ -658,7 +657,7 @@ const FilterSidebar = ({
       (urlParams.selectedSubcategory && slugAnalysis.type === "category") ||
       urlParams.selectedMaterial ||
       urlParams.minPrice ||
-      urlParams.maxPrice ||
+      urlParams.maxPrice || // Treat as single filter
       urlParams.inStockOnly ||
       urlParams.onSaleOnly ||
       urlParams.discountRange ||
@@ -700,16 +699,17 @@ const FilterSidebar = ({
   };
 
   const activeFiltersCount = useMemo(() => {
-    return [
+    const filters = [
       urlParams.selectedSubcategory && slugAnalysis.type === "category",
       urlParams.selectedMaterial,
-      urlParams.minPrice,
-      urlParams.maxPrice,
+      urlParams.minPrice || urlParams.maxPrice, // Single price filter
       urlParams.inStockOnly,
       urlParams.onSaleOnly,
       urlParams.discountRange,
       urlParams.sortBy !== "newest" ? urlParams.sortBy : null,
-    ].filter(Boolean).length;
+    ];
+
+    return filters.filter(Boolean).length;
   }, [urlParams, slugAnalysis.type]);
 
   const sidebarContent = (
@@ -778,7 +778,11 @@ const FilterSidebar = ({
             <DualRangeSlider
               min={DEFAULT_MIN_PRICE}
               max={DEFAULT_MAX_PRICE}
-              value={validatedPriceRange}
+              value={
+                getSelectedQuickPriceRange()
+                  ? [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
+                  : validatedPriceRange
+              }
               onChange={handlePriceRangeChange}
               step={PRICE_STEP}
             />

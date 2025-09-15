@@ -151,7 +151,7 @@ const CategoryGrid = () => {
                   href={`/${category.slug}`}
                   className="block h-full group"
                 >
-                  <div className="relative aspect-square w-full overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+                  <div className="relative aspect-square w-full overflow-hidden shadow-all transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
                     <Image
                       src={category.mainImage?.url || "/placeholder.png"}
                       alt={category.mainImage?.alt || category.name}

@@ -113,7 +113,7 @@ const ProductsPage = () => {
       selectedSubcategory ||
       selectedMaterial ||
       minPrice ||
-      maxPrice ||
+      maxPrice || // Treat price range as single filter
       inStockOnly ||
       onSaleOnly ||
       discountRange ||
@@ -231,13 +231,10 @@ const ProductsPage = () => {
 
       if (filterKey === "category") {
         params.delete("category");
-        params.delete("subcategory");
-        params.delete("minPrice");
-        params.delete("maxPrice");
+        params.delete("subcategory"); // Clear subcategory when category is removed
       } else if (filterKey === "subcategory") {
         params.delete("subcategory");
-        params.delete("minPrice");
-        params.delete("maxPrice");
+        // Don't clear prices when removing subcategory
       } else if (filterKey === "price") {
         params.delete("minPrice");
         params.delete("maxPrice");
@@ -304,17 +301,20 @@ const ProductsPage = () => {
       discountRange,
       sortBy,
     } = filterParams;
-    return [
+
+    // Count each filter type as one, treating price range as single filter
+    const filters = [
       selectedCategory,
       selectedSubcategory,
       selectedMaterial,
-      minPrice,
-      maxPrice,
+      minPrice || maxPrice, // Price range as single filter
       inStockOnly,
       onSaleOnly,
       discountRange,
       sortBy !== "newest",
-    ].filter(Boolean).length;
+    ];
+
+    return filters.filter(Boolean).length;
   }, [filterParams]);
 
   // Filters object
@@ -408,7 +408,6 @@ const ProductsPage = () => {
                   Sort & Filters
                 </span>
                 <div className="flex items-center gap-2">
-                  
                   {hasActiveFilters && (
                     <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-2 py-1 font-semibold min-w-[20px] h-[20px] flex items-center justify-center shadow-sm">
                       {activeFilterCount}
@@ -420,105 +419,80 @@ const ProductsPage = () => {
 
               {/* Active Filters with Discount Support */}
               {hasActiveFilters && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex flex-wrap items-center gap-1.5 mb-4 p-2 mx-2 bg-gray-50 border border-gray-100"
-                >
-                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1 mr-1">
-                    <SlidersHorizontal className="w-3 h-3" />
-                    Filters:
-                  </span>
-
-                  {filterParams.selectedCategory && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
-                      {findCategoryName(filterParams.selectedCategory)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("category")}
-                      />
+                <div className="px-4  my-4 md:mb-4 ">
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
+                      Filters:
                     </span>
-                  )}
+                    {filterParams.selectedMaterial && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                        {filterParams.selectedMaterial}
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("material")}
+                        />
+                      </span>
+                    )}
 
-                  {filterParams.selectedSubcategory && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
-                      {findSubcategoryName(filterParams.selectedSubcategory)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("subcategory")}
-                      />
-                    </span>
-                  )}
+                    {(filterParams.minPrice || filterParams.maxPrice) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                        ₹{filterParams.minPrice || 0}–₹
+                        {filterParams.maxPrice || 100000}
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("price")}
+                        />
+                      </span>
+                    )}
 
-                  {filterParams.selectedMaterial && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
-                      {filterParams.selectedMaterial}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("material")}
-                      />
-                    </span>
-                  )}
+                    {filterParams.discountRange && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                        {getDiscountLabel(filterParams.discountRange)}
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("discount")}
+                        />
+                      </span>
+                    )}
 
-                  {(filterParams.minPrice || filterParams.maxPrice) && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-800 text-white text-xs font-medium rounded-xs">
-                      ₹{filterParams.minPrice || 0} - ₹
-                      {filterParams.maxPrice || "100000"}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("price")}
-                      />
-                    </span>
-                  )}
+                    {filterParams.inStockOnly && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                        In Stock
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("inStock")}
+                        />
+                      </span>
+                    )}
 
-                  {filterParams.discountRange && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-700 text-white text-xs font-medium rounded-xs">
-                      {getDiscountLabel(filterParams.discountRange)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("discount")}
-                      />
-                    </span>
-                  )}
+                    {filterParams.onSaleOnly && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">
+                        On Sale
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("onSale")}
+                        />
+                      </span>
+                    )}
 
-                  {filterParams.inStockOnly && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-700 text-white text-xs font-medium rounded-xs">
-                      In Stock
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("inStock")}
-                      />
-                    </span>
-                  )}
+                    {filterParams.sortBy !== "newest" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                        {findSortLabel(filterParams.sortBy)}
+                        <X
+                          className="w-3 h-3 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("sort")}
+                        />
+                      </span>
+                    )}
 
-                  {filterParams.onSaleOnly && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-700 text-white text-xs font-medium rounded-xs">
-                      On Sale
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("onSale")}
-                      />
-                    </span>
-                  )}
-
-                  {filterParams.sortBy !== "newest" && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-700 text-white text-xs font-medium rounded-xs">
-                      {findSortLabel(filterParams.sortBy)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-gray-300 transition-colors"
-                        onClick={() => removeFilter("sort")}
-                      />
-                    </span>
-                  )}
-
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-xs text-red-600 hover:text-red-800 font-medium underline ml-2 px-1 py-0.5 hover:bg-red-50 transition-colors"
-                  >
-                    Clear All
-                  </button>
-                </motion.div>
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-[10px] text-red-600 hover:text-red-700 font-medium underline px-1 py-0.5 hover:bg-red-50 rounded transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* Content Area */}
@@ -563,20 +537,13 @@ const ProductsPage = () => {
                     animate={{ opacity: 1 }}
                     className="text-center py-12 mt-8"
                   >
-                    <div className="bg-white rounded-xs p-8 border border-gray-200 shadow-sm max-w-md mx-auto">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <ShoppingBag className="w-8 h-8 text-blue-600" />
-                      </div>
-                      <h3 className="text-gray-900 font-semibold text-xl mb-2">
-                        That's everything!
-                      </h3>
+                    <div className="bg-white rounded-xs p-8 border border-gray-200 shadow-sm max-w-md mx-auto"> 
                       <p className="text-gray-600 text-base">
                         You've viewed all{" "}
                         <span className="font-semibold text-blue-600">
                           {totalProducts?.toLocaleString() || 0}
                         </span>{" "}
-                        {totalProducts === 1 ? "product" : "products"} in this
-                        collection.
+                        {totalProducts === 1 ? "product" : "products"}
                       </p>
                     </div>
                   </motion.div>

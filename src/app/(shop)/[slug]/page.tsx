@@ -410,15 +410,17 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   }, []);
 
   const activeFilterCount = useMemo(() => {
-    return [
+    const filters = [
       filterParams.selectedMaterial,
-      filterParams.minPrice,
-      filterParams.maxPrice,
+      // Count price range as single filter if either min or max is set
+      filterParams.minPrice || filterParams.maxPrice ? true : false,
       filterParams.inStockOnly,
       filterParams.onSaleOnly,
       filterParams.discountRange,
       filterParams.sortBy !== "newest",
-    ].filter(Boolean).length;
+    ];
+
+    return filters.filter(Boolean).length;
   }, [filterParams]);
 
   const filters = useMemo(
@@ -516,13 +518,15 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                       {totalProducts === 1 ? "product" : "products"}
                     </div>
                   ) : loadingProducts ? (
-                    <div className="h-4 w-32 bg-gray-200 animate-pulse rounded-sm"></div>
-                  ) : null}
+                    <div className="h-4 "></div>
+                  ) : (
+                    <div className="h-4"></div>
+                  )}
                 </div>
 
                 <div className="mt-2 max-w-4xl">
                   {getPageDescription()?.length > 100 ? (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-center">
                       <p
                         className={`text-xs text-gray-500 leading-relaxed flex-1 ${
                           !showFullDescription
@@ -534,7 +538,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                       </p>
                       <button
                         type="button"
-                        className="text-blue-600 md:hidden hover:text-blue-700 hover:underline font-medium text-xs transition-colors flex-shrink-0 ml-1"
+                        className="text-red-600 md:hidden hover:text-red-700 hover:underline font-medium text-xs transition-colors flex-shrink-0"
                         onClick={() => setShowFullDescription((prev) => !prev)}
                       >
                         {showFullDescription ? "Less" : "More"}
@@ -567,7 +571,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
               </motion.button>
               {/* Compact Active Filters */}
               {hasActiveFilters && (
-                <div className="px-4 mb-4">
+                <div className="px-4  my-4 md:mb-4 ">
                   <div className="flex flex-wrap gap-1.5 items-center">
                     <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
                       Filters:

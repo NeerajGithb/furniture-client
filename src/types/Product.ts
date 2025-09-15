@@ -1,3 +1,5 @@
+import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from "react";
+
 // types/Product.ts
 export interface Product {
   _id: string;
@@ -151,7 +153,7 @@ export interface ProductCardData extends Pick<Product,
   | 'ratings'
   | 'reviews'
   | 'inStockQuantity'
-> {}
+> { }
 
 // 🎯 Filters type
 export interface ProductFilters {
@@ -206,9 +208,29 @@ export interface ProductsApiResponse {
 }
 
 export interface Category {
-  _id: string;
-  name: string;
+  _id: Key | null | undefined;
   slug: string;
+  name:
+  | string
+  | number
+  | bigint
+  | boolean
+  | ReactElement<unknown, string | JSXElementConstructor<any>>
+  | Iterable<ReactNode>
+  | ReactPortal
+  | Promise<
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactPortal
+    | ReactElement<unknown, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined
+  >
+  | null
+  | undefined;
   description: string;
   mainImage: {
     url: string;
@@ -216,6 +238,8 @@ export interface Category {
   };
   products?: Product[];
 }
+
+
 
 export interface SubCategory {
   _id: string;
@@ -241,7 +265,7 @@ export interface IInspiration {
   heroImage: { url: string; alt: string; publicId: string };
   tags: string[];
   keywords: string[];
-  categories: string[] | Array<{_id: string; name: string; slug: string; mainImage?: { url: string; alt: string; publicId: string }}>;
+  categories: string[] | Array<{ _id: string; name: string; slug: string; mainImage?: { url: string; alt: string; publicId: string } }>;
   createdAt: string;
   updatedAt: string;
 }

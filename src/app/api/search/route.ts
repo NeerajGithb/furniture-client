@@ -4,15 +4,6 @@ import PureSearchService from '@/lib/searchService';
 import cacheManager from '@/lib/cacheManager';
 import { SuggestionsHandler } from '@/lib/suggestions';
 
-/**
- * GET /api/search - Main search endpoint
- * Query params:
- * - q: search query
- * - page: page number (default: 1)
- * - pageSize: items per page (default: 24, max: 60)
- * - suggest: return suggestions only (1 or 0)
- * - debug: include debug information (1 or 0)
- */
 export async function GET(request : NextRequest) {
   try {
     const clientId = cacheManager.getClientId(request);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Search,
@@ -13,7 +13,7 @@ import {
 import useSearchStore from "@/stores/searchStore";
 import { SuggestionsHandler } from "@/lib/suggestions";
 import { getDidYouMeanSuggestions } from "@/lib/didumean";
-// Type definitions
+
 interface Product {
   id: string;
   name: string;
@@ -39,6 +39,8 @@ interface SearchBarProps {
   className?: string;
   placeholder?: string;
   onSearch?: (query: string) => void;
+  autoFocus?: boolean;
+  initialQuery?: string;
 }
 
 type SuggestionType =
@@ -49,7 +51,6 @@ type SuggestionType =
   | "recent"
   | "didYouMean";
 
-// Enhanced placeholder texts
 const PLACEHOLDERS = [
   "Search furniture, sofas, beds...",
   "Find dining sets, chairs...",
@@ -58,7 +59,6 @@ const PLACEHOLDERS = [
   "Search by brand, style, color...",
 ];
 
-// Enhanced trending searches
 const TRENDING_SEARCHES = [
   "sofa set 3 seater",
   "king size bed with storage",
@@ -70,7 +70,6 @@ const TRENDING_SEARCHES = [
   "recliner chair leather",
 ];
 
-// Placeholder animation hook
 const usePlaceholderAnimation = () => {
   const [placeholderText, setPlaceholderText] = useState("");
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
@@ -108,8 +107,13 @@ const usePlaceholderAnimation = () => {
   return placeholderText;
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
-  const [query, setQuery] = useState<string>("");
+const SearchBar: React.FC<SearchBarProps> = ({
+  className = "",
+  onSearch,
+  autoFocus = false,
+  initialQuery = "",
+}) => {
+  const [query, setQuery] = useState<string>(initialQuery);
   const [suggestions, setSuggestions] = useState<SuggestionsData | null>(null);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -127,55 +131,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
   const router = useRouter();
   const pathName = usePathname();
   const animatedPlaceholder = usePlaceholderAnimation();
-  const placeholderText =
-    pathName === "/" ? animatedPlaceholder : "Search furniture & home decor...";
+  const placeholderText = pathName === "/" ? animatedPlaceholder : "Search furniture & home decor...";
 
   const { setQuery: setSearchQuery } = useSearchStore();
 
-  // Clear input on page load and route changes (except search page)
-  useEffect(() => {
-    if (pathName !== "/search") {
-      setQuery("");
-    }
-    setIsSearching(false);
-    setIsLoading(false);
-  }, [pathName]);
-
-  // Load recent searches
-  useEffect(() => {
-    try {
-      const recentSearchesData = JSON.parse(
-        localStorage.getItem("recentSearches") || "[]"
-      );
-      setRecentSearches(recentSearchesData.slice(0, 6));
-    } catch (error) {
-      console.error("Error loading search data:", error);
-    }
-  }, []);
-
-  // Save to recent searches
-  const saveToRecentSearches = useCallback(
-    (searchQuery: string) => {
-      try {
-        const cleanQuery = searchQuery.trim().toLowerCase();
-        if (cleanQuery.length < 2) return;
-
-        const updatedRecent = [
-          searchQuery,
-          ...recentSearches.filter((item) => item.toLowerCase() !== cleanQuery),
-        ].slice(0, 6);
-
-        setRecentSearches(updatedRecent);
-        localStorage.setItem("recentSearches", JSON.stringify(updatedRecent));
-      } catch (error) {
-        console.error("Error saving search data:", error);
-      }
-    },
-    [recentSearches]
-  );
-
-  // Get default suggestions (recent + trending)
-  const getDefaultSuggestions = useCallback((): SuggestionsData => {
+  // Memoize default suggestions to prevent recalculation
+  const defaultSuggestions = useMemo(() => {
     const maxItems = 8;
     const hasRecent = recentSearches.length > 0;
 
@@ -202,30 +163,84 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }
   }, [recentSearches]);
 
-  // Get instant suggestions
-  const getInstantSuggestions = useCallback(
-    (searchQuery: string): SuggestionsData => {
-      if (searchQuery.length < 2) {
-        return getDefaultSuggestions();
+  useEffect(() => {
+    if (pathName !== "/search") {
+      setQuery("");
+    }
+    setIsSearching(false);
+    setIsLoading(false);
+  }, [pathName]);
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus]);
+
+  useEffect(() => {
+    try {
+      const recentSearchesData = JSON.parse(
+        localStorage.getItem("recentSearches") || "[]"
+      );
+      setRecentSearches(recentSearchesData.slice(0, 6));
+    } catch (error) {
+      console.error("Error loading search data:", error);
+    }
+  }, []);
+  useEffect(() => {
+    if (initialQuery && initialQuery !== query) {
+      setQuery(initialQuery);
+      // Set suggestions based on initial query
+      if (initialQuery.trim()) {
+        const instantSuggestions = getInstantSuggestions(initialQuery.trim());
+        setSuggestions(instantSuggestions);
+      } else {
+        setSuggestions(defaultSuggestions);
       }
+    }
+  }, [initialQuery]);
 
-      const result = SuggestionsHandler.getSmartSuggestions(searchQuery);
-      const maxItems = 8;
-      const querySuggestions = result.suggestions?.slice(0, maxItems) || [];
+  const saveToRecentSearches = useCallback((searchQuery: string) => {
+    try {
+      const cleanQuery = searchQuery.trim().toLowerCase();
+      if (cleanQuery.length < 2) return;
 
-      return {
-        queries: querySuggestions,
-        trending: [],
-        recent: [],
-        products: [],
-        categories: [],
-        didYouMean: [],
-      };
-    },
-    [getDefaultSuggestions]
-  );
+      setRecentSearches(prevRecent => {
+        const updatedRecent = [
+          searchQuery,
+          ...prevRecent.filter((item) => item.toLowerCase() !== cleanQuery),
+        ].slice(0, 6);
 
-  // Input change handler
+        localStorage.setItem("recentSearches", JSON.stringify(updatedRecent));
+        return updatedRecent;
+      });
+    } catch (error) {
+      console.error("Error saving search data:", error);
+    }
+  }, []);
+
+  const getInstantSuggestions = useCallback((searchQuery: string): SuggestionsData => {
+    if (searchQuery.length < 2) {
+      return defaultSuggestions;
+    }
+
+    const result = SuggestionsHandler.getSmartSuggestions(searchQuery);
+    const maxItems = 8;
+    const querySuggestions = result.suggestions?.slice(0, maxItems) || [];
+
+    return {
+      queries: querySuggestions,
+      trending: [],
+      recent: [],
+      products: [],
+      categories: [],
+      didYouMean: [],
+    };
+  }, [defaultSuggestions]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
     setQuery(value);
@@ -238,13 +253,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     const trimmedValue = value.trim();
 
     if (!trimmedValue) {
-      // Show recent + trending when no text
-      setSuggestions(getDefaultSuggestions());
+      setSuggestions(defaultSuggestions);
       setShowSuggestions(true);
       return;
     }
 
-    // Show loading for query suggestions
     setIsLoading(true);
 
     debounceRef.current = setTimeout(() => {
@@ -256,7 +269,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }, 150);
   };
 
-  // Input focus handler - always show suggestions
   const handleInputFocus = (): void => {
     setIsFocused(true);
     const trimmedQuery = query.trim();
@@ -264,21 +276,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     if (trimmedQuery) {
       setSuggestions(getInstantSuggestions(trimmedQuery));
     } else {
-      // Always show recent + trending when focused with no text
-      setSuggestions(getDefaultSuggestions());
+      setSuggestions(defaultSuggestions);
     }
     setShowSuggestions(true);
   };
 
-  // Input blur handler
   const handleInputBlur = (): void => {
     setIsFocused(false);
   };
 
-  // Submit handler
-  const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     const trimmedQuery = query.trim();
     if (trimmedQuery && !isSearching) {
@@ -286,7 +293,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }
   };
 
-  // Perform search
   const performSearch = async (searchQuery: string): Promise<void> => {
     if (!searchQuery || isSearching) return;
 
@@ -302,7 +308,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
       onSearch(searchQuery);
     }
 
-    // Create clean URL slug
     const createSlug = (text: string) => {
       return text
         .toLowerCase()
@@ -317,8 +322,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     setIsLoading(false);
   };
 
-  // Get all suggestions for keyboard navigation
-  const getAllSuggestionItems = () => {
+  const getAllSuggestionItems = useCallback(() => {
     const items: Array<{ item: any; type: SuggestionType; index: number }> = [];
     let currentIndex = 0;
 
@@ -359,9 +363,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }
 
     return items;
-  };
+  }, [suggestions]);
 
-  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (!showSuggestions || !suggestions) return;
 
@@ -405,7 +408,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }
   };
 
-  // Suggestion selection
   const handleSuggestionSelect = async (suggestionItem: {
     item: any;
     type: SuggestionType;
@@ -427,7 +429,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     }
   };
 
-  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Node;
@@ -446,7 +447,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Cleanup
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -455,10 +455,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     };
   }, []);
 
-  // Clear search
   const clearSearch = (): void => {
     setQuery("");
-    setSuggestions(getDefaultSuggestions());
+    setSuggestions(defaultSuggestions);
     setShowSuggestions(true);
     setSelectedIndex(-1);
     setIsLoading(false);
@@ -466,13 +465,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     inputRef.current?.focus();
   };
 
-  // Get item name helper
   const getItemName = (item: string | Product | Category): string => {
     if (typeof item === "string") return item;
     return item.name;
   };
 
-  // Render suggestion section
   const renderSuggestionSection = (
     items: any[],
     type: SuggestionType,
@@ -486,7 +483,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     const limitedItems = items.slice(0, maxItems);
 
     return (
-      <div className="border-b border-gray-100 last:border-b-0">
+      <div className="md:border-b md:border-gray-100 last:border-b-0">
         {limitedItems.map((item, i) => {
           const globalIndex = startIndex + i;
           const isSelected = selectedIndex === globalIndex;
@@ -495,7 +492,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
           return (
             <div
               key={`${type}-${i}`}
-              className={`px-4 py-2 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
+              className={`px-4 py-[10px] md:py-2 cursor-pointer flex max-md:border-b max-md:border-gray-200 items-center justify-between group transition-colors duration-150 ${
                 isSelected
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-700 hover:bg-gray-50"
@@ -537,6 +534,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
       </div>
     );
   };
+
   const renderDidYouMeanSection = (
     items: string[],
     icon: React.ReactNode,
@@ -550,7 +548,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     const limitedItems = items.slice(0, maxItems);
 
     return (
-      <div className="border-b border-gray-100 last:border-b-0 pt-1">
+      <div className="md:border-b md:border-gray-100 last:border-b-0 pt-1">
         {isFallback && (
           <div className="text-xs text-gray-600 uppercase tracking-wide mb-2 px-3">
             No results found for "{query}" · Did you mean?
@@ -563,7 +561,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
           return (
             <div
               key={`didyoumean-${i}`}
-              className={`px-4 py-3 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
+              className={`px-4 py-[10px] md:py-2 max-md:border-b max-md:border-gray-200 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
                 isSelected
                   ? "bg-blue-50 text-blue-700"
                   : "text-gray-700 hover:bg-gray-50"
@@ -600,7 +598,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
     );
   };
 
-  // Check if we have suggestions
   const hasSuggestions =
     suggestions &&
     ((suggestions.recent && suggestions.recent.length > 0) ||
@@ -613,14 +610,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
 
   return (
     <div className={`relative ${className}`} role="search">
-      {/* Search Form */}
       <form onSubmit={handleSubmit} className="relative">
         <div
           className="relative group"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Search Input - Premium styling without focus ring */}
           <input
             ref={inputRef}
             type="search"
@@ -631,14 +626,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
             onBlur={handleInputBlur}
             placeholder={placeholderText}
             disabled={isSearching || loadingProducts}
-            className={`w-full pl-5 pr-16 h-[30px] max-h-[30px] text-xs font-normal rounded-xs bg-gray-50  border border-gray-200 
-            focus:outline-none focus:border-gray-600  focus:bg-white transition-all duration-300 ease-out 
-            text-gray-900 placeholder-gray-400 
-            ${
-              isSearching || loadingProducts
-                ? "cursor-not-allowed opacity-70"
-                : ""
-            }`}
+            className={`w-full pl-7  pr-16 h-full text-sm font-normal md:rounded-xs md:bg-gray-50 md:border md:border-gray-200 
+md:pl-5 md:pr-16 md:h-[30px] md:max-h-[30px] md:text-xs
+focus:outline-none md:focus:border-gray-600 md:focus:bg-white transition-all duration-300 ease-out 
+text-gray-900 placeholder-gray-400 
+${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
             autoComplete="off"
             aria-label="Search furniture and home decor"
             aria-expanded={showSuggestions}
@@ -647,12 +639,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
           />
           <style jsx>{`
             input:not(:placeholder-shown) {
-              font-size: 0.875rem; /* text-sm */
+              font-size: 0.875rem;
             }
           `}</style>
-          {/* Search Icons */}
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
-            {/* Clear button - only show on hover and when there's query */}
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 md:right-2">
             {query && !isSearching && !loadingProducts && isHovered && (
               <button
                 type="button"
@@ -660,11 +650,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 rounded hover:bg-gray-100"
                 aria-label="Clear search"
               >
-                <X size={14} />
+                <X size={16} className="md:w-3.5 md:h-3.5" />
               </button>
             )}
 
-            {/* Search button - always visible */}
             <button
               type="submit"
               disabled={isSearching || loadingProducts || !query.trim()}
@@ -680,20 +669,22 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
               }
             >
               {isSearching || isLoading || loadingProducts ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2
+                  size={20}
+                  className="animate-spin md:w-[18px] md:h-[18px]"
+                />
               ) : (
-                <Search size={18} />
+                <Search size={20} className="md:w-[18px] md:h-[18px] max-md:text-white" />
               )}
             </button>
           </div>
         </div>
       </form>
 
-      {/* Suggestions Dropdown */}
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xs shadow-lg z-50 max-w-full "
+          className="fixed md:absolute md:top-full left-0 right-0 mt-4 md:mt-2 bg-white border border-gray-200 rounded-xs shadow-all z-50 max-w-full"
           style={{
             maxHeight: "min(400px, 80vh)",
             width: "100%",
@@ -704,7 +695,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
         >
           {hasSuggestions ? (
             <div>
-              {/* Recent Searches */}
               {suggestions?.recent && suggestions.recent.length > 0 && (
                 <>
                   {renderSuggestionSection(
@@ -719,7 +709,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 </>
               )}
 
-              {/* Trending Searches */}
               {suggestions?.trending && suggestions.trending.length > 0 && (
                 <>
                   {renderSuggestionSection(
@@ -734,7 +723,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "", onSearch }) => {
                 </>
               )}
 
-              {/* Query Suggestions */}
               {suggestions?.queries && suggestions.queries.length > 0 && (
                 <>
                   {renderSuggestionSection(

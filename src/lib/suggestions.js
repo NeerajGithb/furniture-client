@@ -332,6 +332,8 @@ export class SuggestionsHandler {
       suggestions.add('office chair');
       suggestions.add('accent chair');
       suggestions.add('recliner chair');
+      suggestions.add('rocking chair');
+      suggestions.add('folding chair');
     }
     
     if (furniture === 'bed') {
@@ -339,6 +341,11 @@ export class SuggestionsHandler {
       suggestions.add('queen size bed');
       suggestions.add('single bed');
       suggestions.add('double bed');
+      suggestions.add('wooden bed');
+      suggestions.add('storage bed');
+      suggestions.add('bunk bed');
+      suggestions.add('sofa cum bed');
+
     }
   }
 }

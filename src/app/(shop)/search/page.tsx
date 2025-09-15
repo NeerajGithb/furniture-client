@@ -26,6 +26,21 @@ import {
 import ProductGrid from "@/components/product/ProductGrid";
 import FilterSidebar from "@/components/filter/FilterSidebar";
 import useSearchStore from "@/stores/searchStore";
+import SearchEmptyState from "@/components/state/SearchEmptyState";
+import GridSkeleton from "@/components/sceleton/GridSkeleton";
+import { Category } from "@/types/Product";
+
+// Sort options matching slug page
+const SORT_OPTIONS = [
+  { value: "relevance", label: "Most Relevant" },
+  { value: "newest", label: "Newest First" },
+  { value: "price-low", label: "Price: Low to High" },
+  { value: "price-high", label: "Price: High to Low" },
+  { value: "name-asc", label: "Name: A-Z" },
+  { value: "name-desc", label: "Name: Z-A" },
+  { value: "rating", label: "Customer Rating" },
+  { value: "discount", label: "Highest Discount" },
+];
 
 // Cache stable selectors
 const selectProducts = (state: any) => state.products;
@@ -45,187 +60,6 @@ const selectSearchProducts = (state: any) => state.searchProducts;
 const selectSetQuery = (state: any) => state.setQuery;
 const selectFallback = (state: any) => state.fallback;
 const selectNoResults = (state: any) => state.noResults;
-
-interface category {
-  _id: Key | null | undefined;
-  slug: string;
-  name:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<unknown, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | ReactPortal
-    | Promise<
-        | string
-        | number
-        | bigint
-        | boolean
-        | ReactPortal
-        | ReactElement<unknown, string | JSXElementConstructor<any>>
-        | Iterable<ReactNode>
-        | null
-        | undefined
-      >
-    | null
-    | undefined;
-}
-
-const GridSkeleton = () => (
-  <div className="">
-    <div className="flex items-center justify-center w-full h-[60vh]">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="flex flex-col items-center gap-6"
-      >
-        {/* Spinner */}
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-300"></div>
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            className="absolute inset-0 rounded-full border-4 border-transparent border-t-black"
-          ></motion.div>
-        </div>
-
-        {/* Loading text with shimmer */}
-        <motion.div
-          initial={{ opacity: 0.6 }}
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="text-lg font-medium text-gray-800 tracking-wide"
-        >
-          Loading products...
-        </motion.div>
-
-        {/* Progress bar style shimmer */}
-        <div className="w-48 h-2 bg-gray-200 rounded overflow-hidden">
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: "100%" }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-            className="w-1/2 h-full bg-gradient-to-r from-gray-400 via-gray-600 to-gray-400"
-          ></motion.div>
-        </div>
-      </motion.div>
-    </div>
-  </div>
-);
-
-type EmptyStateProps = {
-  hasFilters: boolean;
-  onClearFilters: () => void;
-  isError?: boolean;
-  errorMessage?: string;
-  query?: string;
-  isFallback?: boolean;
-};
-
-const EmptyState = ({
-  hasFilters,
-  onClearFilters,
-  isError = false,
-  errorMessage = "",
-  query = "",
-  isFallback = false,
-}: EmptyStateProps) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="flex flex-col items-center justify-center py-8 sm:py-12 px-4"
-  >
-    <div className="bg-white rounded-sm shadow-sm border border-gray-100 p-6 sm:p-8 text-center max-w-md mx-auto">
-      {isError ? (
-        <>
-          <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Search Error
-          </h3>
-          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            {errorMessage || "We encountered an error while searching."}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Try Again
-          </button>
-        </>
-      ) : !query.trim() ? (
-        <>
-          <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search className="w-6 h-6 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Start your search
-          </h3>
-          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            Enter a search term to find products
-          </p>
-        </>
-      ) : (
-        <>
-          <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag className="w-6 h-6 text-gray-400" />
-          </div>
-          {isFallback ? (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Limited results found
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We found some related products for "{query}", but no exact matches. 
-                {hasFilters && " Try adjusting your filters for more results."}
-              </p>
-              {hasFilters && (
-                <button
-                  onClick={onClearFilters}
-                  className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-                >
-                  <Search className="w-4 h-4" />
-                  Clear All Filters
-                </button>
-              )}
-            </>
-          ) : hasFilters ? (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products found
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We couldn't find any products matching "{query}" with your
-                current filters. Try adjusting your search criteria.
-              </p>
-              <button
-                onClick={onClearFilters}
-                className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                <Search className="w-4 h-4" />
-                Clear All Filters
-              </button>
-            </>
-          ) : (
-            <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products found
-              </h3>
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We couldn't find any products matching "{query}". Try different
-                search terms.
-              </p>
-            </>
-          )}
-        </>
-      )}
-    </div>
-  </motion.div>
-);
 
 const SearchPage: React.FC = () => {
   console.log("SearchPage rendered");
@@ -255,6 +89,7 @@ const SearchPage: React.FC = () => {
 
   // Local state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const lastSearchRef = useRef<string>("");
 
   // Refs for stable actions
@@ -270,7 +105,7 @@ const SearchPage: React.FC = () => {
     setQuery(query);
   }, [query, setQuery]);
 
-  // Stable filter parameters - memoized
+  // Enhanced filter parameters - now includes discount
   const filterParams = useMemo(
     () => ({
       query: query,
@@ -281,12 +116,13 @@ const SearchPage: React.FC = () => {
       maxPrice: searchParams.get("maxPrice") || "",
       inStockOnly: searchParams.get("inStock") === "true",
       onSaleOnly: searchParams.get("onSale") === "true",
+      discountRange: searchParams.get("discount") || "",
       sortBy: searchParams.get("sort") || "relevance",
     }),
     [query, searchParams]
   );
 
-  // Check active filters
+  // Check active filters - now includes discount
   const hasActiveFilters = useMemo(() => {
     const {
       selectedCategory,
@@ -296,6 +132,7 @@ const SearchPage: React.FC = () => {
       maxPrice,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy,
     } = filterParams;
     return !!(
@@ -306,6 +143,7 @@ const SearchPage: React.FC = () => {
       maxPrice ||
       inStockOnly ||
       onSaleOnly ||
+      discountRange ||
       (sortBy && sortBy !== "relevance")
     );
   }, [filterParams]);
@@ -323,12 +161,14 @@ const SearchPage: React.FC = () => {
     // Only search if this is a completely new search
     if (lastSearchRef.current !== searchKey) {
       lastSearchRef.current = searchKey;
+      setCurrentPage(1);
+      isLoadingMoreRef.current = false;
       const params = new URLSearchParams(searchParams.toString());
       searchProducts(query, params.toString(), true);
     }
   }, [searchParams.toString(), query, searchProducts]);
 
-  // Load more function
+  // Load more function - enhanced with all filter parameters
   const loadMore = useCallback(async () => {
     if (
       isLoadingMoreRef.current ||
@@ -342,10 +182,46 @@ const SearchPage: React.FC = () => {
     }
 
     isLoadingMoreRef.current = true;
+    const nextPage = currentPage + 1;
 
     try {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams();
+      params.set("q", query);
+
+      // Add all filter parameters
+      if (filterParams.selectedCategory) {
+        params.set("category", filterParams.selectedCategory);
+      }
+      if (filterParams.selectedSubcategory) {
+        params.set("subcategory", filterParams.selectedSubcategory);
+      }
+      if (filterParams.selectedMaterial) {
+        params.set("material", filterParams.selectedMaterial);
+      }
+      if (filterParams.minPrice) {
+        params.set("minPrice", filterParams.minPrice);
+      }
+      if (filterParams.maxPrice) {
+        params.set("maxPrice", filterParams.maxPrice);
+      }
+      if (filterParams.inStockOnly) {
+        params.set("inStock", "true");
+      }
+      if (filterParams.onSaleOnly) {
+        params.set("onSale", "true");
+      }
+      if (filterParams.discountRange) {
+        params.set("discount", filterParams.discountRange);
+      }
+      if (filterParams.sortBy !== "relevance") {
+        params.set("sort", filterParams.sortBy);
+      }
+
+      params.set("page", nextPage.toString());
+      params.set("limit", "20");
+
       await searchProducts(query, params.toString(), false);
+      setCurrentPage(nextPage);
     } catch (error) {
       console.error("Error loading more search results:", error);
     } finally {
@@ -358,8 +234,9 @@ const SearchPage: React.FC = () => {
     products.length,
     loadingProducts,
     loadingMore,
+    currentPage,
     query,
-    searchParams,
+    filterParams,
     searchProducts,
   ]);
 
@@ -421,12 +298,8 @@ const SearchPage: React.FC = () => {
       if (filterKey === "category") {
         params.delete("category");
         params.delete("subcategory");
-        params.delete("minPrice");
-        params.delete("maxPrice");
       } else if (filterKey === "subcategory") {
         params.delete("subcategory");
-        params.delete("minPrice");
-        params.delete("maxPrice");
       } else if (filterKey === "price") {
         params.delete("minPrice");
         params.delete("maxPrice");
@@ -461,6 +334,24 @@ const SearchPage: React.FC = () => {
     [subcategories]
   );
 
+  const findSortLabel = useCallback((value: string) => {
+    return SORT_OPTIONS.find((opt) => opt.value === value)?.label || value;
+  }, []);
+
+  const getDiscountLabel = useCallback((value: string) => {
+    const discountOptions = [
+      { value: "", label: "All Products" },
+      { value: "10", label: "10% or more" },
+      { value: "25", label: "25% or more" },
+      { value: "50", label: "50% or more" },
+      { value: "70", label: "70% or more" },
+    ];
+    return (
+      discountOptions.find((opt) => opt.value === value)?.label ||
+      `${value}% or more`
+    );
+  }, []);
+
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
       const params = new URLSearchParams(searchParams);
@@ -470,7 +361,7 @@ const SearchPage: React.FC = () => {
     [router, pathname, searchParams]
   );
 
-  // Active filter count
+  // Active filter count - now includes discount
   const activeFilterCount = useMemo(() => {
     const {
       selectedCategory,
@@ -480,27 +371,41 @@ const SearchPage: React.FC = () => {
       maxPrice,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy,
     } = filterParams;
-    return [
+
+    const filters = [
       selectedCategory,
       selectedSubcategory,
       selectedMaterial,
-      minPrice,
-      maxPrice,
+      // Count price range as single filter if either min or max is set
+      minPrice || maxPrice ? true : false,
       inStockOnly,
       onSaleOnly,
+      discountRange,
       sortBy !== "relevance",
-    ].filter(Boolean).length;
+    ];
+
+    return filters.filter(Boolean).length;
   }, [filterParams]);
 
   // Filters object
   const filters = useMemo(
     () => ({
-      categories: categories || [],
-      subcategories: subcategories || [],
-      materials: materials || [],
-      priceRange: priceRange || { minPrice: 0, maxPrice: 100000 },
+      categories: Array.isArray(categories)
+        ? categories.filter((c: any) => c && typeof c === "object" && c._id)
+        : [],
+      subcategories: Array.isArray(subcategories)
+        ? subcategories.filter((s: any) => s && typeof s === "object" && s._id)
+        : [],
+      materials: Array.isArray(materials)
+        ? materials.filter((m: any) => m && typeof m === "object" && m._id)
+        : [],
+      priceRange:
+        priceRange && typeof priceRange === "object"
+          ? priceRange
+          : { minPrice: 0, maxPrice: 100000 },
     }),
     [categories, subcategories, materials, priceRange]
   );
@@ -508,25 +413,23 @@ const SearchPage: React.FC = () => {
   // Determine what to show - Fixed logic
   const shouldShowSkeleton = loadingProducts && products.length === 0;
   const shouldShowError = error && !loadingProducts;
-  const shouldShowEmptyState = 
-    !loadingProducts && 
-    !error && 
-    query.trim() && 
+  const shouldShowEmptyState =
+    !loadingProducts &&
+    !error &&
+    query.trim() &&
     (noResults || (fallback && products.length === 0));
   const shouldShowProducts = !loadingProducts && !error && products.length > 0;
 
   return (
-    <div className="min-h-screen bg-white ">
+    <div className="min-h-screen bg-white">
       <div className="max-w-screen-2xl mx-auto">
         <div className="flex">
-          {/* Left Sidebar Filters - Desktop */}
           <FilterSidebar filters={filters} />
-
           {/* Main Content */}
           <main className="flex-1 min-w-0">
-            <div className="px-3 py-2 sm:px-4 shadow-sm">
+            <div className="py-2 px-3">
               <motion.nav
-                initial={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="mb-2 text-xs text-gray-600 flex items-center justify-start flex-wrap gap-1"
@@ -562,12 +465,12 @@ const SearchPage: React.FC = () => {
               {/* Unified Search Results Header */}
               {query && !loadingProducts && !shouldShowError ? (
                 <motion.div
-                  initial={{ opacity: 0, y: -6 }}
+                  initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="mb-4 pb-3 border-b border-gray-200"
+                  className="mb-3 pb-2 border-b border-gray-200"
                 >
-                  <h1 className="text-base font-semibold text-gray-900 text-center">
+                  <h1 className="text-sm font-semibold text-gray-900 text-center leading-tight">
                     {products.length > 0 ? (
                       <>
                         Showing{" "}
@@ -586,34 +489,38 @@ const SearchPage: React.FC = () => {
                           {totalProducts?.toLocaleString() || 0}
                         </span>{" "}
                         results for{" "}
-                        <span className="font-bold text-indigo-600">"{query}"</span>
+                        <span className="font-bold text-indigo-600">
+                          "{query}"
+                        </span>
                         {fallback && (
-                          <span className="block text-sm text-orange-600 mt-1">
+                          <span className="block text-xs text-orange-600 mt-1">
                             (Related results - no exact matches found)
                           </span>
                         )}
                       </>
                     ) : (
-                      <span className="text-gray-600">Search results for "{query}"</span>
+                      <span className="text-gray-600">
+                        Search results for "{query}"
+                      </span>
                     )}
                   </h1>
                 </motion.div>
               ) : (
                 <div>
-                  <div className="mb-3 pb-3 border-b border-gray-200 h-10" />
+                  <div className="mb-2 pb-2 border-b border-gray-200 h-6" />
                 </div>
               )}
 
               {/* Suggestion */}
               {suggestion && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-4"
+                  className="mb-3"
                 >
-                  <div className="bg-blue-50 border border-blue-200 rounded-xs p-3">
-                    <div className="flex items-center space-x-2 text-sm">
-                      <Search size={14} className="text-blue-600" />
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-2.5">
+                    <div className="flex items-center space-x-2 text-xs">
+                      <Search size={12} className="text-blue-600" />
                       <span className="text-blue-800">Did you mean:</span>
                       <button
                         onClick={() => handleSuggestionClick(suggestion)}
@@ -629,13 +536,13 @@ const SearchPage: React.FC = () => {
               {/* Related Categories */}
               {relatedCategories.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mb-4"
+                  className="mb-3"
                 >
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-sm text-gray-600 mr-2">Related:</span>
-                    {relatedCategories.map((category: category) => (
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-xs text-gray-600 mr-1">Related:</span>
+                    {relatedCategories.map((category: Category) => (
                       <button
                         key={category._id}
                         onClick={() => {
@@ -643,7 +550,7 @@ const SearchPage: React.FC = () => {
                           params.set("category", category.slug);
                           router.push(`${pathname}?${params.toString()}`);
                         }}
-                        className="px-3 py-1 text-sm bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                        className="px-2 py-1 text-xs bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                       >
                         {category.name}
                       </button>
@@ -654,139 +561,157 @@ const SearchPage: React.FC = () => {
 
               {/* Results Header */}
               <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
                 className="mb-1"
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-sm sm:text-base text-gray-800">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="text-xs sm:text-sm text-gray-800">
                       {shouldShowError && (
-                        <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-full px-3 py-1.5 shadow-sm">
-                          <AlertCircle className="w-4 h-4" />
-                          <span className="font-medium">Search error</span>
+                        <div className="flex items-center gap-1.5 text-red-600 bg-red-50 rounded-full px-2.5 py-1 shadow-sm">
+                          <AlertCircle className="w-3 h-3" />
+                          <span className="font-medium text-xs">
+                            Search error
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
-
-                  {/* Mobile Filter Button */}
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowMobileFilters(true)}
-                    className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-sm border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-all text-sm font-medium"
-                  >
-                    <Filter className="w-4 h-4 text-gray-600" />
-                    <span>Filters</span>
-                    {hasActiveFilters && (
-                      <span className="bg-black text-white text-xs px-1.5 py-0.5 rounded-full font-semibold min-w-[18px] h-[18px] flex items-center justify-center">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </motion.button>
                 </div>
               </motion.div>
 
-              {/* Active Filters */}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowMobileFilters(true)}
+                className="lg:hidden w-full flex items-center justify-between px-3 py-2.5 border border-slate-300 bg-gradient-to-r from-slate-50 to-gray-50 shadow-sm hover:shadow-md hover:border-slate-400 hover:from-slate-100 hover:to-gray-100 transition-all duration-300 text-sm font-medium text-slate-800 hover:text-slate-900 mb-2"
+              >
+                <span className="flex items-center gap-2">Sort & Filters</span>
+                <div className="flex items-center gap-1.5">
+                  {hasActiveFilters && (
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs px-1.5 py-0.5 font-semibold min-w-[16px] h-[16px] flex items-center justify-center shadow-sm rounded-full">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <SlidersHorizontal className="w-4 h-4 text-slate-800" />
+                </div>
+              </motion.button>
+
+              {/* Enhanced Active Filters Display */}
               {hasActiveFilters && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-white border border-gray-100 rounded-sm shadow-sm"
-                >
-                  <span className="text-xs font-medium text-gray-600 flex items-center gap-1">
-                    <SlidersHorizontal className="w-3 h-3" />
-                    Active:
-                  </span>
-                  {filterParams.selectedCategory && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      {findCategoryName(filterParams.selectedCategory)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("category")}
-                      />
+                <div className="px-1 my-3">
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-[9px] text-gray-500 font-medium uppercase tracking-wide">
+                      Filters:
                     </span>
-                  )}
-                  {filterParams.selectedSubcategory && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      {findSubcategoryName(filterParams.selectedSubcategory)}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("subcategory")}
-                      />
-                    </span>
-                  )}
-                  {filterParams.selectedMaterial && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      {filterParams.selectedMaterial}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("material")}
-                      />
-                    </span>
-                  )}
-                  {(filterParams.minPrice || filterParams.maxPrice) && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      ₹{filterParams.minPrice || 0} - ₹
-                      {filterParams.maxPrice || "∞"}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("price")}
-                      />
-                    </span>
-                  )}
-                  {filterParams.inStockOnly && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      In Stock
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("inStock")}
-                      />
-                    </span>
-                  )}
-                  {filterParams.onSaleOnly && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      On Sale
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("onSale")}
-                      />
-                    </span>
-                  )}
-                  {filterParams.sortBy !== "relevance" && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-900 text-white text-xs rounded-full font-medium shadow-sm">
-                      Sort: {filterParams.sortBy}
-                      <X
-                        className="w-3 h-3 cursor-pointer hover:text-red-400 transition-colors"
-                        onClick={() => removeFilter("sort")}
-                      />
-                    </span>
-                  )}
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-xs text-red-600 hover:text-red-800 font-medium underline ml-2"
-                  >
-                    Clear All
-                  </button>
-                </motion.div>
+
+                    {filterParams.selectedCategory && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                        {findCategoryName(filterParams.selectedCategory)}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("category")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.selectedSubcategory && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full font-medium">
+                        {findSubcategoryName(filterParams.selectedSubcategory)}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("subcategory")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.selectedMaterial && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                        {filterParams.selectedMaterial}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("material")}
+                        />
+                      </span>
+                    )}
+
+                    {(filterParams.minPrice || filterParams.maxPrice) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full font-medium">
+                        ₹{filterParams.minPrice || 0}–₹
+                        {filterParams.maxPrice || 100000}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("price")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.discountRange && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full font-medium">
+                        {getDiscountLabel(filterParams.discountRange)}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("discount")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.inStockOnly && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">
+                        In Stock
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("inStock")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.onSaleOnly && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">
+                        On Sale
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("onSale")}
+                        />
+                      </span>
+                    )}
+
+                    {filterParams.sortBy !== "relevance" && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
+                        {findSortLabel(filterParams.sortBy)}
+                        <X
+                          className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
+                          onClick={() => removeFilter("sort")}
+                        />
+                      </span>
+                    )}
+
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-[9px] text-red-600 hover:text-red-700 font-medium underline px-1 py-0.5 hover:bg-red-50 rounded transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* Content Area */}
-              <div className="mb-8">
+              <div className="min-h-[300px]">
                 {shouldShowSkeleton ? (
                   <GridSkeleton />
                 ) : shouldShowError ? (
-                  <EmptyState
+                  <SearchEmptyState
                     hasFilters={hasActiveFilters}
                     onClearFilters={clearAllFilters}
                     isError={true}
                     errorMessage={error}
                     query={query}
+                    isFallback={fallback}
                   />
                 ) : shouldShowEmptyState ? (
-                  <EmptyState
+                  <SearchEmptyState
                     hasFilters={hasActiveFilters}
                     onClearFilters={clearAllFilters}
                     query={query}
@@ -798,11 +723,11 @@ const SearchPage: React.FC = () => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="mb-4"
+                        className="px-1 mb-3"
                       >
-                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm p-3 rounded-sm">
-                          Showing related results for{" "}
-                          <strong>"{query}"</strong> - no exact matches found.
+                        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs p-2.5 rounded-md">
+                          Showing related results for <strong>"{query}"</strong>{" "}
+                          - no exact matches found.
                         </div>
                       </motion.div>
                     )}
@@ -816,13 +741,9 @@ const SearchPage: React.FC = () => {
                 ) : null}
               </div>
 
-              {/* Intersection Observer Target - positioned after content */}
+              {/* Load More Observer */}
               {hasMore && products && products.length > 0 && !loadingMore && (
-                <div
-                  ref={observerTarget}
-                  className="h-4 w-full"
-                  style={{ marginTop: "-2rem" }}
-                />
+                <div ref={observerTarget} className="h-3 w-full -mt-6" />
               )}
 
               {/* End of Results */}
@@ -832,23 +753,22 @@ const SearchPage: React.FC = () => {
                 !loadingMore &&
                 !loadingProducts && (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center py-12"
+                    className="bg-gray-50 p-3 border border-gray-200 rounded-md h-[80px] w-[250px] mx-auto mt-4 mb-6 flex justify-center items-center"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
                   >
-                    <div className="bg-white rounded-xs p-8 border border-gray-100 shadow-sm max-w-sm mx-auto">
-                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <ShoppingBag className="w-6 h-6 text-gray-600" />
+                    <div className="space-y-1.5">
+                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <ShoppingBag className="w-4 h-4 text-gray-600" />
                       </div>
-                      <div className="text-gray-900 font-semibold text-lg mb-2">
+                      <div className="text-gray-900 font-semibold text-xs text-center">
                         All results shown!
                       </div>
-                      <div className="text-gray-600 text-sm">
-                        Found {totalProducts?.toLocaleString() || 0}{" "}
-                        {totalProducts === 1 ? "result" : "results"} for "
-                        {query}".
+                      <div className="text-gray-600 text-[10px] text-center leading-tight">
+                        Found {totalProducts?.toLocaleString() || 0} results
                         {fallback && (
-                          <span className="block text-orange-600 mt-1">
+                          <span className="block text-orange-600 mt-0.5">
                             (Related results only)
                           </span>
                         )}
@@ -867,10 +787,11 @@ const SearchPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-60 z-50 lg:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden min-h-screen"
               onClick={() => setShowMobileFilters(false)}
             >
               <motion.div
+                className="w-70"
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -300, opacity: 0 }}

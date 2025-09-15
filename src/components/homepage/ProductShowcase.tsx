@@ -144,20 +144,27 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     </div>
   );
 
+
   const renderSkeletonRow = () => (
-    <div className="relative mb-8 overflow-hidden">
-      <div
-        className={`grid gap-2 sm:gap-3 md:gap-4 ${
-          itemsPerView === 2
-            ? "grid-cols-2"
-            : itemsPerView === 3
-            ? "grid-cols-3"
-            : "grid-cols-5"
-        }`}
-      >
-        {Array.from({ length: itemsPerView }).map((_, i) => (
-          <ProductSkeleton key={i} />
-        ))}
+    <div className="max-w-6xl mx-auto">
+      {" "}
+      {/* Add max-width and center container */}
+      <div className="relative mb-8 overflow-hidden p-2">
+        {" "}
+        {/* Add padding like product rows */}
+        <div
+          className={`grid gap-2 sm:gap-3 md:gap-4 ${
+            itemsPerView === 2
+              ? "grid-cols-2"
+              : itemsPerView === 3
+              ? "grid-cols-3"
+              : "grid-cols-4" // Change from grid-cols-5 to grid-cols-4 to match product rows
+          }`}
+        >
+          {Array.from({ length: itemsPerView }).map((_, i) => (
+            <ProductSkeleton key={i} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -331,26 +338,6 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             </button>
           )}
         </div>
-
-        {/* {isMobile && showViewMoreButton && (
-          <div className="flex justify-center gap-2">
-            {Array.from({ length: Math.ceil(products.length / itemsPerView) }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  setIsUserInteracting(true);
-                  setIndex(i * itemsPerView);
-                  setTimeout(() => setIsUserInteracting(false), 5000);
-                }}
-                className={`w-1 h-1 transition-all ${
-                  Math.floor(currentIndex / itemsPerView) === i
-                    ? 'bg-gray-800'
-                    : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-        )} */}
       </div>
     );
   };
@@ -368,15 +355,9 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
         </div>
         <div className="space-y-4 px-4 mx-auto">
           <div>
-            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-gray-800 px-2 sm:px-0">
-              Featured Collection
-            </h3>
             {renderSkeletonRow()}
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-gray-800 px-2 sm:px-0">
-              Trending Now
-            </h3>
             {renderSkeletonRow()}
           </div>
         </div>

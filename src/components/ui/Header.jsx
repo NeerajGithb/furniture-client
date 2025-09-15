@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Heart,
   Plus,
+  DivideIcon,
 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -435,6 +436,7 @@ const InspirationMegaMenu = memo(
 InspirationMegaMenu.displayName = "InspirationMegaMenu";
 
 const Header = () => {
+  console.log("Rendering Header");
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
 
@@ -526,7 +528,48 @@ const Header = () => {
   );
   const closeDropdown = useCallback(() => setIsDropdownOpen(false), []);
   const openDropdown = useCallback(() => setIsDropdownOpen(true), []);
+  const [currentQuery, setCurrentQuery] = useState("");
 
+  // Add this useEffect to Header component to sync with localStorage
+  useEffect(() => {
+    const syncQuery = () => {
+      try {
+        const lastQuery = localStorage.getItem("lastSearchQuery");
+        if (lastQuery && lastQuery.trim()) {
+          setCurrentQuery(lastQuery);
+        }
+      } catch (error) {
+        console.error("Error reading search query:", error);
+      }
+    };
+
+    // Sync on mount
+    syncQuery();
+
+    // Listen for storage changes (when search happens in modal)
+    window.addEventListener("storage", syncQuery);
+
+    // Custom event listener for same-tab updates
+    const handleQueryUpdate = (event) => {
+      if (event.detail?.query) {
+        setCurrentQuery(event.detail.query);
+      }
+    };
+
+    window.addEventListener("searchQueryUpdated", handleQueryUpdate);
+
+    return () => {
+      window.removeEventListener("storage", syncQuery);
+      window.removeEventListener("searchQueryUpdated", handleQueryUpdate);
+    };
+  }, []);
+
+  // Clear query when navigating away from search
+  useEffect(() => {
+    if (pathname !== "/search") {
+      setCurrentQuery("");
+    }
+  }, [pathname]);
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -700,16 +743,16 @@ const Header = () => {
 
                 <div className="flex items-center gap-1 sm:gap-2 relative max-md:w-full">
                   {/* Static icons container with smooth transform */}
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-1 sm:gap-2"
-                    animate={{ 
-                      x: scrolled && isMdDown ? -44 : 0 
+                    animate={{
+                      x: scrolled && isMdDown ? -44 : 0,
                     }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 400, 
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
                       damping: 30,
-                      duration: 0.3
+                      duration: 0.3,
                     }}
                   >
                     {/* Wishlist */}
@@ -721,7 +764,7 @@ const Header = () => {
                       <Heart size={18} />
                       {wishlistCount > 0 && (
                         <motion.span
-                          className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
+                          className="absolute -top-0 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 md:bg-black text-red-600 md:text-white text-xs md:rounded-full flex items-center justify-center font-bold"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
@@ -744,7 +787,7 @@ const Header = () => {
                       <ShoppingCart size={18} />
                       {cartCount > 0 && (
                         <motion.span
-                          className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-black text-white text-xs rounded-full flex items-center justify-center font-normal"
+                          className="absolute -top-0 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 md:bg-black text-red-600 md:text-white text-xs md:rounded-full flex items-center justify-center font-bold"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
@@ -757,7 +800,6 @@ const Header = () => {
                         </motion.span>
                       )}
                     </Link>
-
                     {/* User section */}
                     {authLoading ? (
                       <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
@@ -823,7 +865,7 @@ const Header = () => {
                           type: "spring",
                           stiffness: 400,
                           damping: 30,
-                          duration: 0.3
+                          duration: 0.3,
                         }}
                       >
                         <motion.button
@@ -893,10 +935,10 @@ const Header = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {/* Secondary navigation bar */}
         <div
-          className="relative bg-white md:border-t md:border-gray-100 max-md:mt-[52px]"
+          className="relative bg-white md:border-t md:border-gray-100 max-md:mt-[52px] max-md:px-1"
           onMouseLeave={handleInspirationLeave}
         >
           <div className="max-w-[1600px] mx-auto px-2 lg:px-6">
@@ -909,21 +951,40 @@ const Header = () => {
             </nav>
 
             {/* Mobile search bar */}
-            <div className="md:hidden py-2 h-14 flex items-center">
-              <button
-                onClick={openSearch}
-                className="flex-1 flex items-center justify-between bg-white border border-gray-200 px-2 py-2  cursor-text hover:bg-gray-100 transition-colors duration-150 text-left rounded-xs"
-                aria-label="Search furniture"
-              >
-                <span className="text-sm text-gray-500 truncate">
-                  What are you looking for?
-                </span>
-
-                <Search
-                  size={16}
-                  className="text-gray-600 flex-shrink-0"
-                />
-              </button>
+            <div className="md:hidden h-[60px] py-[10px] flex items-center">
+              <AnimatePresence>
+                {!isSearchOpen && (
+                  <motion.div
+                    key="search-bar"
+                    className="w-full"
+                    initial={{ y: -60, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -60, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                  >
+                    <motion.button
+                      onClick={openSearch}
+                      className="w-full flex items-center justify-between bg-white border border-gray-200 px-2 py-[9px] cursor-text hover:bg-gray-100 transition-colors duration-150 text-left rounded-xs"
+                      aria-label="Search furniture"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <span
+                        className={`text-sm truncate ${
+                          currentQuery
+                            ? "text-gray-900 font-medium"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {currentQuery || "What are you looking for?"}
+                      </span>
+                      <Search
+                        size={16}
+                        className="text-gray-600 flex-shrink-0"
+                      />
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -945,7 +1006,11 @@ const Header = () => {
 
       {/* Modals and overlays */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={closeSearch}
+        initialQuery={currentQuery}
+      />
       <AuthModal isOpen={isAuthOpen} onClose={closeAuth} />
     </>
   );

@@ -285,7 +285,7 @@ export default function AuthModal({ isOpen, onClose }) {
       });
 
       if (meRes.ok) {
-        const meData = await mehandleApiResponse(res);
+        const meData = await handleApiResponse(meRes);
         if (meData?.user) {
           initializeApp();
           setUser(meData.user);

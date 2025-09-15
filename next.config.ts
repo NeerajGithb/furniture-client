@@ -4,11 +4,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     remotePatterns: [
-      // Google profile images
-      { protocol: "https", hostname: "lh3.googleusercontent.com" },
-      // Cloudinary images
-      { protocol: "https", hostname: "res.cloudinary.com" },
-      // Unsplash images
+      { protocol: "https", hostname: "lh3.googleusercontent.com" }, // Google profile
+      { protocol: "https", hostname: "res.cloudinary.com" },        // Cloudinary
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "unsplash.com" },
       { protocol: "https", hostname: "i.pinimg.com" },
@@ -17,11 +14,11 @@ const nextConfig: NextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  // ✅ Add headers for auth popup
+  // ✅ Headers for auth popup
   async headers() {
     return [
       {
-        source: "/auth/:path*", // all auth routes
+        source: "/(.*)", // **apply to all routes**
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",

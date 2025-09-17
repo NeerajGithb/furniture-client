@@ -329,8 +329,7 @@ OrderSchema.statics.getOrderByNumber = function(orderNumber: string) {
 
 // Instance methods
 OrderSchema.methods.canCancel = function() {
-  return ['pending', 'confirmed'].includes(this.orderStatus) && 
-         this.paymentMethod !== 'cod';
+  return ['pending', 'confirmed'].includes(this.orderStatus);
 };
 
 OrderSchema.methods.cancel = function(reason?: string) {

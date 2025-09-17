@@ -38,6 +38,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.1",
     "@types/pdfkit": "^0.17.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",

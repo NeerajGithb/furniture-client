@@ -214,6 +214,8 @@ export const PUT = withAuth(async (
     const { id } = await params;
     const body = await request.json();
 
+    console.log('[PUT] Request body:', JSON.stringify(body, null, 2));
+
     // Validate order ID
     const validatedId = orderIdSchema.parse(id);
 
@@ -275,8 +277,9 @@ export const PUT = withAuth(async (
       });
 
       if (Object.keys(updates).length === 0 && body.action !== 'cancel') {
+        console.log('[PUT] No valid updates provided. Body:', body, 'Updates:', updates);
         return NextResponse.json(
-          { error: 'No valid updates provided' },
+          { error: 'No valid updates provided. Expected action: "cancel" or valid fields like "notes"' },
           { status: 400 }
         );
       }

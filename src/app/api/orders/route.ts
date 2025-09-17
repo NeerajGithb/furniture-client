@@ -1,11 +1,242 @@
-// app/api/orders/route.ts - MINIMAL FIX: Just fix the orderNumber issue and add new fields
+// app/api/orders/route.ts - Order creation with welcome email
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
 import Product from '@/models/product';
 import Address from '@/models/Address';
 import Payment from '@/models/Payment';
+import User from '@/models/User';
 import { connectDB } from '@/lib/dbConnect';
+import nodemailer from 'nodemailer';
+
+const COLORS = {
+  primary: '#1a365d',
+  accent: '#2b77c9',
+  success: '#16a085',
+  warning: '#f39c12',
+  danger: '#e74c3c',
+  text: '#2c3e50',
+  textLight: '#7f8c8d',
+  border: '#ecf0f1',
+  background: '#f8f9fa',
+  white: '#ffffff'
+};
+
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+    tls: { rejectUnauthorized: false }
+  });
+};
+
+const getUserFriendlyPaymentMethod = (method: string): string => {
+  const methods: Record<string, string> = {
+    'cod': 'Cash on Delivery',
+    'COD': 'Cash on Delivery',
+    'cash_on_delivery': 'Cash on Delivery',
+    'online': 'Online Payment',
+    'card': 'Credit/Debit Card',
+    'upi': 'UPI Payment',
+    'netbanking': 'Net Banking',
+    'wallet': 'Digital Wallet',
+    'razorpay': 'Online Payment',
+    'stripe': 'Online Payment',
+    'paypal': 'PayPal',
+    'paytm': 'Paytm Wallet',
+    'gpay': 'Google Pay',
+    'phonepe': 'PhonePe'
+  };
+  return methods[method?.toLowerCase()] || 'Cash on Delivery';
+};
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+const formatDate = (date: Date | string): string => {
+  return new Date(date).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  });
+};
+
+const generateWelcomeEmailHTML = (order: any, user: any): string => {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Received #${order.orderNumber} - V Furnitures</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: ${COLORS.text}; background-color: ${COLORS.background}; }
+    .email-wrapper { width: 100%; background-color: ${COLORS.background}; padding: 20px 0; }
+    .email-container { max-width: 600px; margin: 0 auto; background: ${COLORS.white}; border: 1px solid ${COLORS.border}; border-radius: 8px; overflow: hidden; }
+    .header { background: ${COLORS.warning}; color: ${COLORS.white}; text-align: center; padding: 32px 24px; }
+    .brand-logo { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+    .status-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+    .status-title { font-size: 20px; font-weight: 600; margin: 16px 0 8px; }
+    .status-message { font-size: 16px; opacity: 0.95; line-height: 1.5; }
+    .content-section { padding: 24px; border-bottom: 1px solid ${COLORS.border}; }
+    .content-section:last-child { border-bottom: none; }
+    .section-title { font-size: 18px; font-weight: 600; color: ${COLORS.text}; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid ${COLORS.border}; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
+    .info-card { padding: 16px; border: 1px solid ${COLORS.border}; border-radius: 6px; background: ${COLORS.background}; }
+    .info-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: ${COLORS.textLight}; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-value { font-size: 15px; font-weight: 600; color: ${COLORS.text}; }
+    .product-item { display: flex; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid ${COLORS.border}; }
+    .product-item:last-child { border-bottom: none; }
+    .product-image { width: 60px; height: 60px; background: ${COLORS.background}; border: 1px solid ${COLORS.border}; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .product-details { flex: 1; min-width: 0; }
+    .product-name { font-weight: 600; color: ${COLORS.text}; margin-bottom: 4px; font-size: 15px; }
+    .product-quantity { font-size: 12px; color: ${COLORS.textLight}; background: ${COLORS.background}; border: 1px solid ${COLORS.border}; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+    .product-price { font-weight: 700; color: ${COLORS.primary}; font-size: 16px; text-align: right; min-width: 80px; }
+    .total-section { background: ${COLORS.background}; border: 2px solid ${COLORS.warning}; padding: 20px; border-radius: 6px; margin: 16px 0; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 700; color: ${COLORS.primary}; }
+    .address-card { background: ${COLORS.background}; border: 1px solid ${COLORS.border}; padding: 16px; border-radius: 6px; font-size: 14px; line-height: 1.6; }
+    .cta-button { display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 16px 0; border: none; cursor: pointer; }
+    .footer { background: ${COLORS.text}; color: ${COLORS.white}; padding: 24px; text-align: center; }
+    .footer-brand { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+    .footer-text { color: #bdc3c7; font-size: 14px; line-height: 1.5; margin: 8px 0; }
+    .contact-info { margin: 16px 0; font-size: 13px; color: #bdc3c7; }
+    .contact-info a { color: #bdc3c7; text-decoration: none; }
+    @media screen and (max-width: 600px) {
+      .email-wrapper { padding: 0; }
+      .email-container { border-radius: 0; border-left: none; border-right: none; }
+      .header { padding: 24px 16px; }
+      .content-section { padding: 16px; }
+      .info-grid { grid-template-columns: 1fr; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="header">
+        <div class="brand-logo">V FURNITURES</div>
+        <div class="status-icon">⏳</div>
+        <div class="status-title">Order Received Successfully</div>
+        <div class="status-message">Thank you for your order! We are reviewing your order details and will confirm shortly.</div>
+      </div>
+      
+      <div class="content-section">
+        <div class="section-title">Order Summary</div>
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-label">Order Number</div>
+            <div class="info-value">#${order.orderNumber}</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Order Date</div>
+            <div class="info-value">${formatDate(order.createdAt)}</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Payment Method</div>
+            <div class="info-value">${getUserFriendlyPaymentMethod(order.paymentMethod)}</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Order Status</div>
+            <div class="info-value">Order Received</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-section">
+        <div class="section-title">Your Products</div>
+        ${order.items.map((item: any) => `
+          <div class="product-item">
+            <div class="product-image">🪑</div>
+            <div class="product-details">
+              <div class="product-name">${item.name}</div>
+              <div class="product-quantity">Qty: ${item.quantity}</div>
+            </div>
+            <div class="product-price">${formatCurrency(item.price * item.quantity)}</div>
+          </div>
+        `).join('')}
+        
+        <div class="total-section">
+          <div class="total-row">
+            <span>Total Amount</span>
+            <span>${formatCurrency(order.totalAmount)}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="content-section">
+        <div class="section-title">Shipping Address</div>
+        <div class="address-card">
+          <strong>${order.shippingAddress.fullName}</strong><br>
+          ${order.shippingAddress.addressLine1}<br>
+          ${order.shippingAddress.addressLine2 ? order.shippingAddress.addressLine2 + '<br>' : ''}
+          ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}<br>
+          ${order.shippingAddress.country}<br><br>
+          <strong>Phone:</strong> ${order.shippingAddress.phone}
+        </div>
+      </div>
+      
+      <div class="content-section">
+        <div class="section-title">What's Next?</div>
+        <p style="color: ${COLORS.textLight}; margin-bottom: 16px;">Your order will be confirmed within 24 hours. Our craftsmen will then begin creating your premium furniture with attention to detail.</p>
+        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/orders/${order._id}" class="cta-button">View Order Details</a>
+      </div>
+      
+      <div class="footer">
+        <div class="footer-brand">V FURNITURES</div>
+        <div class="footer-text">Premium Quality • Timeless Design • Exceptional Service</div>
+        <div class="contact-info">
+          <a href="mailto:vfurnitureshelp@gmail.com">vfurnitureshelp@gmail.com</a><br>
+          www.vfurnitures.com
+        </div>
+        <div class="footer-text" style="margin-top: 16px; font-size: 12px; opacity: 0.8;">
+          This is an automated message. Please do not reply to this email.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
+const sendWelcomeEmail = async (order: any, userEmail: string) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.log('Email configuration missing, skipping email');
+      return { success: false, error: 'Email not configured' };
+    }
+
+    const transporter = createTransporter();
+    const mailOptions = {
+      from: {
+        name: 'V Furnitures',
+        address: process.env.EMAIL_USER!
+      },
+      to: userEmail,
+      subject: `Order Received #${order.orderNumber} - V Furnitures`,
+      html: generateWelcomeEmailHTML(order, null)
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Welcome email sent successfully for order: ${order.orderNumber}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send welcome email:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
 
 // GET - Fetch user's orders (UNCHANGED)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
@@ -322,6 +553,12 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     if (paymentMethod === 'cod') {
       order.orderStatus = 'confirmed';
       await order.save();
+    }
+
+    // Send welcome email
+    const userDoc = await User.findById(user.userId);
+    if (userDoc?.email) {
+      await sendWelcomeEmail(order, userDoc.email);
     }
 
     return NextResponse.json({

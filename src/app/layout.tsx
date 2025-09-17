@@ -27,7 +27,7 @@ export default function RootLayout({
               "var(--font-body), Inter, system-ui, -apple-system, sans-serif",
           }}
         >
-          <Suspense fallback={<div className="flex items-center justify-center h-full bg-white"></div>}>
+          <Suspense fallback={<div className="flex min-h-screen items-center justify-center h-full bg-white"></div>}>
             <Providers>
               <ToastProvider />
               <Header />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import ProductGrid from "@/components/product/ProductGrid";
+import ProductCard from "@/components/product/ProductCard";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import ProductDetails from "@/components/product/ProductDetails";
 import ProductReviews from "@/components/product/ProductReviews";
@@ -13,6 +14,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
 import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useProductStore } from "@/stores/productStore";
+import { Product } from "@/types/Product";
 
 const SingleProductPage = () => {
   const params = useParams();
@@ -53,20 +55,56 @@ const SingleProductPage = () => {
   const slugWithId = params?.id as string | undefined;
   const productId = slugWithId?.split("-").slice(-1)[0];
 
+  // Track fetch attempts to distinguish between loading and not found
+  const [hasFetched, setHasFetched] = useState(false);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
+
   // Local states for actions
   const [buyingNow, setBuyingNow] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [removingFromWishlist, setRemovingFromWishlist] = useState(false);
 
-  useEffect(() => {
-    if (productId) {
-      fetchProduct(productId);
-    }
-  }, [productId, fetchProduct]);
+  // Desktop carousel states
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [relatedIndex, setRelatedIndex] = useState(0);
+  const [allProductsIndex, setAllProductsIndex] = useState(0);
+  const [itemsPerView, setItemsPerView] = useState(3);
+
+  useLayoutEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+
+      setIsDesktop(width >= 768);
+
+      if (width >= 1536) {
+        setItemsPerView(6); // 2xl
+      } else if (width >= 1280) {
+        setItemsPerView(5); // xl
+      } else if (width >= 1024) {
+        setItemsPerView(4); // lg
+      } else if (width >= 768) {
+        setItemsPerView(3); // md
+      } else {
+        setItemsPerView(2); // fallback
+      }
+    };
+
+    handleResize(); // Apply immediately on mount
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
-    if (product) {
+    if (productId && !fetchAttempted) {
+      setFetchAttempted(true);
+      fetchProduct(productId).finally(() => setHasFetched(true));
+    }
+  }, [productId, fetchProduct, fetchAttempted]);
+
+  useEffect(() => {
+    if (product && product._id) {
       const categoryName = product.categoryId?.name;
       if (categoryName) {
         fetchRelatedProducts(categoryName, product._id);
@@ -91,7 +129,7 @@ const SingleProductPage = () => {
       await addToCart(product._id, quantity);
     } catch (error: any) {
       console.error("Add to cart error:", error);
-      toast.error(error.message || "Failed to add to cart");
+      toast.error(error?.message || "Failed to add to cart");
     } finally {
       setAddingToCart(false);
     }
@@ -141,7 +179,7 @@ const SingleProductPage = () => {
             itemTotal: subtotal,
             product: {
               _id: product._id,
-              name: product.name,
+              name: product.name || "",
               finalPrice: product.finalPrice,
               originalPrice: product.originalPrice,
               discountPercent: product.discountPercent,
@@ -156,7 +194,7 @@ const SingleProductPage = () => {
       router.push("/checkout");
     } catch (error: any) {
       console.error("Buy now error:", error);
-      toast.error(error.message || "Failed to proceed with purchase");
+      toast.error(error?.message || "Failed to proceed with purchase");
       setAddingToCart(false);
     } finally {
       setBuyingNow(false);
@@ -169,7 +207,7 @@ const SingleProductPage = () => {
       return;
     }
 
-    if (!product) return;
+    if (!product?._id) return;
 
     if (isWishlisted(product._id)) {
       setRemovingFromWishlist(true);
@@ -178,7 +216,7 @@ const SingleProductPage = () => {
         toast.success("Removed from wishlist");
       } catch (error: any) {
         console.error("Remove from wishlist error:", error);
-        toast.error(error.message || "Failed to remove from wishlist");
+        toast.error(error?.message || "Failed to remove from wishlist");
       } finally {
         setRemovingFromWishlist(false);
       }
@@ -189,7 +227,7 @@ const SingleProductPage = () => {
         toast.success("Added to wishlist");
       } catch (error: any) {
         console.error("Add to wishlist error:", error);
-        toast.error(error.message || "Failed to add to wishlist");
+        toast.error(error?.message || "Failed to add to wishlist");
       } finally {
         setAddingToWishlist(false);
       }
@@ -197,63 +235,163 @@ const SingleProductPage = () => {
   };
 
   const cleanProductName = (name: string) => {
-    return name.replace(/\s*\(Copy\)\s*/g, "").trim();
+    return name?.replace(/\s*\(Copy\)\s*/g, "").trim() || "";
   };
 
   const getDisplayImages = () => {
+    if (!product) return [];
+
     const images = [];
-    if (product?.mainImage?.url) {
+    if (product.mainImage?.url) {
       images.push(product.mainImage);
     }
-    if (product?.galleryImages) {
+    if (product.galleryImages && Array.isArray(product.galleryImages)) {
       images.push(...product.galleryImages);
     }
     return images;
   };
 
-  // Calculate derived state
+  const renderDesktopProductRow = (
+    products: Product[],
+    currentIndex: number,
+    setIndex: React.Dispatch<React.SetStateAction<number>>
+  ) => {
+    if (!products || products.length === 0) return null;
+
+    const maxIndex = Math.max(0, products.length - itemsPerView);
+    const canSlide = products.length > itemsPerView;
+
+    const nextSlide = () => {
+      if (!canSlide) return;
+      setIndex((prev) => Math.min(prev + 2, maxIndex));
+    };
+
+    const prevSlide = () => {
+      if (!canSlide) return;
+      setIndex((prev) => Math.max(prev - 2, 0));
+    };
+
+    return (
+      <div className="relative overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{
+            transform: `translateX(-${(currentIndex / itemsPerView) * 100}%)`,
+          }}
+        >
+          {products.map((product) => (
+            <div
+              key={product._id}
+              className="flex-shrink-0 p-2"
+              style={{ width: `${100 / itemsPerView}%` }}
+            >
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+
+        {canSlide && (
+          <>
+            <button
+              onClick={prevSlide}
+              disabled={currentIndex === 0}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur border border-gray-300 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={nextSlide}
+              disabled={currentIndex >= maxIndex}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur border border-gray-300 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // Calculate derived state - only if product exists
   const isOutOfStock = product
     ? product.inStockQuantity !== undefined && product.inStockQuantity <= 0
     : false;
 
-  const productInCart = product ? isInCart(product._id) : false;
-  const productWishlisted = product ? isWishlisted(product._id) : false;
-  const cartItem = product ? getCartItem(product._id) : null;
-  const isUpdatingCart = product
+  const productInCart = product?._id ? isInCart(product._id) : false;
+  const productWishlisted = product?._id ? isWishlisted(product._id) : false;
+  const cartItem = product?._id ? getCartItem(product._id) : null;
+  const isUpdatingCart = product?._id
     ? cartUpdatingItems.has(product._id) || addingToCart
     : false;
-  const isUpdatingWishlist = product
+  const isUpdatingWishlist = product?._id
     ? wishlistUpdatingItems.has(product._id) ||
       addingToWishlist ||
       removingFromWishlist
     : false;
 
-  if (loading) {
+  // Show loading only if we're currently fetching and haven't fetched yet
+  if (loading && !hasFetched) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="w-full mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-            {/* Image Loading */}
-            <div className="flex gap-3">
-              <div className="flex flex-col gap-2 w-12 md:w-16">
+        <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mb-16">
+            {/* Left Gallery Skeleton */}
+            <div className="md:w-[40%] md:min-w-[464px] space-y-4">
+              <div className="w-full aspect-square bg-gray-200 animate-pulse rounded" />
+              <div className="flex gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="w-12 h-12 md:w-16 md:h-16 bg-gray-200 animate-pulse"
+                    className="w-16 h-16 bg-gray-200 animate-pulse rounded"
                   />
                 ))}
               </div>
-              <div className="flex-1 h-64 md:h-96 bg-gray-200 animate-pulse" />
             </div>
 
-            {/* Details Loading */}
-            <div className="space-y-4">
-              <div className="h-4 bg-gray-200 w-1/4 animate-pulse" />
-              <div className="h-6 bg-gray-200 w-3/4 animate-pulse" />
-              <div className="h-8 bg-gray-200 w-1/3 animate-pulse" />
-              <div className="space-y-2">
-                <div className="h-10 bg-gray-200 animate-pulse" />
-                <div className="h-10 bg-gray-200 animate-pulse" />
+            {/* Right Product Details Skeleton */}
+            <div className="md:w-[60%] space-y-8">
+              <div className="space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
+                <div className="h-8 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+                <div className="h-12 bg-gray-200 rounded w-full animate-pulse" />
+              </div>
+
+              <div className="h-96 bg-gray-200 rounded w-full animate-pulse">
+                <div className="space-y-1">
+                  <div className="h-8 bg-gray-300 rounded w-full animate-pulse"></div>
+                  <div className="h-8 bg-gray-300 rounded w-full animate-pulse"></div>
+                  <div className="h-8 bg-gray-300 rounded w-full animate-pulse"></div>
+                  <div className="h-8 bg-gray-300 rounded w-full animate-pulse"></div>
+                  <div className="h-8 bg-gray-300 rounded w-full animate-pulse"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -262,23 +400,24 @@ const SingleProductPage = () => {
     );
   }
 
-  if (error || !product) {
+  // Show error only if there's an error and we've attempted to fetch
+  if (error && hasFetched) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center bg-white p-6 md:p-8 shadow-lg border max-w-md mx-4">
-          <div className="text-gray-400 mb-4">
-            <X className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-3" />
+        <div className="text-center bg-white p-8 shadow-lg border max-w-md mx-4 rounded-lg">
+          <div className="text-gray-400 mb-6">
+            <X className="w-16 h-16 mx-auto mb-4" />
           </div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
-            Product Not Found
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Error Loading Product
           </h1>
-          <p className="text-gray-600 mb-6 text-sm md:text-base">
+          <p className="text-gray-600 mb-8">
             {error ||
-              "The product you are looking for does not exist or has been removed."}
+              "An unexpected error occurred while fetching the product."}
           </p>
           <button
             onClick={() => router.push("/products")}
-            className="bg-black text-white px-6 py-2.5 font-medium hover:bg-gray-800 transition-colors"
+            className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors rounded"
           >
             Browse Products
           </button>
@@ -287,68 +426,157 @@ const SingleProductPage = () => {
     );
   }
 
+  // Show not found only if we've fetched but no product exists and no error
+  if (hasFetched && !product && !loading && !error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center bg-white p-8 shadow-lg border max-w-md mx-4 rounded-lg">
+          <div className="text-gray-400 mb-6">
+            <X className="w-16 h-16 mx-auto mb-4" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Product Not Found
+          </h1>
+          <p className="text-gray-600 mb-8">
+            The product you are looking for does not exist or has been removed.
+          </p>
+          <button
+            onClick={() => router.push("/products")}
+            className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors rounded"
+          >
+            Browse Products
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render the main content until we have a product
+  if (!product) {
+    return <div className="min-h-screen bg-white"></div>;
+  }
+
   const displayImages = getDisplayImages();
   const cleanedProductName = cleanProductName(product.name);
 
   return (
-    <div className="min-h-screen bg-white max-w-[1400px] mx-auto">
-      <div className="w-full mx-auto px-4 py-4 md:py-6">
-        {/* Main Product Section */}
-        <div className="flex flex-col gap-2 lg:flex-row lg:gap-10 mb-12">
-          {/* Left - Image Gallery */}
-          <div className="lg:sticky lg:top-6 lg:self-start z-20">
+    <div className="min-h-screen bg-white">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <nav
+          className="text-xs text-gray-500 mb-2 max-md:p-2 md:py-2"
+          aria-label="Breadcrumb"
+        >
+          <ol className="flex items-center space-x-2">
+            <li>
+              <a href="/" className="hover:underline">
+                Home
+              </a>
+            </li>
+
+            <li>
+              <span>-&gt;</span>
+            </li>
+
+            <li>
+              <a href="/furniture" className="hover:underline">
+                Furniture
+              </a>
+            </li>
+
+            <li>
+              <span>-&gt;</span>
+            </li>
+
+            <li>
+              <a
+                href={`/category/${product.categoryId?.slug || ""}`}
+                className="hover:underline capitalize"
+              >
+                {product.categoryId?.name || "Category"}
+              </a>
+            </li>
+
+            <li>
+              <span>-&gt;</span>
+            </li>
+
+            <li
+              aria-current="page"
+              className="font-medium text-gray-900 truncate max-w-xs"
+            >
+              {cleanedProductName}
+            </li>
+          </ol>
+        </nav>
+
+        <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mb-16">
+          <div className="md:w-[40%] md:min-w-[464px] lg:sticky lg:top-14 self-start">
             <ProductImageGallery
               images={displayImages}
               productName={cleanedProductName}
             />
           </div>
 
-          {/* Right - Product Details */}
-          <div className="relative z-10">
+          <div className="md:w-[60%] space-y-8">
             <ProductDetails
               product={product}
               quantity={quantity}
               onQuantityChange={setQuantity}
               onAddToCart={handleAddToCart}
               onBuyNow={handleBuyNow}
-              onWishlistToggle={handleWishlistToggle}
               isInCart={productInCart}
-              isWishlisted={productWishlisted}
               cartQuantity={cartItem?.quantity}
               isUpdatingCart={isUpdatingCart}
-              isUpdatingWishlist={isUpdatingWishlist}
               buyingNow={buyingNow}
             />
-            <ProductReviews productId={product._id} userId={user?._id} />
+            <div className="mb-16">
+              <ProductReviews productId={product._id} userId={user?._id} />
+            </div>
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="border-t border-gray-200 pt-8 mb-12">
-            <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
+        {relatedProducts && relatedProducts.length > 0 && (
+          <div className="border-t border-gray-200 pt-12 mb-16">
+            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">
               Similar Products
             </h2>
-            <ProductGrid
-              products={relatedProducts}
-              loading={loadingMore}
-              error={null}
-            />
+            {isDesktop ? (
+              renderDesktopProductRow(
+                relatedProducts,
+                relatedIndex,
+                setRelatedIndex
+              )
+            ) : (
+              <ProductGrid
+                products={relatedProducts}
+                loading={loadingMore}
+                error={null}
+              />
+            )}
           </div>
         )}
 
-        {/* More Products */}
-        <div className="border-t border-gray-200 pt-8">
-          <h2 className="text-xl md:text-2xl font-bold text-black mb-6">
-            More Products
-          </h2>
-          <ProductGrid
-            products={allProducts}
-            loading={loadingAll}
-            error={error}
-            loadingMore={false}
-          />
-        </div>
+        {allProducts && allProducts.length > 0 && (
+          <div className="border-t border-gray-200 pt-12">
+            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">
+              More Products
+            </h2>
+            {isDesktop ? (
+              renderDesktopProductRow(
+                allProducts,
+                allProductsIndex,
+                setAllProductsIndex
+              )
+            ) : (
+              <ProductGrid
+                products={allProducts}
+                loading={loadingAll}
+                error={error}
+                loadingMore={false}
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
-import { Loader2 } from "lucide-react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,11 +27,11 @@ export default function RootLayout({
               "var(--font-body), Inter, system-ui, -apple-system, sans-serif",
           }}
         >
-          <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2/></div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-full bg-white"></div>}>
             <Providers>
               <ToastProvider />
               <Header />
-              <div className="max-w-[1700px] mx-auto w-full">
+              <div className="max-w-[1700px] min-h-screen mx-auto w-full">
                 <main>{children}</main>
               </div>
             </Providers>

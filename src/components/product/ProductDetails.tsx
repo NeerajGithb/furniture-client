@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   Star,
-  Heart,
   ShoppingCart,
   Zap,
   Truck,
@@ -14,13 +13,13 @@ import {
   Check,
   X,
   Award,
-  Clock,
   Eye,
   Users,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Product } from "@/types/Product";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 interface ProductDetailsProps {
@@ -29,12 +28,9 @@ interface ProductDetailsProps {
   onQuantityChange: (qty: number) => void;
   onAddToCart: () => void;
   onBuyNow: () => void;
-  onWishlistToggle: () => void;
   isInCart: boolean;
-  isWishlisted: boolean;
   cartQuantity?: number;
   isUpdatingCart: boolean;
-  isUpdatingWishlist: boolean;
   buyingNow: boolean;
 }
 
@@ -44,15 +40,19 @@ const ProductDetails = ({
   onQuantityChange,
   onAddToCart,
   onBuyNow,
-  onWishlistToggle,
   isInCart,
-  isWishlisted,
   cartQuantity,
   isUpdatingCart,
-  isUpdatingWishlist,
   buyingNow,
 }: ProductDetailsProps) => {
   const router = useRouter();
+  const [selectedColor, setSelectedColor] = useState(
+    product.colorOptions?.[0] || ""
+  );
+  const [selectedSize, setSelectedSize] = useState(product.size?.[0] || "");
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [showAllHighlights, setShowAllHighlights] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const cleanProductName = (name: string) => {
     return name.replace(/\s*\(Copy\)\s*/g, "").trim();
@@ -60,381 +60,663 @@ const ProductDetails = ({
 
   const handleCartAction = () => {
     if (isInCart) {
-      router.push('/cart');
+      router.push("/cart");
     } else {
       onAddToCart();
     }
   };
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const safeRating = Math.max(0, Math.min(5, rating || 0));
-    const fullStars = Math.floor(safeRating);
-    const hasHalfStar = safeRating % 1 !== 0;
-
-    for (let i = 0; i < 5; i++) {
-      if (i < fullStars) {
-        stars.push(
-          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-        );
-      } else if (i === fullStars && hasHalfStar) {
-        stars.push(
-          <div key={i} className="relative w-3 h-3">
-            <Star className="w-3 h-3 text-gray-300 absolute" />
-            <div className="overflow-hidden w-1/2">
-              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-            </div>
-          </div>
-        );
-      } else {
-        stars.push(<Star key={i} className="w-3 h-3 text-gray-300" />);
-      }
-    }
-    return stars;
-  };
-
   const cleanedProductName = cleanProductName(product.name);
   const hasDiscount = product.discountPercent && product.discountPercent > 0;
-  const discountPercentage = hasDiscount ? Math.round(product.discountPercent!) : 0;
-  const isOutOfStock = product.inStockQuantity !== undefined && product.inStockQuantity <= 0;
-  const isLowStock = product.inStockQuantity !== undefined && 
-    product.inStockQuantity > 0 && product.inStockQuantity <= 5;
+  const discountPercentage = hasDiscount
+    ? Math.round(product.discountPercent!)
+    : 0;
+  const isOutOfStock =
+    product.inStockQuantity !== undefined && product.inStockQuantity <= 0;
+  const isLowStock =
+    product.inStockQuantity !== undefined &&
+    product.inStockQuantity > 0 &&
+    product.inStockQuantity <= 5;
   const rating = product.ratings || product.reviews?.average || 0;
   const reviewCount = product.reviews?.count || 0;
 
   return (
-    <div className="space-y-3 md:space-y-4 relative z-0">
-      {/* Brand/Category */}
-      <div className="flex items-center justify-between">
-        {product.categoryId?.name && (
-          <span className="text-[9px] md:text-[10px] text-gray-500 uppercase tracking-wider font-semibold">
-            {product.categoryId.name}
-          </span>
-        )}
-        {product.brand && (
-          <span className="text-[9px] md:text-[10px] font-semibold text-gray-700 bg-gray-100 px-1.5 py-0.5">
-            {product.brand}
-          </span>
-        )}
-      </div>
-
-      {/* Product Title & Badges */}
-      <div className="space-y-2">
-        <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 leading-tight tracking-tight">
-          {cleanedProductName}
-        </h1>
-
-        <div className="flex flex-wrap gap-1">
-          {product.isBestSeller && (
-            <span className="bg-orange-500 text-white px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold flex items-center gap-1">
-              <Award className="w-2.5 h-2.5 md:w-3 md:h-3" />
-              Best Seller
+    <div className="space-y-4">
+      {/* Meta Description */}
+      {product.metaDescription && product.brand && (
+        <>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-gray-600 max-md:line-clamp-2">
+              {product.metaDescription}
+            </p>
+            <span className="text-sm font-medium text-blue-700 ">
+              By {product.brand}
             </span>
-          )}
-          {product.isNewArrival && (
-            <span className="bg-blue-500 text-white px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold">
-              New
-            </span>
-          )}
-          {product.isFeatured && (
-            <span className="bg-purple-500 text-white px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold">
-              Featured
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Cart/Wishlist Status */}
-      {(isInCart || isWishlisted) && (
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {isInCart && (
-            <div className="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold border border-green-200">
-              <ShoppingCart className="w-2.5 h-2.5 md:w-3 md:h-3" />
-              In Cart ({cartQuantity})
-            </div>
-          )}
-          {isWishlisted && (
-            <div className="flex items-center gap-1 bg-red-50 text-red-700 px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold border border-red-200">
-              <Heart className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
-              Saved
-            </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
 
-      {/* Ratings & Social Proof */}
-      <div className="flex items-center gap-2 md:gap-3 flex-wrap text-[9px] md:text-[10px]">
-        {rating > 0 && (
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center gap-0.5 px-1.5 py-0.5 bg-green-600 text-white font-semibold">
-              <span className="text-[9px] md:text-[10px]">{rating.toFixed(1)}</span>
-              <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
-            </div>
-            <span className="text-gray-500 font-medium">
-              {reviewCount.toLocaleString()} reviews
-            </span>
-          </div>
-        )}
-
-        {product.totalSold && (
-          <div className="flex items-center gap-1 text-gray-500 font-medium">
-            <Users className="w-2.5 h-2.5 md:w-3 md:h-3" />
-            <span>{product.totalSold.toLocaleString()} sold</span>
-          </div>
-        )}
-
-        {product.viewCount && (
-          <div className="flex items-center gap-1 text-gray-500 font-medium">
-            <Eye className="w-2.5 h-2.5 md:w-3 md:h-3" />
-            <span>{product.viewCount.toLocaleString()} views</span>
-          </div>
-        )}
-      </div>
-
       {/* Pricing */}
-      <div className="bg-gray-50 p-3 md:p-4 border border-gray-200">
-        <div className="flex items-baseline gap-2 mb-1.5">
-          <span className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
+      <div className="p-3">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl  text-gray-900">
             ₹{product.finalPrice.toLocaleString()}
           </span>
           {hasDiscount && product.originalPrice && (
             <>
-              <span className="text-sm md:text-base text-gray-400 line-through font-medium">
+              <span className="text-sm text-gray-500 line-through">
                 ₹{product.originalPrice.toLocaleString()}
               </span>
-              <span className="bg-red-500 text-white px-1.5 py-0.5 text-[9px] md:text-[10px] font-bold">
+              <span className="bg-red-600 text-white px-2 py-1 text-xs font-medium rounded-xs">
                 {discountPercentage}% OFF
               </span>
             </>
           )}
         </div>
-
-        {product.emiPrice && (
-          <p className="text-[9px] md:text-[10px] text-gray-500 font-medium">
-            EMI from ₹{product.emiPrice.toLocaleString()}/month
-          </p>
-        )}
       </div>
 
-      {/* Stock Status */}
-      <div className="flex items-center justify-between bg-gray-50 p-2.5 md:p-3 border border-gray-200">
-        <div className="flex items-center gap-1.5">
-          {isOutOfStock ? (
-            <span className="text-red-600 font-semibold flex items-center gap-1 text-[10px] md:text-xs">
-              <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              Out of Stock
-            </span>
-          ) : isLowStock ? (
-            <span className="text-orange-600 font-semibold flex items-center gap-1 text-[10px] md:text-xs">
-              <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-orange-600 animate-pulse"></div>
-              Only {product.inStockQuantity} left
-            </span>
-          ) : (
-            <span className="text-green-600 font-semibold flex items-center gap-1 text-[10px] md:text-xs">
-              <Check className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              In Stock
-            </span>
-          )}
+      {/* Color Selection */}
+      {product.colorOptions && product.colorOptions.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="font-medium text-gray-900 text-sm">
+            Color: {selectedColor}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {product.colorOptions.map((color, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedColor(color)}
+                className={`px-3 py-1 border rounded-xs transition-colors text-sm cursor-pointer ${
+                  selectedColor === color
+                    ? "border-gray-900 bg-gray-900 text-white"
+                    : "border-gray-300 hover:border-gray-400 bg-white text-gray-700"
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
         </div>
-
-        {product.shippingInfo?.freeShipping && (
-          <span className="text-green-600 font-semibold text-[9px] md:text-[10px] flex items-center gap-1 bg-green-50 px-1.5 py-0.5 border border-green-200">
-            <Truck className="w-2.5 h-2.5 md:w-3 md:h-3" />
-            Free Ship
-          </span>
-        )}
-      </div>
+      )}
 
       {/* Quantity Selector */}
-      <div className="space-y-1.5">
-        <h3 className="font-semibold text-gray-900 text-[10px] md:text-xs">Quantity: {quantity}</h3>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border border-gray-300">
+      <div className="space-y-2">
+        <h3 className="font-medium text-gray-900 text-sm">Quantity</h3>
+        <div className="flex items-center">
+          <div className="flex items-center border border-gray-300 rounded-xs">
+            {/* Decrement Button */}
             <button
-              onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-              className="p-1.5 md:p-2 hover:bg-gray-100 disabled:opacity-50 transition-colors disabled:cursor-not-allowed"
-              disabled={quantity <= 1}
+              onClick={() => {
+                if (quantity > 1) onQuantityChange(quantity - 1);
+              }}
+              className={`p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+                quantity <= 1
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600"
+              }`}
             >
-              <Minus className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              <Minus className="w-4 h-4" />
             </button>
-            <span className="px-2 md:px-3 py-1.5 md:py-2 border-x border-gray-300 font-semibold min-w-[40px] md:min-w-[45px] text-center text-[10px] md:text-xs">
+
+            {/* Quantity Display */}
+            <span className="px-4 py-2 border-x border-gray-300 font-medium min-w-[60px] text-center text-sm text-gray-900">
               {quantity}
             </span>
+
+            {/* Increment Button */}
             <button
-              onClick={() => onQuantityChange(quantity + 1)}
-              className="p-1.5 md:p-2 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={quantity >= (product.inStockQuantity || 10)}
+              onClick={() => {
+                if (quantity < (product.inStockQuantity || 10))
+                  onQuantityChange(quantity + 1);
+              }}
+              className={`p-2 hover:bg-gray-50 transition-colors cursor-pointer ${
+                quantity >= (product.inStockQuantity || 10)
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-600"
+              }`}
             >
-              <Plus className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              <Plus className="w-4 h-4" />
             </button>
           </div>
-          
-          {product.inStockQuantity && product.inStockQuantity <= 10 && !isOutOfStock && (
-            <span className="text-[9px] md:text-[10px] text-orange-600 bg-orange-50 px-1.5 py-0.5 border border-orange-200 font-semibold">
-              Only {product.inStockQuantity} left
-            </span>
-          )}
         </div>
       </div>
 
+      {/* EMI Option */}
+      {product.emiPrice && product.emiPrice > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xs p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-blue-900">
+              EMI Available:
+            </span>
+            <span className="text-sm font-semibold text-blue-900">
+              ₹{product.emiPrice.toLocaleString()}/month
+            </span>
+          </div>
+          <p className="text-xs text-blue-700 mt-1">
+            No cost EMI available on select cards
+          </p>
+        </div>
+      )}
+
       {/* Action Buttons */}
-      <div className="space-y-2 pt-1">
+      <div className="space-y-2">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <button
             onClick={handleCartAction}
             disabled={isOutOfStock || isUpdatingCart}
-            className="bg-white text-black py-2 md:py-2.5 px-3 md:px-4 border border-black font-semibold hover:bg-black hover:text-white disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-all duration-300 ease-out flex items-center justify-center gap-1.5 text-[10px] md:text-xs group overflow-hidden relative transform hover:scale-[1.02] active:scale-[0.98]"
+            className="bg-white text-gray-900 py-2 px-3 border-2 border-gray-900 font-medium hover:bg-gray-900 hover:text-white disabled:bg-gray-100 disabled:border-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2 rounded-xs text-sm cursor-pointer"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-black transform translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300 ease-out"></div>
-            <div className="relative z-10 flex items-center gap-1.5">
-              {isUpdatingCart ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-3.5 h-3.5 md:w-4 md:h-4 transform group-hover:scale-110 transition-transform duration-200" />
-                  {isInCart ? "Go to Cart" : "Add to Cart"}
-                </>
-              )}
-            </div>
+            {isUpdatingCart ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                {isInCart
+                  ? cartQuantity && cartQuantity > 0
+                    ? `Go to Cart (${cartQuantity})`
+                    : "Go to Cart"
+                  : "Add to Cart"}
+              </>
+            )}
           </button>
-          
+
           <button
             onClick={onBuyNow}
             disabled={isOutOfStock || buyingNow}
-            className="bg-black text-white py-2 md:py-2.5 px-3 md:px-4 font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-1.5 text-[10px] md:text-xs"
+            className="bg-gray-900 text-white py-2 px-3 font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2 rounded-xs text-sm cursor-pointer"
           >
             {buyingNow ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <Zap className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <Zap className="w-4 h-4" />
                 Buy Now
               </>
             )}
           </button>
         </div>
-
-        <button
-          onClick={onWishlistToggle}
-          disabled={isUpdatingWishlist}
-          className={`w-full py-2 md:py-2.5 px-3 md:px-4 border font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 text-[10px] md:text-xs ${
-            isWishlisted
-              ? "border-red-500 text-red-600 bg-red-50 hover:bg-red-100"
-              : "border-gray-300 text-gray-700 hover:border-gray-400 hover:text-black hover:bg-gray-50"
-          }`}
-        >
-          {isUpdatingWishlist ? (
-            <>
-              <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
-              Updating...
-            </>
-          ) : (
-            <>
-              <Heart className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isWishlisted ? "fill-current" : ""}`} />
-              {isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-            </>
-          )}
-        </button>
       </div>
 
-      {/* Description */}
-      {product.description && (
-        <div className="bg-gray-50 p-3 md:p-4 border border-gray-200 space-y-2">
-          <h3 className="text-xs md:text-sm font-semibold text-gray-900">About This Item</h3>
-          <div className="text-gray-600 text-[10px] md:text-xs leading-relaxed space-y-1.5">
-            {product.description.split("\n").slice(0, 3).map((paragraph, index) => (
-              <p key={index} className="leading-relaxed font-medium">
-                {paragraph.trim()}
-              </p>
-            ))}
-          </div>
+      {/* Stock Status */}
+      <div className="flex items-center justify-between border border-gray-300 rounded-xs p-3">
+        <div className="flex items-center gap-2">
+          {isOutOfStock ? (
+            <span className="text-red-600 font-medium flex items-center gap-1 text-sm">
+              <X className="w-4 h-4" />
+              Out of Stock
+            </span>
+          ) : isLowStock ? (
+            <span className="text-orange-600 font-medium flex items-center gap-1 text-sm">
+              <div className="w-2 h-2 bg-orange-600 rounded-full animate-pulse"></div>
+              Only {product.inStockQuantity} left
+            </span>
+          ) : product.inStockQuantity !== undefined ? (
+            <span className="text-green-600 font-medium flex items-center gap-1 text-sm">
+              <Check className="w-4 h-4" />
+              {product.inStockQuantity} in stock
+            </span>
+          ) : null}
+        </div>
+
+        {product.shippingInfo?.freeShipping && (
+          <span className="text-green-600 font-medium flex items-center gap-1 text-sm">
+            <Truck className="w-4 h-4" />
+            Free Shipping
+          </span>
+        )}
+      </div>
+
+      {/* Ratings & Social Proof */}
+      {((typeof rating === "number" && rating > 0) ||
+        (typeof product.totalSold === "number" && product.totalSold > 0) ||
+        (typeof product.viewCount === "number" && product.viewCount > 0)) && (
+        <div className="flex items-center gap-4 flex-wrap">
+          {typeof rating === "number" && rating > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 px-2 py-1 bg-green-600 text-white font-medium rounded-xs text-sm">
+                <span>{rating.toFixed(1)}</span>
+                <Star className="w-3 h-3 fill-current" />
+              </div>
+              {typeof reviewCount === "number" && reviewCount > 0 && (
+                <span className="text-sm text-gray-600">
+                  ({reviewCount.toLocaleString()} reviews)
+                </span>
+              )}
+            </div>
+          )}
+
+          {typeof product.totalSold === "number" && product.totalSold > 0 && (
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <Users className="w-3 h-3" />
+              <span>{product.totalSold.toLocaleString()} sold</span>
+            </div>
+          )}
+
+          {typeof product.viewCount === "number" && product.viewCount > 0 && (
+            <div className="flex items-center gap-1 text-sm text-gray-600">
+              <Eye className="w-3 h-3" />
+              <span>{product.viewCount.toLocaleString()} views</span>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Specifications */}
-      {(product.material || product.dimensions || product.weight) && (
-        <div className="bg-gray-50 p-3 md:p-4 border border-gray-200 space-y-2">
-          <h3 className="font-semibold text-gray-900 text-xs md:text-sm">Specifications</h3>
-          <div className="space-y-1.5">
-            {product.material && (
-              <div className="flex justify-between text-[10px] md:text-xs border-b border-gray-200 pb-1">
-                <span className="text-gray-500 font-medium">Material:</span>
-                <span className="text-gray-900 font-semibold">{product.material}</span>
+      {/* Product Details Table */}
+      {(product.sku ||
+        product.brand ||
+        product.material ||
+        product.dimensions ||
+        (product.weight && product.weight > 0) ||
+        product.warranty ||
+        product.returnPolicy ||
+        (product.inStockQuantity !== undefined &&
+          product.inStockQuantity > 0) ||
+        (product.shippingInfo &&
+          (product.shippingInfo.estimatedDays ||
+            product.shippingInfo.shippingCost !== undefined)) ||
+        (product.colorOptions && product.colorOptions.length > 0) ||
+        (product.size && product.size.length > 0) ||
+        (product.attributes &&
+          Object.keys(product.attributes).filter(
+            (key) => product.attributes![key]
+          ).length > 0) ||
+        product.categoryId?.name ||
+        product.subCategoryId?.name ||
+        product.itemId) && (
+        <div className="border border-gray-300 rounded-xs">
+          <div className="px-4 py-3 border-b border-gray-300 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">
+              Product Details
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {product.sku && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">SKU</span>
+                <span className="text-gray-900 text-sm">{product.sku}</span>
               </div>
             )}
-            {product.dimensions && (
-              <div className="flex justify-between text-[10px] md:text-xs border-b border-gray-200 pb-1">
-                <span className="text-gray-500 font-medium">Size:</span>
-                <span className="text-gray-900 font-semibold">
-                  {product.dimensions.length}×{product.dimensions.width}×{product.dimensions.height} cm
+
+            {product.brand && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">Brand</span>
+                <span className="text-gray-900 text-sm">{product.brand}</span>
+              </div>
+            )}
+
+            {product.material && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Material
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.material}
                 </span>
               </div>
             )}
-            {product.weight && (
-              <div className="flex justify-between text-[10px] md:text-xs border-b border-gray-200 pb-1">
-                <span className="text-gray-500 font-medium">Weight:</span>
-                <span className="text-gray-900 font-semibold">{product.weight} kg</span>
+
+            {product.dimensions && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Dimensions
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.dimensions.length} × {product.dimensions.width} ×{" "}
+                  {product.dimensions.height} cm
+                </span>
+              </div>
+            )}
+
+            {product.weight && product.weight > 0 && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Weight
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.weight} kg
+                </span>
+              </div>
+            )}
+
+            {product.warranty && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Warranty
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.warranty}
+                </span>
+              </div>
+            )}
+
+            {product.returnPolicy && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Return Policy
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.returnPolicy}
+                </span>
+              </div>
+            )}
+
+            {product.inStockQuantity !== undefined &&
+              product.inStockQuantity > 0 && (
+                <div className="grid grid-cols-2 px-4 py-3">
+                  <span className="text-gray-600 font-medium text-sm">
+                    Available Stock
+                  </span>
+                  <span className="text-gray-900 text-sm">
+                    {product.inStockQuantity} units
+                  </span>
+                </div>
+              )}
+
+            {product.shippingInfo && (
+              <>
+                {typeof product.shippingInfo.estimatedDays === "number" &&
+                  product.shippingInfo.estimatedDays > 0 && (
+                    <div className="grid grid-cols-2 px-4 py-3">
+                      <span className="text-gray-600 font-medium text-sm">
+                        Delivery Time
+                      </span>
+                      <span className="text-gray-900 text-sm">
+                        {product.shippingInfo.estimatedDays} days
+                      </span>
+                    </div>
+                  )}
+
+                {product.shippingInfo.shippingCost !== undefined && (
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <span className="text-gray-600 font-medium text-sm">
+                      Shipping Cost
+                    </span>
+                    <span className="text-gray-900 text-sm">
+                      {product.shippingInfo.shippingCost === 0
+                        ? "Free"
+                        : `₹${product.shippingInfo.shippingCost}`}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {product.colorOptions && product.colorOptions.length > 0 && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Colors Available
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.colorOptions.join(", ")}
+                </span>
+              </div>
+            )}
+
+            {product.size && product.size.length > 0 && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Sizes Available
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.size.join(", ")}
+                </span>
+              </div>
+            )}
+
+            {product.attributes && (
+              <>
+                {product.attributes.seater && (
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <span className="text-gray-600 font-medium text-sm">
+                      Seater
+                    </span>
+                    <span className="text-gray-900 text-sm">
+                      {product.attributes.seater} Seater
+                    </span>
+                  </div>
+                )}
+                {product.attributes.style && (
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <span className="text-gray-600 font-medium text-sm">
+                      Style
+                    </span>
+                    <span className="text-gray-900 text-sm">
+                      {product.attributes.style}
+                    </span>
+                  </div>
+                )}
+                {product.attributes.room && (
+                  <div className="grid grid-cols-2 px-4 py-3">
+                    <span className="text-gray-600 font-medium text-sm">
+                      Room Type
+                    </span>
+                    <span className="text-gray-900 text-sm">
+                      {product.attributes.room}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+
+            {product.categoryId?.name && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Category
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.categoryId.name}
+                </span>
+              </div>
+            )}
+
+            {product.subCategoryId?.name && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Sub Category
+                </span>
+                <span className="text-gray-900 text-sm">
+                  {product.subCategoryId.name}
+                </span>
+              </div>
+            )}
+
+            {product.itemId && (
+              <div className="grid grid-cols-2 px-4 py-3">
+                <span className="text-gray-600 font-medium text-sm">
+                  Item ID
+                </span>
+                <span className="text-gray-900 font-mono text-xs">
+                  {product.itemId}
+                </span>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Services */}
-      <div className="space-y-2 pt-2 border-t border-gray-200">
-        <h3 className="font-semibold text-gray-900 text-xs md:text-sm">Services</h3>
-        <div className="grid gap-1.5">
-          <div className="flex items-center justify-between text-[10px] md:text-xs bg-green-50 p-2 md:p-2.5 border border-green-200">
-            <div className="flex items-center gap-1.5">
-              <Truck className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
-              <span className="text-gray-700 font-semibold">Free delivery</span>
-            </div>
-            <span className="text-gray-500 text-[9px] md:text-[10px] font-medium">
-              by {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}
-            </span>
+      {/* Product Highlights */}
+      {product.highlights && product.highlights.length > 0 && (
+        <div className="border border-gray-300 rounded-xs">
+          <div className="px-4 py-3 border-b border-gray-300 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">
+              Key Features
+            </h3>
           </div>
-          
-          <div className="flex items-center justify-between text-[10px] md:text-xs bg-blue-50 p-2 md:p-2.5 border border-blue-200">
-            <div className="flex items-center gap-1.5">
-              <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600" />
-              <span className="text-gray-700 font-semibold">Easy returns</span>
-            </div>
-            <span className="text-gray-500 text-[9px] md:text-[10px] font-medium">
-              {product.returnPolicy || "7 days"}
-            </span>
-          </div>
-          
-          <div className="flex items-center justify-between text-[10px] md:text-xs bg-purple-50 p-2 md:p-2.5 border border-purple-200">
-            <div className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
-              <span className="text-gray-700 font-semibold">Warranty</span>
-            </div>
-            <span className="text-gray-500 text-[9px] md:text-[10px] font-medium">
-              {product.warranty || "1 year"}
-            </span>
+          <div className="p-4">
+            <ul className="space-y-2">
+              {(showAllHighlights
+                ? product.highlights
+                : product.highlights.slice(0, 5)
+              ).map((highlight, index) => (
+                <li
+                  key={index}
+                  className="text-gray-700 flex items-start gap-3 text-sm"
+                >
+                  <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  {highlight}
+                </li>
+              ))}
+            </ul>
+            {product.highlights.length > 5 && (
+              <button
+                onClick={() => setShowAllHighlights(!showAllHighlights)}
+                className="text-blue-600 hover:text-blue-800 mt-3 flex items-center gap-1 font-medium text-sm cursor-pointer"
+              >
+                {showAllHighlights
+                  ? "Show less"
+                  : `Show all ${product.highlights.length} features`}
+                {showAllHighlights ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Tags */}
-      {product.tags && product.tags.length > 0 && (
-        <div className="pt-2 border-t border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-2 text-xs md:text-sm">Tags</h3>
-          <div className="flex flex-wrap gap-1.5">
-            {product.tags.slice(0, 6).map((tag, index) => (
-              <span
-                key={index}
-                className="bg-gray-100 text-gray-700 px-1.5 py-0.5 text-[9px] md:text-[10px] font-semibold hover:bg-gray-200 transition-colors cursor-pointer border border-gray-200"
-              >
-                #{tag}
-              </span>
+      {/* Description */}
+      {product.description && (
+        <div className="border border-gray-300 rounded-xs">
+          <div className="px-4 py-3 border-b border-gray-300 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">
+              Description
+            </h3>
+          </div>
+          <div className="p-4">
+            <div className="text-gray-700 leading-relaxed text-sm">
+              {showFullDescription ? (
+                <div className="space-y-3">
+                  {product.description.split("\n").map((paragraph, index) => (
+                    <p key={index}>{paragraph.trim()}</p>
+                  ))}
+                </div>
+              ) : (
+                <p>{product.description.split("\n")[0]}</p>
+              )}
+              {product.description.split("\n").length > 1 && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-blue-600 hover:text-blue-800 mt-3 flex items-center gap-1 font-medium text-sm cursor-pointer"
+                >
+                  {showFullDescription ? "Show less" : "Read more"}
+                  {showFullDescription ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FAQ Section */}
+      {product.faq && product.faq.length > 0 && (
+        <div className="border border-gray-300 rounded-xs">
+          <div className="px-4 py-3 border-b border-gray-300 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">
+              Frequently Asked Questions
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-200">
+            {product.faq.map((item, index) => (
+              <div key={index}>
+                <button
+                  onClick={() =>
+                    setExpandedFaq(expandedFaq === index ? null : index)
+                  }
+                  className="w-full flex justify-between items-center px-4 py-4 text-left hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <span className="font-medium text-gray-900 pr-4 text-sm">
+                    {item.question}
+                  </span>
+                  {expandedFaq === index ? (
+                    <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+                {expandedFaq === index && (
+                  <div className="px-4 pb-4">
+                    <p className="text-gray-700 leading-relaxed text-sm">
+                      {item.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Services - Only show if data exists */}
+      {(product.shippingInfo || product.returnPolicy || product.warranty) && (
+        <div className="border border-gray-300 rounded-xs">
+          <div className="px-4 py-3 border-b border-gray-300 bg-gray-50">
+            <h3 className="font-semibold text-gray-900 text-sm md:text-base">
+              Services & Policies
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-200">
+
+            {/*insure itsnevwer show 0 */}
+            {product.shippingInfo &&
+              (product.shippingInfo.freeShipping ||
+              (typeof product.shippingInfo.estimatedDays === "number" &&
+                product.shippingInfo.estimatedDays > 0)) && (
+                <div className="flex items-center justify-between px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <Truck className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
+                    <span className="font-medium text-gray-900 text-sm">
+                      {product.shippingInfo.freeShipping
+                        ? "Free Delivery"
+                        : "Delivery"}
+                    </span>
+                  </div>
+                  {product.shippingInfo.estimatedDays && (
+                    <span className="text-gray-600 text-sm">
+                      {product.shippingInfo.estimatedDays} days
+                    </span>
+                  )}
+                </div>
+              )}
+
+            {product.returnPolicy && (
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <RotateCcw className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                  <span className="font-medium text-gray-900 text-sm">
+                    Returns
+                  </span>
+                </div>
+                <span className="text-gray-600 text-sm">
+                  {product.returnPolicy}
+                </span>
+              </div>
+            )}
+
+            {product.warranty && (
+              <div className="flex items-center justify-between px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
+                  <span className="font-medium text-gray-900 text-sm">
+                    Warranty
+                  </span>
+                </div>
+                <span className="text-gray-600 text-sm">
+                  {product.warranty}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-// app/api/orders/route.ts - FIXED: Only process selected items
+// app/api/orders/route.ts - MINIMAL FIX: Just fix the orderNumber issue and add new fields
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -7,7 +7,7 @@ import Address from '@/models/Address';
 import Payment from '@/models/Payment';
 import { connectDB } from '@/lib/dbConnect';
 
-// GET - Fetch user's orders
+// GET - Fetch user's orders (UNCHANGED)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     console.log("Fetching orders for user:", user.userId);
@@ -35,7 +35,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const orders = await Order.find(query)
       .populate({
         path: 'items.productId',
-        select: 'name mainImage'
+        select: 'name mainImage slug'
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -51,14 +51,20 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         _id: item._id,
         name: item.name,
         price: item.price,
+        originalPrice: item.originalPrice, // NEW
         quantity: item.quantity,
         insuranceCost: item.insuranceCost || 0,
         productImage: item.productImage,
         selectedVariant: item.selectedVariant || null,
+        sku: item.sku, // NEW
+        itemId: item.itemId, // NEW
+        discount: item.discount || 0, // NEW
+        discountPercent: item.discountPercent || 0, // NEW
         product: item.productId ? {
           _id: item.productId._id,
           name: item.productId.name,
-          mainImage: item.productId.mainImage
+          mainImage: item.productId.mainImage,
+          slug: item.productId.slug
         } : null
       })),
       totalAmount: order.totalAmount,
@@ -69,7 +75,12 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       trackingNumber: order.trackingNumber,
       shippingAddress: order.shippingAddress,
       createdAt: order.createdAt,
-      updatedAt: order.updatedAt
+      updatedAt: order.updatedAt,
+      
+      // NEW FIELDS - Add price breakdown if available
+      priceBreakdown: order.priceBreakdown,
+      insuranceEnabled: order.insuranceEnabled,
+      couponCode: order.couponCode
     }));
 
     console.log("Formatted orders:", formattedOrders);
@@ -93,17 +104,19 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// POST - Create new order - FIXED: Use selected items from frontend
+// POST - Create new order - MINIMAL FIX: Just fix orderNumber and add new fields
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
+    console.log("Body : ---------------------------> ",body);
     const { 
       addressId, 
       paymentMethod,
       selectedItems, 
       cartData,
       totals,
-      insuranceEnabled = []
+      insuranceEnabled = [],
+      couponCode // NEW
     } = body;
 
     console.log('Order creation request:', {
@@ -121,7 +134,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       );
     }
 
-    // FIXED: Validate that we have selected items from frontend
+    // Validate that we have selected items from frontend
     if (!selectedItems || !Array.isArray(selectedItems) || selectedItems.length === 0) {
       return NextResponse.json(
         { error: 'No items selected for checkout' },
@@ -151,7 +164,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       );
     }
 
-    // FIXED: Process only selected items instead of entire cart
+    // Process only selected items instead of entire cart
     const orderItems = [];
     
     console.log(`Processing ${selectedItems.length} selected items for order`);
@@ -191,9 +204,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         productId: product._id,
         name: product.name,
         price: product.finalPrice,
-        originalPrice: product.originalPrice,
+        originalPrice: product.originalPrice, // NEW - from your product schema
         quantity: cartItem.quantity,
-        productImage: product.mainImage?.url
+        productImage: product.mainImage?.url,
+        sku: product.sku, // NEW
+        itemId: product.itemId, // NEW
+        discount: (product.originalPrice || product.finalPrice) - product.finalPrice, // NEW - calculate discount
+        discountPercent: product.discountPercent || 0 // NEW
       };
 
       // Include selected variant if available
@@ -202,6 +219,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           cartItem.selectedVariant !== null &&
           (cartItem.selectedVariant.color || cartItem.selectedVariant.size || cartItem.selectedVariant.sku)) {
         orderItem.selectedVariant = cartItem.selectedVariant;
+      }
+
+      // NEW - Add insurance cost if this product has insurance enabled
+      if (insuranceEnabled.includes(productId)) {
+        orderItem.insuranceCost = Math.round((product.finalPrice * cartItem.quantity) * 0.02); // 2% insurance
       }
 
       orderItems.push(orderItem);
@@ -217,7 +239,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       console.log(`Added ${cartItem.quantity}x ${product.name} to order`);
     }
 
-    // FIXED: Use totals from frontend instead of recalculating
+    // Use totals from frontend instead of recalculating
     let subtotal = totals?.subtotal || 0;
     let shippingCost = totals?.shippingCost || 0;
     let insuranceCost = totals?.insuranceCost || 0;
@@ -244,9 +266,15 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     console.log('Order totals:', { subtotal, shippingCost, insuranceCost, totalAmount });
 
+    // FIX: Generate orderNumber explicitly before creating order
+    const timestamp = Date.now().toString();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const orderNumber = `ORD${timestamp}${random}`;
+
     // Create order
     const orderData = {
       userId: user.userId,
+      orderNumber, // FIX: Explicitly set orderNumber
       items: orderItems,
       subtotal,
       shippingCost,
@@ -265,8 +293,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       },
       paymentMethod,
       expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      orderNumber: `ORD-${Date.now()}`,
       trackingNumber: `TRK-${Date.now()}`,
+      
+      // NEW FIELDS
+      insuranceEnabled,
+      couponCode
     };
 
     console.log(`Creating order with ${orderItems.length} items, total: ₹${totalAmount}`);
@@ -274,7 +305,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const order = new Order(orderData);
     await order.save();
 
-    // FIXED: Don't clear entire cart - let frontend handle removal of only ordered items
     console.log('Order created successfully, frontend will handle cart cleanup');
 
     // Create payment record
@@ -308,8 +338,18 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           productId: item.productId,
           name: item.name,
           quantity: item.quantity,
-          price: item.price
-        }))
+          price: item.price,
+          originalPrice: item.originalPrice, // NEW
+          sku: item.sku, // NEW
+          itemId: item.itemId, // NEW
+          discount: item.discount, // NEW
+          discountPercent: item.discountPercent // NEW
+        })),
+        
+        // NEW - Include price breakdown in response
+        priceBreakdown: order.priceBreakdown,
+        insuranceEnabled: order.insuranceEnabled,
+        couponCode: order.couponCode
       },
       paymentId: payment.paymentId
     });

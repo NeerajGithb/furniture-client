@@ -147,7 +147,7 @@ const InputField = memo<InputFieldProps>(({
         pattern={pattern}
         maxLength={maxLength}
         placeholder={placeholder}
-        className={`w-full px-3 py-2 border transition-colors focus:outline-none focus:ring-2 focus:border-transparent rounded ${
+        className={`w-full px-3 py-2 border transition-colors focus:outline-none focus:ring-2 focus:border-transparent rounded-xs ${
           hasError
             ? 'border-red-300 focus:ring-red-500 bg-red-50'
             : 'border-gray-300 focus:ring-blue-500 hover:border-gray-400'
@@ -186,7 +186,7 @@ const AddressCard = memo<AddressCardProps>(({ address, isSelected, onSelect, onE
 
   return (
     <div
-      className={`p-3 border-2 cursor-pointer transition-all rounded ${
+      className={`p-3 sm:p-4 border-2 cursor-pointer transition-all rounded-xs ${
         isSelected
           ? "border-blue-500 bg-blue-50"
           : "border-gray-200 hover:border-gray-300"
@@ -195,35 +195,35 @@ const AddressCard = memo<AddressCardProps>(({ address, isSelected, onSelect, onE
       <div className="flex items-start justify-between">
         <div 
           onClick={handleSelect}
-          className="flex-1"
+          className="flex-1 min-w-0"
         >
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center flex-wrap gap-2 mb-1">
             <span className="font-medium text-gray-900 text-sm">{address.fullName}</span>
-            <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded capitalize">
+            <span className="text-xs bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded-xs capitalize">
               {address.type}
             </span>
             {address.isDefault && (
-              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">
+              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded-xs">
                 Default
               </span>
             )}
           </div>
-          <p className="text-gray-600 text-xs">
+          <p className="text-gray-600 text-xs mb-1">
             {address.addressLine1}
             {address.addressLine2 && `, ${address.addressLine2}`}
           </p>
-          <p className="text-gray-600 text-xs">
+          <p className="text-gray-600 text-xs mb-1">
             {address.city}, {address.state} - {address.postalCode}
           </p>
           <p className="text-gray-600 text-xs">Phone: {address.phone}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {isSelected && (
             <Check className="w-4 h-4 text-blue-600" />
           )}
           <button 
             onClick={handleEdit}
-            className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded"
+            className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors rounded-xs"
             title="Edit address"
           >
             <Edit2 className="w-3 h-3" />
@@ -243,6 +243,8 @@ const CheckoutPage = () => {
   const { user } = useCurrentUser();
   const router = useRouter();
   const pathname = usePathname();
+  const priceCardRef = useRef(null);
+  const [showFixedCheckout, setShowFixedCheckout] = useState(false);
 
   // Checkout store
   const checkoutStore = useCheckoutStore();
@@ -301,6 +303,29 @@ const CheckoutPage = () => {
       updateSelectedAddress(defaultAddress._id);
     }
   }, [checkoutData, defaultAddress, updateSelectedAddress]);
+
+  // Intersection Observer for checkout button visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowFixedCheckout(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "-50px",
+      }
+    );
+
+    if (priceCardRef.current) {
+      observer.observe(priceCardRef.current);
+    }
+
+    return () => {
+      if (priceCardRef.current) {
+        observer.unobserve(priceCardRef.current);
+      }
+    };
+  }, [checkoutData]);
 
   // Stable field change handler
   const handleFieldChange = useCallback((fieldName: string, value: string) => {
@@ -443,17 +468,17 @@ const CheckoutPage = () => {
   // Authentication check
   if (!user?._id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 shadow-sm rounded border border-gray-200 max-w-md mx-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
           <h1 className="text-xl font-semibold mb-4 text-gray-900">
             Authentication Required
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-sm">
             Please sign in to continue with checkout.
           </p>
           <button 
             onClick={() => router.push("/auth/signin?returnUrl=/checkout")}
-            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Sign In
           </button>
@@ -468,7 +493,7 @@ const CheckoutPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">Loading checkout...</p>
+          <p className="text-gray-600 text-sm">Loading checkout...</p>
         </div>
       </div>
     );
@@ -477,17 +502,17 @@ const CheckoutPage = () => {
   // Show error if no items selected
   if (!selectedItems.length) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 shadow-sm rounded border border-gray-200 max-w-md mx-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
           <h1 className="text-xl font-semibold mb-4 text-gray-900">
             No items selected for checkout
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-sm">
             Please go back to your cart and select items to checkout.
           </p>
           <button 
             onClick={handleGoToCart}
-            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Go to Cart
           </button>
@@ -498,460 +523,583 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={handleGoBack}
-            className="p-2 hover:bg-white transition-colors rounded"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Checkout</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              {checkoutData.totals.selectedQuantity} items selected for checkout
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4  gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              onClick={handleGoBack}
+              className="p-2 hover:bg-white rounded-xs transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
+            >
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
+                Checkout
+              </h1>
+              <p className="text-gray-600 mt-1 text-xs sm:text-sm">
+                {checkoutData.totals.selectedQuantity} items selected for checkout
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Delivery Address Section */}
-            <div className="bg-white p-6 border border-gray-200 rounded">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
-                  <MapPin className="w-5 h-5" />
-                  Delivery Address
-                </h2>
-              </div>
+            <div className="bg-white rounded-xs shadow-sm border border-gray-200">
+              <div className="p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                    <MapPin className="w-5 h-5" />
+                    Delivery Address
+                  </h2>
+                </div>
 
-              {/* Default/Selected Address Display */}
-              {selectedAddress ? (
-                <div className="mb-4">
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium text-gray-900">{selectedAddress.fullName}</span>
-                          <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded capitalize">
-                            {selectedAddress.type}
-                          </span>
-                          {selectedAddress.isDefault && (
-                            <span className="text-xs bg-green-600 text-white px-2 py-1 rounded">
-                              Default
+                {/* Default/Selected Address Display */}
+                {selectedAddress ? (
+                  <div className="mb-4">
+                    <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-xs">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
+                            <span className="font-medium text-gray-900">{selectedAddress.fullName}</span>
+                            <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-xs capitalize">
+                              {selectedAddress.type}
                             </span>
-                          )}
+                            {selectedAddress.isDefault && (
+                              <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-xs">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-600 text-sm mb-1">
+                            {selectedAddress.addressLine1}
+                            {selectedAddress.addressLine2 && `, ${selectedAddress.addressLine2}`}
+                          </p>
+                          <p className="text-gray-600 text-sm mb-1">
+                            {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.postalCode}
+                          </p>
+                          <p className="text-gray-600 text-sm">Phone: {selectedAddress.phone}</p>
                         </div>
-                        <p className="text-gray-600 text-sm">
-                          {selectedAddress.addressLine1}
-                          {selectedAddress.addressLine2 && `, ${selectedAddress.addressLine2}`}
-                        </p>
-                        <p className="text-gray-600 text-sm">
-                          {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.postalCode}
-                        </p>
-                        <p className="text-gray-600 text-sm">Phone: {selectedAddress.phone}</p>
+                        <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
                       </div>
-                      <Check className="w-5 h-5 text-blue-600" />
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mt-3">
+                      <button
+                        onClick={() => setShowAllAddresses(!showAllAddresses)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                      >
+                        {showAllAddresses ? (
+                          <>
+                            <ChevronUp className="w-4 h-4" />
+                            Hide Other Addresses
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4" />
+                            <span className="hidden sm:inline">Change Address</span>
+                            <span className="sm:hidden">Change</span>
+                            {addresses.length > 1 ? ` (${addresses.length - 1} more)` : ' (Add new)'}
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3 mt-3">
+                ) : (
+                  <div className="mb-4 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-xs">
+                    <p className="text-orange-800 text-sm">No address selected. Please choose or add a delivery address.</p>
                     <button
-                      onClick={() => setShowAllAddresses(!showAllAddresses)}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                      onClick={() => setShowAllAddresses(true)}
+                      className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
                     >
-                      {showAllAddresses ? (
-                        <>
-                          <ChevronUp className="w-4 h-4" />
-                          Hide Other Addresses
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown className="w-4 h-4" />
-                          Change Address ({addresses.length > 1 ? `${addresses.length - 1} more` : 'Add new'})
-                        </>
-                      )}
+                      Select Address
                     </button>
                   </div>
-                </div>
-              ) : (
-                <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-orange-800 text-sm">No address selected. Please choose or add a delivery address.</p>
-                  <button
-                    onClick={() => setShowAllAddresses(true)}
-                    className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
-                  >
-                    Select Address
-                  </button>
-                </div>
-              )}
+                )}
 
-              {/* Expandable Address List */}
-              {showAllAddresses && (
-                <div className="space-y-4">
-                  {/* Address Form */}
-                  {showAddressForm && (
-                    <div className="p-4 border border-gray-200 bg-gray-50 rounded">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-medium text-gray-900">
-                          {editingAddressId ? 'Edit Address' : 'Add New Address'}
-                        </h3>
-                        <button
-                          onClick={handleCloseForm}
-                          className="p-1 hover:bg-gray-200 transition-colors rounded text-gray-500 hover:text-gray-700"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      
-                      <form onSubmit={handleAddressSubmit}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <InputField
-                            label="Full Name"
-                            name="fullName"
-                            required
-                            value={addressForm.fullName}
-                            onChange={fieldHandlers.fullName}
-                            placeholder="Enter your full name"
-                            error={formErrors.fullName}
-                            isTouched={touchedFields.has('fullName')}
-                          />
-                          
-                          <InputField
-                            label="Phone Number"
-                            name="phone"
-                            type="tel"
-                            required
-                            value={addressForm.phone}
-                            onChange={fieldHandlers.phone}
-                            placeholder="Enter 10-digit mobile number"
-                            maxLength={10}
-                            error={formErrors.phone}
-                            isTouched={touchedFields.has('phone')}
-                          />
-                          
-                          <div className="md:col-span-2">
-                            <InputField
-                              label="Address Line 1"
-                              name="addressLine1"
-                              required
-                              value={addressForm.addressLine1}
-                              onChange={fieldHandlers.addressLine1}
-                              placeholder="House/Flat no., Building, Street"
-                              error={formErrors.addressLine1}
-                              isTouched={touchedFields.has('addressLine1')}
-                            />
-                          </div>
-                          
-                          <div className="md:col-span-2">
-                            <InputField
-                              label="Address Line 2"
-                              name="addressLine2"
-                              value={addressForm.addressLine2 ?? ""}
-                              onChange={fieldHandlers.addressLine2}
-                              placeholder="Area, Colony, Landmark (Optional)"
-                            />
-                          </div>
-                          
-                          <InputField
-                            label="City"
-                            name="city"
-                            required
-                            value={addressForm.city}
-                            onChange={fieldHandlers.city}
-                            placeholder="Enter city name"
-                            error={formErrors.city}
-                            isTouched={touchedFields.has('city')}
-                          />
-                          
-                          <InputField
-                            label="State"
-                            name="state"
-                            required
-                            value={addressForm.state}
-                            onChange={fieldHandlers.state}
-                            placeholder="Enter state name"
-                            error={formErrors.state}
-                            isTouched={touchedFields.has('state')}
-                          />
-                          
-                          <InputField
-                            label="PIN Code"
-                            name="postalCode"
-                            required
-                            value={addressForm.postalCode}
-                            onChange={fieldHandlers.postalCode}
-                            placeholder="Enter 6-digit PIN code"
-                            maxLength={6}
-                            error={formErrors.postalCode}
-                            isTouched={touchedFields.has('postalCode')}
-                          />
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Address Type
-                            </label>
-                            <select
-                              value={addressForm.type}
-                              onChange={handleAddressTypeChange}
-                              className="w-full px-3 py-2 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors rounded"
-                            >
-                              <option value="home">Home</option>
-                              <option value="work">Work</option>
-                              <option value="other">Other</option>
-                            </select>
-                          </div>
+                {/* Expandable Address List */}
+                {showAllAddresses && (
+                  <div className="space-y-4">
+                    {/* Address Form */}
+                    {showAddressForm && (
+                      <div className="p-3 sm:p-4 border border-gray-200 bg-gray-50 rounded-xs">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-medium text-gray-900 text-sm sm:text-base">
+                            {editingAddressId ? 'Edit Address' : 'Add New Address'}
+                          </h3>
+                          <button
+                            onClick={handleCloseForm}
+                            className="p-1 hover:bg-gray-200 transition-colors rounded-xs text-gray-500 hover:text-gray-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
                         
-                        <div className="flex items-center gap-4 mt-6">
-                          <button
-                            type="submit"
-                            disabled={isSubmitting || addressLoading || !isValidForm()}
-                            className="bg-blue-600 text-white px-6 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 rounded"
-                          >
-                            {(isSubmitting || addressLoading) && (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            )}
-                            {editingAddressId ? 'Update Address' : 'Save Address'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleCloseForm}
-                            className="text-gray-600 hover:text-gray-900 text-sm px-4 py-2 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
+                        <form onSubmit={handleAddressSubmit}>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <InputField
+                              label="Full Name"
+                              name="fullName"
+                              required
+                              value={addressForm.fullName}
+                              onChange={fieldHandlers.fullName}
+                              placeholder="Enter your full name"
+                              error={formErrors.fullName}
+                              isTouched={touchedFields.has('fullName')}
+                            />
+                            
+                            <InputField
+                              label="Phone Number"
+                              name="phone"
+                              type="tel"
+                              required
+                              value={addressForm.phone}
+                              onChange={fieldHandlers.phone}
+                              placeholder="Enter 10-digit mobile number"
+                              maxLength={10}
+                              error={formErrors.phone}
+                              isTouched={touchedFields.has('phone')}
+                            />
+                            
+                            <div className="sm:col-span-2">
+                              <InputField
+                                label="Address Line 1"
+                                name="addressLine1"
+                                required
+                                value={addressForm.addressLine1}
+                                onChange={fieldHandlers.addressLine1}
+                                placeholder="House/Flat no., Building, Street"
+                                error={formErrors.addressLine1}
+                                isTouched={touchedFields.has('addressLine1')}
+                              />
+                            </div>
+                            
+                            <div className="sm:col-span-2">
+                              <InputField
+                                label="Address Line 2"
+                                name="addressLine2"
+                                value={addressForm.addressLine2 ?? ""}
+                                onChange={fieldHandlers.addressLine2}
+                                placeholder="Area, Colony, Landmark (Optional)"
+                              />
+                            </div>
+                            
+                            <InputField
+                              label="City"
+                              name="city"
+                              required
+                              value={addressForm.city}
+                              onChange={fieldHandlers.city}
+                              placeholder="Enter city name"
+                              error={formErrors.city}
+                              isTouched={touchedFields.has('city')}
+                            />
+                            
+                            <InputField
+                              label="State"
+                              name="state"
+                              required
+                              value={addressForm.state}
+                              onChange={fieldHandlers.state}
+                              placeholder="Enter state name"
+                              error={formErrors.state}
+                              isTouched={touchedFields.has('state')}
+                            />
+                            
+                            <InputField
+                              label="PIN Code"
+                              name="postalCode"
+                              required
+                              value={addressForm.postalCode}
+                              onChange={fieldHandlers.postalCode}
+                              placeholder="Enter 6-digit PIN code"
+                              maxLength={6}
+                              error={formErrors.postalCode}
+                              isTouched={touchedFields.has('postalCode')}
+                            />
+                            
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Address Type
+                              </label>
+                              <select
+                                value={addressForm.type}
+                                onChange={handleAddressTypeChange}
+                                className="w-full px-3 py-2 border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors rounded-xs"
+                              >
+                                <option value="home">Home</option>
+                                <option value="work">Work</option>
+                                <option value="other">Other</option>
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
+                            <button
+                              type="submit"
+                              disabled={isSubmitting || addressLoading || !isValidForm()}
+                              className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 rounded-xs"
+                            >
+                              {(isSubmitting || addressLoading) && (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              )}
+                              {editingAddressId ? 'Update Address' : 'Save Address'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleCloseForm}
+                              className="w-full sm:w-auto text-gray-600 hover:text-gray-900 text-sm px-4 py-2 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    {/* Address List */}
+                    <div className="space-y-3">
+                      {addresses.map((addr) => (
+                        <AddressCard
+                          key={addr._id}
+                          address={addr}
+                          isSelected={checkoutData.selectedAddressId === addr._id}
+                          onSelect={handleSelectAddress}
+                          onEdit={handleEditAddress}
+                        />
+                      ))}
                     </div>
-                  )}
 
-                  {/* Address List */}
-                  <div className="space-y-3">
-                    {addresses.map((addr) => (
-                      <AddressCard
-                        key={addr._id}
-                        address={addr}
-                        isSelected={checkoutData.selectedAddressId === addr._id}
-                        onSelect={handleSelectAddress}
-                        onEdit={handleEditAddress}
-                      />
-                    ))}
+                    <button
+                      onClick={handleAddNewAddress}
+                      className="w-full p-3 border-2 border-dashed border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors rounded-xs flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add New Address
+                    </button>
                   </div>
-
-                  <button
-                    onClick={handleAddNewAddress}
-                    className="w-full p-3 border-2 border-dashed border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors rounded flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add New Address
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Order Items Section */}
-            <div className="bg-white p-6 border border-gray-200 rounded">
-              <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 mb-4">
-                <Package className="w-5 h-5" />
-                Order Items ({selectedItems.length})
-              </h2>
+            <div className="bg-white rounded-xs shadow-sm border border-gray-200">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-lg font-semibold flex items-center gap-2 text-gray-900 mb-4">
+                  <Package className="w-5 h-5" />
+                  Order Items ({selectedItems.length})
+                </h2>
 
-              <div className="space-y-4">
-                {selectedItems.map((item) => {
-                  const hasProtection = checkoutData.insuranceEnabled.includes(item.productId);
-                  const itemInsuranceCost = hasProtection ? Math.round(item.itemTotal * 0.02) : 0;
+                <div className="space-y-4">
+                  {selectedItems.map((item) => {
+                    const hasProtection = checkoutData.insuranceEnabled.includes(item.productId);
+                    const itemInsuranceCost = hasProtection ? Math.round(item.itemTotal * 0.02) : 0;
 
-                  return (
-                    <div
-                      key={item.productId}
-                      className="border border-gray-200 rounded p-4 hover:shadow-sm transition-shadow"
-                    >
-                      <div className="flex gap-4">
-                        {/* Product Image */}
-                        <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                          {item.product?.mainImage?.url ? (
-                            <img
-                              src={item.product.mainImage.url}
-                              alt={item.product.mainImage.alt || item.product.name}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                if (e.currentTarget.nextElementSibling) {
-                                  (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
-                                }
-                              }}
-                            />
-                          ) : null}
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <Package className="w-6 h-6 text-gray-400" />
-                          </div>
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">
-                                {item.product?.name || "Product"}
-                              </h3>
-                              <div className="text-sm text-gray-600 mb-2">
-                                Qty: {item.quantity}
+                    return (
+                      <div
+                        key={item.productId}
+                        className="border border-gray-200 rounded-xs transition-all duration-200 hover:shadow-sm"
+                      >
+                        <div className="p-4">
+                          {/* Mobile Layout */}
+                          <div className="block sm:hidden">
+                            {/* Mobile: Full-width image at top */}
+                            <div className="relative mb-4">
+                              <div className="aspect-video w-full bg-gray-100 rounded-xs overflow-hidden">
+                                {item.product?.mainImage?.url ? (
+                                  <img
+                                    src={item.product.mainImage.url}
+                                    alt={item.product.mainImage.alt || item.product.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (nextElement) {
+                                        nextElement.style.display = 'flex';
+                                      }
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                  <Package className="w-12 h-12 text-gray-400" />
+                                </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-gray-900">
-                                ₹{item.itemTotal.toLocaleString()}
+
+                            {/* Mobile: Product details below image */}
+                            <div className="space-y-4">
+                              <div>
+                                <h3 className="font-semibold text-gray-900 text-lg mb-2">
+                                  {item.product?.name || "Product"}
+                                </h3>
+                                <div className="text-sm text-gray-600 mb-2">
+                                  Qty: {item.quantity}
+                                </div>
                               </div>
-                              {item.product?.originalPrice && 
-                               item.product.originalPrice > item.product.finalPrice && (
-                                <div className="text-xs text-gray-500 line-through">
-                                  ₹{(item.product.originalPrice * item.quantity).toLocaleString()}
+
+                              {/* Price */}
+                              <div className="flex items-center flex-wrap gap-2">
+                                {item.product?.originalPrice && 
+                                 item.product.originalPrice > item.product.finalPrice && (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 line-through">
+                                      ₹{(item.product.originalPrice * item.quantity).toLocaleString()}
+                                    </span>
+                                    <span className="text-xs text-gray-400">(MRP)</span>
+                                  </div>
+                                )}
+                                <span className="font-bold text-xl text-gray-900">
+                                  ₹{item.itemTotal.toLocaleString()}
+                                </span>
+                                {item.product?.discountPercent && item.product.discountPercent > 0 && (
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
+                                    {Math.round(item.product.discountPercent)}% OFF
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Protection Plan */}
+                              <div 
+                                className={`border rounded-xs p-3 transition-all duration-200 ${
+                                  hasProtection 
+                                    ? 'border-blue-200 bg-blue-50' 
+                                    : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                                    <button
+                                      onClick={() => handleToggleInsurance(item.productId)}
+                                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 mt-0.5 ${
+                                        hasProtection
+                                          ? "bg-blue-600 border-blue-600 text-white"
+                                          : "border-gray-300 hover:border-blue-400"
+                                      }`}
+                                    >
+                                      {hasProtection && <Check className="w-3 h-3" />}
+                                    </button>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        {hasProtection ? (
+                                          <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                        ) : (
+                                          <Shield className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        )}
+                                        <div className="font-medium text-sm text-gray-900">
+                                          Product Protection Plan
+                                        </div>
+                                      </div>
+                                      <div className="text-xs text-gray-600 mb-1">
+                                        2-year damage & theft coverage
+                                      </div>
+                                      {hasProtection && (
+                                        <div className="flex items-center gap-1 text-xs text-blue-700">
+                                          <Info className="w-3 h-3 flex-shrink-0" />
+                                          <span>
+                                            Coverage includes accidental damage, liquid spills & theft protection
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-right flex-shrink-0">
+                                    <div className="font-semibold text-sm text-gray-900">
+                                      +₹{Math.round(item.itemTotal * 0.02).toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-gray-500 whitespace-nowrap">
+                                      (2% of item value)
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Item total with insurance */}
+                              {hasProtection && (
+                                <div className="p-2 bg-blue-50 border border-blue-200 rounded-xs text-right">
+                                  <div className="text-sm font-semibold text-gray-900">
+                                    Item Total: ₹{(item.itemTotal + itemInsuranceCost).toLocaleString()}
+                                  </div>
+                                  <div className="text-xs text-blue-600">
+                                    (includes ₹{itemInsuranceCost} protection)
+                                  </div>
                                 </div>
                               )}
                             </div>
                           </div>
 
-                          {/* Price per unit */}
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm text-gray-600">
-                              ₹{item.product?.finalPrice?.toLocaleString()} each
-                            </span>
-                            {item.product?.discountPercent && item.product.discountPercent > 0 && (
-                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                                {Math.round(item.product.discountPercent)}% OFF
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Product ratings if available */}
-                          {item.product && (item.product as any).ratings > 0 && (
-                            <div className="flex items-center gap-1 mb-3">
-                              <div className="flex">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <Star 
-                                    key={i} 
-                                    className={`w-3 h-3 ${
-                                      i < Math.floor((item.product as any).ratings) 
-                                        ? 'text-yellow-400 fill-current' 
-                                        : 'text-gray-300'
-                                    }`} 
+                          {/* Desktop Layout */}
+                          <div className="hidden sm:block">
+                            <div className="flex gap-4">
+                              {/* Product Image */}
+                              <div className="w-20 h-20 bg-gray-100 rounded-xs overflow-hidden flex-shrink-0">
+                                {item.product?.mainImage?.url ? (
+                                  <img
+                                    src={item.product.mainImage.url}
+                                    alt={item.product.mainImage.alt || item.product.name}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                      const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                      if (nextElement) {
+                                        nextElement.style.display = 'flex';
+                                      }
+                                    }}
                                   />
-                                ))}
+                                ) : null}
+                                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                  <Package className="w-6 h-6 text-gray-400" />
+                                </div>
                               </div>
-                              <span className="text-xs text-gray-600">
-                                ({(item.product as any).ratings.toFixed(1)})
-                              </span>
-                            </div>
-                          )}
 
-                          {/* Protection Plan */}
-                          <div 
-                            className={`border rounded p-3 transition-all duration-200 ${
-                              hasProtection 
-                                ? 'border-blue-200 bg-blue-50' 
-                                : 'border-gray-200 bg-gray-50'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <button
-                                  onClick={() => handleToggleInsurance(item.productId)}
-                                  className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-                                    hasProtection
-                                      ? "bg-blue-600 border-blue-600 text-white"
-                                      : "border-gray-300 hover:border-blue-400"
-                                  }`}
-                                >
-                                  {hasProtection && <Check className="w-3 h-3" />}
-                                </button>
-                                <div className="flex items-center gap-2">
-                                  {hasProtection ? (
-                                    <ShieldCheck className="w-4 h-4 text-blue-600" />
-                                  ) : (
-                                    <Shield className="w-4 h-4 text-gray-400" />
-                                  )}
-                                  <div>
-                                    <div className="font-medium text-sm text-gray-900">
-                                      Product Protection Plan
-                                    </div>
-                                    <div className="text-xs text-gray-600">
-                                      2-year damage & theft coverage
+                              {/* Product Details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-start mb-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className="font-semibold text-gray-900 mb-1 text-lg truncate">
+                                      {item.product?.name || "Product"}
+                                    </h3>
+                                    <div className="text-sm text-gray-600 mb-2">
+                                      Qty: {item.quantity}
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-semibold text-sm text-gray-900">
-                                  +₹{Math.round(item.itemTotal * 0.02).toLocaleString()}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  (2% of item value)
-                                </div>
-                              </div>
-                            </div>
-                            {hasProtection && (
-                              <div className="mt-2 pt-2 border-t border-blue-200">
-                                <div className="flex items-center gap-1 text-xs text-blue-700">
-                                  <Info className="w-3 h-3" />
-                                  <span>Covers accidental damage, liquid spills & theft</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
 
-                          {/* Item total with insurance */}
-                          {hasProtection && (
-                            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-right">
-                              <div className="text-sm font-semibold text-gray-900">
-                                Item Total: ₹{(item.itemTotal + itemInsuranceCost).toLocaleString()}
-                              </div>
-                              <div className="text-xs text-blue-600">
-                                (includes ₹{itemInsuranceCost} protection)
+                                {/* Price */}
+                                <div className="flex items-center gap-2 mb-4 flex-wrap">
+                                  {item.product?.originalPrice && 
+                                   item.product.originalPrice > item.product.finalPrice && (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-sm text-gray-500 line-through">
+                                        ₹{(item.product.originalPrice * item.quantity).toLocaleString()}
+                                      </span>
+                                      <span className="text-xs text-gray-400">(MRP)</span>
+                                    </div>
+                                  )}
+                                  <span className="font-bold text-xl text-gray-900">
+                                    ₹{item.itemTotal.toLocaleString()}
+                                  </span>
+                                  {item.product?.discountPercent && item.product.discountPercent > 0 && (
+                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
+                                      {Math.round(item.product.discountPercent)}% OFF
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Protection Plan */}
+                                <div className="mb-4">
+                                  <div 
+                                    className={`border rounded-xs p-3 transition-all duration-200 ${
+                                      hasProtection 
+                                        ? 'border-blue-200 bg-blue-50' 
+                                        : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <button
+                                          onClick={() => handleToggleInsurance(item.productId)}
+                                          className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 ${
+                                            hasProtection
+                                              ? "bg-blue-600 border-blue-600 text-white"
+                                              : "border-gray-300 hover:border-blue-400"
+                                          }`}
+                                        >
+                                          {hasProtection && <Check className="w-3 h-3" />}
+                                        </button>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          {hasProtection ? (
+                                            <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                          ) : (
+                                            <Shield className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                          )}
+                                          <div className="min-w-0">
+                                            <div className="font-medium text-sm text-gray-900">
+                                              Product Protection Plan
+                                            </div>
+                                            <div className="text-xs text-gray-600">
+                                              2-year damage & theft coverage
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="text-right flex-shrink-0">
+                                        <div className="font-semibold text-sm text-gray-900">
+                                          +₹{Math.round(item.itemTotal * 0.02).toLocaleString()}
+                                        </div>
+                                        <div className="text-xs text-gray-500 whitespace-nowrap">
+                                          (2% of item value)
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {hasProtection && (
+                                      <div className="mt-2 pt-2 border-t border-blue-200">
+                                        <div className="flex items-center gap-1 text-xs text-blue-700">
+                                          <Info className="w-3 h-3 flex-shrink-0" />
+                                          <span className="line-clamp-1">
+                                            Coverage includes accidental damage, liquid spills & theft protection
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Item total with insurance */}
+                                {hasProtection && (
+                                  <div className="p-2 bg-blue-50 border border-blue-200 rounded-xs text-right">
+                                    <div className="text-sm font-semibold text-gray-900">
+                                      Item Total: ₹{(item.itemTotal + itemInsuranceCost).toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-blue-600">
+                                      (includes ₹{itemInsuranceCost} protection)
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
 
-              {/* Order Summary */}
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal ({checkoutData.totals.selectedQuantity} items)</span>
-                    <span className="font-medium">₹{checkoutData.totals.subtotal.toLocaleString()}</span>
-                  </div>
-                  {checkoutData.totals.insuranceCost > 0 && (
+                {/* Order Summary */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Protection Plan</span>
-                      <span className="font-medium text-blue-600">₹{checkoutData.totals.insuranceCost.toLocaleString()}</span>
+                      <span className="text-gray-600">Subtotal ({checkoutData.totals.selectedQuantity} items)</span>
+                      <span className="font-medium">₹{checkoutData.totals.subtotal.toLocaleString()}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">
-                      {checkoutData.totals.shippingCost === 0 ? (
-                        <span className="text-green-600">FREE</span>
-                      ) : (
-                        `₹${checkoutData.totals.shippingCost.toLocaleString()}`
-                      )}
-                    </span>
-                  </div>
-                  {checkoutData.totals.totalDiscount > 0 && (
+                    {checkoutData.totals.insuranceCost > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Protection Plan</span>
+                        <span className="font-medium text-blue-600">₹{checkoutData.totals.insuranceCost.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Total Discount</span>
-                      <span className="font-medium text-green-600">-₹{checkoutData.totals.totalDiscount.toLocaleString()}</span>
+                      <span className="text-gray-600">Shipping</span>
+                      <span className="font-medium">
+                        {checkoutData.totals.shippingCost === 0 ? (
+                          <span className="text-green-600">FREE</span>
+                        ) : (
+                          `₹${checkoutData.totals.shippingCost.toLocaleString()}`
+                        )}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex justify-between pt-2 border-t border-gray-200 font-semibold text-lg">
-                    <span className="text-gray-900">Total Amount</span>
-                    <span className="text-gray-900">₹{checkoutData.totals.totalAmount.toLocaleString()}</span>
+                    {checkoutData.totals.totalDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Discount</span>
+                        <span className="font-medium text-green-600">-₹{checkoutData.totals.totalDiscount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-2 border-t border-gray-200 font-semibold text-lg">
+                      <span className="text-gray-900">Total Amount</span>
+                      <span className="text-gray-900">₹{checkoutData.totals.totalAmount.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -960,15 +1108,48 @@ const CheckoutPage = () => {
 
           {/* Price Summary Card */}
           <div className="lg:col-span-1">
-            <PriceSummaryCard
-              mode="checkout"
-              onProceedToPayment={handleProceedToPayment}
-              showItemDetails={true}
-              showTrustSignals={true}
-              showContinueShopping={true}
-            />
+            <div className="lg:sticky lg:top-14" ref={priceCardRef}>
+              <PriceSummaryCard
+                mode="checkout"
+                onProceedToPayment={handleProceedToPayment}
+                showItemDetails={true}
+                showTrustSignals={true}
+                showContinueShopping={true}
+              />
+            </div>
           </div>
         </div>
+
+        {/* Fixed Bottom Checkout Button - Only show when price card is not visible */}
+        {checkoutData && (
+          <div
+            className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
+              showFixedCheckout
+                ? "translate-y-0 opacity-100"
+                : "translate-y-full opacity-0 pointer-events-none"
+            }`}
+          >
+            <button
+              onClick={handleProceedToPayment}
+              disabled={!canProceedToPayment() || !checkoutData.selectedAddressId}
+              className="w-full h-[60px] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 rounded-2xl font-semibold shadow-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-2 border-emerald-400/30"
+            >
+              <div className="flex items-center justify-between h-full">
+                <span className="font-bold text-lg tracking-wide">
+                  Proceed to Payment
+                </span>
+                <div className="flex items-center gap-3">
+                  <span className="bg-white/20 px-2 py-1 rounded-full text-sm font-medium">
+                    {checkoutData.totals.selectedQuantity}
+                  </span>
+                  <span className="font-bold text-lg tracking-wide">
+                    ₹{checkoutData.totals.totalAmount.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

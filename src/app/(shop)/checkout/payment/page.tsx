@@ -1,8 +1,8 @@
-// PaymentPage.tsx - Fixed version that only removes ordered items from cart
+// PaymentPage.tsx - Fixed version with responsive design and fixed bottom button
 
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, JSX } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useCheckoutStore } from "@/stores/checkoutStore";
@@ -39,6 +39,8 @@ interface PaymentMethod {
 const PaymentPage = () => {
   const { user } = useCurrentUser();
   const router = useRouter();
+  const priceCardRef = useRef(null);
+  const [showFixedCheckout, setShowFixedCheckout] = useState(false);
 
   // Checkout store
   const {
@@ -107,6 +109,29 @@ const PaymentPage = () => {
     ],
     []
   );
+
+  // Intersection Observer for checkout button visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowFixedCheckout(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "-50px",
+      }
+    );
+
+    if (priceCardRef.current) {
+      observer.observe(priceCardRef.current);
+    }
+
+    return () => {
+      if (priceCardRef.current) {
+        observer.unobserve(priceCardRef.current);
+      }
+    };
+  }, [checkoutData]);
 
   // FIXED: Improved redirect checks with better error handling
   useEffect(() => {
@@ -279,6 +304,7 @@ const PaymentPage = () => {
         }
         
         // Clear checkout data
+        console.log("checkoutData : ",checkoutData);
         clearCheckout();
         console.log("Checkout data cleared");
 
@@ -352,17 +378,17 @@ const PaymentPage = () => {
   // FIXED: Better loading state handling
   if (!user?._id) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
           <h1 className="text-xl font-semibold mb-4 text-gray-900">
             Authentication Required
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-sm">
             Please sign in to continue with payment.
           </p>
           <button
             onClick={() => router.push("/auth/signin?returnUrl=/checkout/payment")}
-            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Sign In
           </button>
@@ -377,7 +403,7 @@ const PaymentPage = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading payment options...</p>
+          <p className="text-gray-600 text-sm">Loading payment options...</p>
         </div>
       </div>
     );
@@ -386,17 +412,17 @@ const PaymentPage = () => {
   // No items selected
   if (!selectedCartItems.length) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
           <h1 className="text-xl font-semibold mb-4 text-gray-900">
             No items selected for checkout
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-sm">
             Please go back to your cart and select items to checkout.
           </p>
           <button
             onClick={() => router.push("/cart")}
-            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Go to Cart
           </button>
@@ -408,17 +434,17 @@ const PaymentPage = () => {
   // No address selected
   if (!selectedAddress) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 border border-gray-200 rounded max-w-md mx-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
           <h1 className="text-xl font-semibold mb-4 text-gray-900">
             No delivery address selected
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-sm">
             Please go back and select a delivery address.
           </p>
           <button
             onClick={() => router.push("/checkout")}
-            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded font-medium"
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Go to Checkout
           </button>
@@ -429,69 +455,67 @@ const PaymentPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className=" mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4  gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-white rounded-xs transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div>
-              <h1 className="text-xl font-medium text-gray-900">Payment</h1>
-              <div className="flex items-center gap-2 text-sm text-gray-600 mt-0.5">
-                <Shield className="w-4 h-4" />
-                <span>100% Safe & Secure</span>
-              </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
+                Payment
+              </h1>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className=" mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Section - Payment Methods */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-2 space-y-2 ">
             {/* Address Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded border border-gray-200 p-4 mb-6"
+              className="bg-white rounded-xs shadow-sm border border-gray-200"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-gray-100 rounded-full">
-                    <MapPin className="w-4 h-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-1">
-                      Deliver to
-                    </h4>
-                    <div className="text-sm text-gray-700 space-y-0.5">
-                      <p className="font-medium">{selectedAddress.fullName}</p>
-                      <p>{selectedAddress.addressLine1}</p>
-                      {selectedAddress.addressLine2 && (
-                        <p>{selectedAddress.addressLine2}</p>
-                      )}
-                      <p className="text-gray-600">
-                        {selectedAddress.city}, {selectedAddress.state} -{" "}
-                        {selectedAddress.postalCode}
-                      </p>
-                      <p className="text-gray-600">
-                        Phone: {selectedAddress.phone}
-                      </p>
+              <div className="p-4 sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-gray-100 rounded-xs flex-shrink-0">
+                      <MapPin className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 mb-1">
+                        Deliver to
+                      </h4>
+                      <div className="text-sm text-gray-700 space-y-0.5">
+                        <p className="font-medium">{selectedAddress.fullName}</p>
+                        <p className="break-words">{selectedAddress.addressLine1}</p>
+                        {selectedAddress.addressLine2 && (
+                          <p className="break-words">{selectedAddress.addressLine2}</p>
+                        )}
+                        <p className="text-gray-600">
+                          {selectedAddress.city}, {selectedAddress.state} -{" "}
+                          {selectedAddress.postalCode}
+                        </p>
+                        <p className="text-gray-600">
+                          Phone: {selectedAddress.phone}
+                        </p>
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => router.push("/checkout")}
+                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0 p-2 hover:bg-blue-50 rounded-xs transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Change</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => router.push("/checkout")}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Change
-                </button>
               </div>
             </motion.div>
 
@@ -500,13 +524,13 @@ const PaymentPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded border border-gray-200"
+              className="bg-white rounded-xs shadow-sm border border-gray-200"
             >
-              <div className="p-4 border-b border-gray-200">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
                 <h3 className="font-medium text-gray-900">
                   Choose Payment Method
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   Currently, only Cash on Delivery is available. Online payments
                   coming soon!
                 </p>
@@ -517,7 +541,7 @@ const PaymentPage = () => {
                   <div key={method.id} className="relative">
                     <div
                       onClick={() => handlePaymentMethodSelect(method.id)}
-                      className={`flex items-center p-4 transition-colors ${
+                      className={`flex items-center p-2 sm:p-4 transition-colors ${
                         method.available
                           ? `cursor-pointer hover:bg-gray-50 ${
                               checkoutData.selectedPaymentMethod === method.id
@@ -527,9 +551,9 @@ const PaymentPage = () => {
                           : "cursor-not-allowed opacity-60"
                       }`}
                     >
-                      <div className="flex items-center gap-4 flex-1">
+                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <div
-                          className={`p-2 rounded-full ${
+                          className={`p-2 sm:p-3 rounded-xs ${
                             checkoutData.selectedPaymentMethod === method.id &&
                             method.available
                               ? "bg-blue-600 text-white"
@@ -540,10 +564,10 @@ const PaymentPage = () => {
                         >
                           {method.icon}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center flex-wrap gap-2 mb-1">
                             <h4
-                              className={`font-medium ${
+                              className={`font-medium text-sm sm:text-base ${
                                 method.available
                                   ? "text-gray-900"
                                   : "text-gray-500"
@@ -552,18 +576,18 @@ const PaymentPage = () => {
                               {method.name}
                             </h4>
                             {method.popular && method.available && (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-xs">
                                 Popular
                               </span>
                             )}
                             {!method.available && (
-                              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-xs">
                                 Coming Soon
                               </span>
                             )}
                           </div>
                           <p
-                            className={`text-sm mt-0.5 ${
+                            className={`text-xs sm:text-sm ${
                               method.available
                                 ? "text-gray-600"
                                 : "text-gray-500"
@@ -571,8 +595,8 @@ const PaymentPage = () => {
                           >
                             {method.description}
                           </p>
-                          {method.offers && method.available && (
-                            <div className="flex gap-2 mt-1 flex-wrap">
+                          {/* {method.offers && method.available && (
+                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 mt-1">
                               {method.offers.map((offer, idx) => (
                                 <span
                                   key={idx}
@@ -582,10 +606,10 @@ const PaymentPage = () => {
                                 </span>
                               ))}
                             </div>
-                          )}
+                          )} */}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {checkoutData.selectedPaymentMethod === method.id &&
                           method.available && (
                             <Check className="w-5 h-5 text-blue-600" />
@@ -607,7 +631,7 @@ const PaymentPage = () => {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden border-t border-gray-200 bg-gray-50"
                           >
-                            <div className="p-4">
+                            <div className="p-4 sm:p-6">
                               <div className="max-w-md">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                   Enter UPI ID
@@ -617,7 +641,7 @@ const PaymentPage = () => {
                                   value={upiId}
                                   onChange={(e) => setUpiId(e.target.value)}
                                   placeholder="example@upi"
-                                  className="w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                  className="w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 rounded-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 />
                                 <p className="text-xs text-gray-600 mt-1">
                                   Enter your UPI ID (e.g., name@paytm,
@@ -635,11 +659,13 @@ const PaymentPage = () => {
           </div>
 
           {/* Right Section - Price Summary */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-1">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
+              className="lg:sticky lg:top-14"
+              ref={priceCardRef}
             >
               <PriceSummaryCard
                 mode="payment"
@@ -652,6 +678,46 @@ const PaymentPage = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Fixed Bottom Place Order Button */}
+        {checkoutData && (
+          <div
+            className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
+              showFixedCheckout
+                ? "translate-y-0 opacity-100"
+                : "translate-y-full opacity-0 pointer-events-none"
+            }`}
+          >
+            <button
+              onClick={handlePlaceOrder}
+              disabled={placingOrder || !canPlaceOrder() || !checkoutData.selectedPaymentMethod}
+              className="w-full h-[60px] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 rounded-2xl font-semibold shadow-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-2 border-emerald-400/30"
+            >
+              <div className="flex items-center justify-between h-full">
+                <span className="font-bold text-lg tracking-wide">
+                  {placingOrder ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Placing Order...
+                    </div>
+                  ) : (
+                    "Place Order"
+                  )}
+                </span>
+                {!placingOrder && (
+                  <div className="flex items-center gap-3">
+                    <span className="bg-white/20 px-2 py-1 rounded-full text-sm font-medium">
+                      {checkoutData.totals.selectedQuantity}
+                    </span>
+                    <span className="font-bold text-lg tracking-wide">
+                      ₹{checkoutData.totals.totalAmount.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -110,7 +110,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
             // Scroll to position inspiration just below header
             sidebarElement.scrollTo({
-              top: relativeTop - headerHeight + 100, // Small padding
+              top: relativeTop - headerHeight + 108, // Small padding
               behavior: "smooth",
             });
           }

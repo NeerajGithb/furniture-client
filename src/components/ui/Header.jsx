@@ -284,7 +284,7 @@ const InspirationMegaMenu = memo(
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.98 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="absolute top-full z-40 bg-white shadow-lg border border-gray-200 rounded-xs"
+        className="absolute top-full z-50 bg-white shadow-lg border border-gray-200 rounded-xs"
         style={{
           left: positionStyle.left,
           right: positionStyle.right || "auto",
@@ -675,7 +675,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="relative z-30 bg-white border-b border-gray-100">
+      <header className="relative z-50 bg-white border-b border-gray-100">
         <div className={headerClasses}>
           <div className="px-3 sm:px-4 lg:px-6 w-full max-w-[1600px] mx-auto">
             <div className="flex items-center justify-between h-full gap-2 sm:gap-4">
@@ -764,7 +764,7 @@ const Header = () => {
                       <Heart size={18} />
                       {wishlistCount > 0 && (
                         <motion.span
-                          className="absolute -top-0 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 md:bg-black text-red-600 md:text-white text-xs md:rounded-full flex items-center justify-center font-bold"
+                          className="absolute top-1 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 bg-black text-white text-[8px] md:text-xs rounded-full flex items-center justify-center font-bold"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
@@ -778,7 +778,6 @@ const Header = () => {
                       )}
                     </Link>
 
-                    {/* Cart */}
                     <Link
                       href="/cart"
                       className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
@@ -787,7 +786,7 @@ const Header = () => {
                       <ShoppingCart size={18} />
                       {cartCount > 0 && (
                         <motion.span
-                          className="absolute -top-0 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 md:bg-black text-red-600 md:text-white text-xs md:rounded-full flex items-center justify-center font-bold"
+                          className="absolute top-1 md:-top-0.5 -right-0.5 md:w-4 md:h-4 h-3 w-3 bg-black text-white text-[8px] md:text-xs rounded-full flex items-center justify-center font-bold"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
@@ -889,7 +888,7 @@ const Header = () => {
         <AnimatePresence mode="wait">
           {scrolled && !isMdDown && (
             <motion.div
-              className="fixed top-0 left-0 right-0 z-[10001] bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
+              className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"
               onMouseLeave={handleInspirationLeave}
               initial={{ y: -100, opacity: 0 }}
               animate={{
@@ -942,11 +941,21 @@ const Header = () => {
           onMouseLeave={handleInspirationLeave}
         >
           <div className="max-w-[1600px] mx-auto px-2 lg:px-6">
-            {/* Desktop navigation */}
-            <nav className="hidden lg:block">{InspirationNavigation}</nav>
+            {/* Desktop navigation - Hide when sticky header is visible */}
+            <nav
+              className={`lg:block ${
+                scrolled && !isMdDown ? "hidden" : "hidden lg:block"
+              }`}
+            >
+              {InspirationNavigation}
+            </nav>
 
-            {/* Tablet navigation */}
-            <nav className="hidden md:block lg:hidden">
+            {/* Tablet navigation - Hide when sticky header is visible */}
+            <nav
+              className={`md:block lg:hidden ${
+                scrolled && !isMdDown ? "hidden" : "hidden md:block lg:hidden"
+              }`}
+            >
               {TabletInspirations}
             </nav>
 
@@ -988,9 +997,9 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mega menu dropdown */}
+          {/* Mega menu dropdown - Only show when sticky header is NOT visible */}
           <AnimatePresence>
-            {activeInspirationData && (
+            {activeInspirationData && (!scrolled || isMdDown) && (
               <InspirationMegaMenu
                 inspiration={activeInspirationData}
                 categories={categories}

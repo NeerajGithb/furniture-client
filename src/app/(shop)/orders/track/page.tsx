@@ -63,6 +63,7 @@ export default function OrderTrackingPage() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams?.get("orderNumber");
   const [copied, setCopied] = useState(false);
+  const [fetchOrder, setFetchOrder] = useState(false);
   const { order, fetchOrderByNumber, loading, error, clearError } =
     useOrderStore();
 
@@ -74,15 +75,17 @@ export default function OrderTrackingPage() {
     }
 
     clearError();
-    fetchOrderByNumber(orderNumber);
+    fetchOrderByNumber(orderNumber).finally(() => {
+      setFetchOrder(true);
+    });
   }, [orderNumber, fetchOrderByNumber, clearError]);
+
+  console.log("Order:", order);
 
   // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!userLoading && !user) {
-      router.push(
-        `/auth/signin?returnUrl=/order-success?orderNumber=${orderNumber || ""}`
-      );
+      return;
     }
   }, [user, userLoading, router, orderNumber]);
 
@@ -327,7 +330,7 @@ export default function OrderTrackingPage() {
   }
 
   // Error or no order state
-  if (error || (!loading && !order)) {
+  if (error || (!loading && !order && fetchOrder)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center bg-white p-6 rounded border border-gray-200 shadow-sm max-w-sm w-full">
@@ -366,8 +369,8 @@ export default function OrderTrackingPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Container with proper spacing */}
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-        {/* Order Status Header - Compact design */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        {/* Order Status Header */}
         {isOrderCompleted && (
           <div className="mb-6 bg-white border border-gray-200 rounded p-4 text-center">
             <div className="flex items-center justify-center mb-3">
@@ -447,7 +450,7 @@ export default function OrderTrackingPage() {
           </div>
         )}
 
-        {/* Quick Stats - Compact grid */}
+        {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="bg-black text-white p-3 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -503,10 +506,10 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Main Content Grid - Compact layout */}
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
-            {/* Order Progress - Compact design */}
+            {/* Order Progress */}
             {isOrderActive && (
               <div className="bg-white border border-gray-200 shadow-sm">
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -592,7 +595,7 @@ export default function OrderTrackingPage() {
               </div>
             )}
 
-            {/* Order Items - Compact design */}
+            {/* Order Items */}
             {order.items && order.items.length > 0 && (
               <div className="bg-white border border-gray-200 shadow-sm">
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -623,59 +626,189 @@ export default function OrderTrackingPage() {
                     </div>
                   </div>
 
-                  {/* Price Breakdown */}
-                  <div className="border-t pt-3 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">
-                        ₹{(order.subtotal || 0).toLocaleString()}
-                      </span>
+                  {/* Enhanced Price Breakdown */}
+                  <div className="border-t pt-3 space-y-3">
+                    {/* Order Number and Details */}
+                    <div className="bg-gray-50 p-3 rounded">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-gray-700">
+                          Order Number
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-black">
+                            {order.orderNumber}
+                          </span>
+                          <button
+                            onClick={copyOrderNumber}
+                            className="p-1 hover:bg-gray-200 transition-colors rounded"
+                          >
+                            {copied ? (
+                              <Check className="w-3 h-3 text-green-600" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-gray-500" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    {typeof order.discount === "number" &&
-                      order.discount > 0 && (
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>Discount</span>
+
+                    {/* Coupon Information */}
+                    {order.couponCode && (
+                      <div className="bg-green-50 border border-green-200 p-3 rounded">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-green-700">
+                            <Gift className="w-4 h-4" />
+                            <span className="font-medium">
+                              Applied: {order.couponCode}
+                            </span>
+                          </div>
+                          {order.priceBreakdown?.couponDiscount && (
+                            <span className="text-green-700 font-medium">
+                              -₹
+                              {order.priceBreakdown.couponDiscount.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Individual Items */}
+                    <div>
+                      <h5 className="font-medium text-black mb-2 text-sm">
+                        Items ({order.items.length}):
+                      </h5>
+                      <div className="space-y-2">
+                        {order.items.map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-start text-sm p-2 bg-gray-50 rounded"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium text-black">
+                                {item.name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                Quantity: {item.quantity}
+                              </div>
+                              {item.selectedVariant?.color && (
+                                <div className="text-gray-500 text-xs">
+                                  Color: {item.selectedVariant.color}
+                                </div>
+                              )}
+                              {item.selectedVariant?.size && (
+                                <div className="text-gray-500 text-xs">
+                                  Size: {item.selectedVariant.size}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              {item.originalPrice &&
+                                item.originalPrice > item.price && (
+                                  <div className="text-xs text-gray-400 line-through">
+                                    ₹{(item.originalPrice * item.quantity).toLocaleString()}
+                                  </div>
+                                )}
+                              <div className="font-medium">
+                                ₹{(item.price * item.quantity).toLocaleString()}
+                              </div>
+                              {item.insuranceCost && item.insuranceCost > 0 && (
+                                <div className="text-xs text-blue-600 flex items-center gap-1">
+                                  <Shield className="w-3 h-3" />
+                                  ₹{(item.insuranceCost * item.quantity).toLocaleString()} protection
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Price Calculation */}
+                    <div className="space-y-2 border-t pt-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Items Subtotal</span>
+                        <span className="font-medium">
+                          ₹{order.priceBreakdown.originalSubtotal.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {order.priceBreakdown.itemDiscount > 0 && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span>Item Discounts</span>
                           <span>
-                            -₹{(order.discount as number).toLocaleString()}
+                            -₹{order.priceBreakdown.itemDiscount.toLocaleString()}
                           </span>
                         </div>
                       )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium">
-                        {(order.shippingCost || 0) === 0
-                          ? "FREE"
-                          : `₹${order.shippingCost?.toLocaleString()}`}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax (GST 18%)</span>
-                      <span className="font-medium">
-                        ₹{(order.tax || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    {typeof order.insuranceCost === "number" &&
-                      order.insuranceCost > 0 && (
-                        <div className="flex justify-between text-sm text-gray-600">
+
+                      {order.priceBreakdown.couponDiscount > 0 && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span>Coupon Discount</span>
+                          <span>
+                            -₹{order.priceBreakdown.couponDiscount.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Subtotal After Discounts</span>
+                        <span className="font-medium">
+                          ₹{order.priceBreakdown.finalSubtotal.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {order.priceBreakdown.totalInsurance > 0 && (
+                        <div className="flex justify-between text-sm text-blue-600">
                           <span className="flex items-center gap-1">
                             <Shield className="w-3 h-3" />
                             Protection Plan
                           </span>
                           <span>
-                            ₹{Number(order.insuranceCost).toLocaleString()}
+                            ₹{order.priceBreakdown.totalInsurance.toLocaleString()}
                           </span>
                         </div>
                       )}
-                  </div>
 
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-base font-bold text-black">
-                        Total Amount
-                      </span>
-                      <span className="text-lg font-bold text-black">
-                        ₹{order.totalAmount.toLocaleString()}
-                      </span>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Shipping</span>
+                        <span className="font-medium">
+                          {order.priceBreakdown.shippingCost === 0
+                            ? "FREE"
+                            : `₹${order.priceBreakdown.shippingCost.toLocaleString()}`}
+                        </span>
+                      </div>
+
+                      {order.priceBreakdown.tax > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Tax</span>
+                          <span className="font-medium">
+                            ₹{order.priceBreakdown.tax.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+
+                      {order.priceBreakdown.totalSavings > 0 && (
+                        <div className="flex justify-between text-sm bg-green-50 p-2 border border-green-200 rounded">
+                          <span className="text-green-700 font-medium">
+                            Total Savings
+                          </span>
+                          <span className="text-green-700 font-bold">
+                            ₹{order.priceBreakdown.totalSavings.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Final Total */}
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-base font-bold text-black">
+                          Total Amount
+                        </span>
+                        <span className="text-lg font-bold text-black">
+                          ₹{order.totalAmount.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -805,106 +938,108 @@ export default function OrderTrackingPage() {
                 </div>
               </div>
             )}
+
             {/* Quick Actions */}
-            <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
-              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-                <h4 className="text-lg font-bold text-gray-900">
+            <div className="bg-white border border-gray-200 shadow-sm">
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <h4 className="text-base font-bold text-black">
                   Quick Actions
                 </h4>
               </div>
-              <div className="p-6 space-y-3">
+              <div className="p-4 space-y-3">
                 {/* Show different actions based on order status */}
                 {isOrderCompleted ? (
                   <>
-                    <button className="flex items-center justify-between w-full p-4 bg-green-50 hover:bg-green-100 transition-colors group border border-green-200 rounded-sm">
+                    <button className="flex items-center justify-between w-full p-3 bg-green-50 hover:bg-green-100 transition-colors group border border-green-200">
                       <div className="flex items-center gap-3">
-                        <Star className="w-5 h-5 text-green-600" />
+                        <Star className="w-4 h-4 text-green-600" />
                         <span className="font-medium text-green-700">
                           Rate & Review Products
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-green-600 group-hover:text-green-700" />
+                      <ChevronRight className="w-4 h-4 text-green-600 group-hover:text-green-700" />
                     </button>
                     <Link
                       href="/products"
-                      className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors group rounded-sm"
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
-                        <Repeat className="w-5 h-5 text-gray-700" />
+                        <Repeat className="w-4 h-4 text-gray-700" />
                         <span className="font-medium text-gray-700">
                           Buy Similar Items
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
                     <Link
                       href="/orders"
-                      className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors group rounded-sm"
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
-                        <Package className="w-5 h-5 text-gray-700" />
+                        <Package className="w-4 h-4 text-gray-700" />
                         <span className="font-medium text-gray-700">
                           View All Orders
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
                   </>
                 ) : isOrderCancelled || isOrderReturned ? (
                   <>
                     <Link
                       href="/products"
-                      className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors group rounded-sm"
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
-                        <ShoppingBag className="w-5 h-5 text-gray-700" />
+                        <ShoppingBag className="w-4 h-4 text-gray-700" />
                         <span className="font-medium text-gray-700">
                           Continue Shopping
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
                     <Link
                       href="/support"
-                      className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors group rounded-sm"
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
-                        <HeadphonesIcon className="w-5 h-5 text-gray-700" />
+                        <HeadphonesIcon className="w-4 h-4 text-gray-700" />
                         <span className="font-medium text-gray-700">
                           Contact Support
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
                   </>
                 ) : (
                   <>
                     <Link
                       href="/orders"
-                      className="flex items-center justify-between w-full p-4 bg-gray-50 hover:bg-gray-100 transition-colors group rounded-sm"
+                      className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
-                        <Package className="w-5 h-5 text-gray-700" />
+                        <Package className="w-4 h-4 text-gray-700" />
                         <span className="font-medium text-gray-700">
                           Track All Orders
                         </span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
-                    {order.orderStatus === "pending" ||
-                    order.orderStatus === "confirmed" ? (
+                    {(order.orderStatus === "pending" ||
+                      order.orderStatus === "confirmed") && (
                       <button
-                       onClick={() => router.push(`/orders`)}
-                       className="flex items-center justify-between w-full p-4 bg-red-50 hover:bg-red-100 transition-colors group border border-red-200 rounded-sm">
+                        onClick={() => router.push(`/orders`)}
+                        className="flex items-center justify-between w-full p-3 bg-red-50 hover:bg-red-100 transition-colors group border border-red-200"
+                      >
                         <div className="flex items-center gap-3">
-                          <XCircle className="w-5 h-5 text-red-600" />
+                          <XCircle className="w-4 h-4 text-red-600" />
                           <span className="font-medium text-red-700">
                             Cancel Order
                           </span>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-red-600 group-hover:text-red-700" />
+                        <ChevronRight className="w-4 h-4 text-red-600 group-hover:text-red-700" />
                       </button>
-                    ) : null}
+                    )}
                   </>
                 )}
               </div>
@@ -912,114 +1047,113 @@ export default function OrderTrackingPage() {
           </div>
         </div>
 
-        {/* Bottom Navigation - Enhanced responsive design */}
+        {/* Bottom Navigation */}
         {isOrderCompleted ? (
-          <div className="mt-12 bg-green-50 border border-green-200 rounded-sm shadow-sm overflow-hidden">
-            <div className="p-8 sm:p-10">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl sm:text-3xl font-bold text-green-800 mb-3">
+          <div className="mt-8 bg-green-50 border border-green-200 shadow-sm">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-green-800 mb-2">
                   Thank You for Your Purchase!
                 </h3>
-                <p className="text-green-700 text-lg max-w-3xl mx-auto leading-relaxed">
+                <p className="text-green-700 max-w-2xl mx-auto">
                   We hope you love your new furniture! Share your experience
                   with others and discover more amazing products.
                 </p>
               </div>
 
-              {/* Action Buttons for completed orders */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button className="flex items-center gap-3 bg-green-600 text-white px-8 py-4 rounded-sm font-semibold hover:bg-green-700 transition-all duration-200 shadow-sm">
-                  <Star className="w-5 h-5" />
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <button className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 font-semibold hover:bg-green-700 transition-all duration-200">
+                  <Star className="w-4 h-4" />
                   Rate Your Experience
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </button>
 
                 <Link
                   href="/products"
-                  className="flex items-center gap-3 bg-white border-2 border-green-300 text-green-700 px-8 py-4 rounded-sm font-semibold hover:border-green-400 hover:bg-green-50 transition-all duration-200 shadow-sm"
+                  className="flex items-center gap-2 bg-white border-2 border-green-300 text-green-700 px-6 py-3 font-semibold hover:border-green-400 hover:bg-green-50 transition-all duration-200"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-4 h-4" />
                   Shop Similar Items
                 </Link>
 
                 <Link
                   href="/"
-                  className="flex items-center gap-3 text-green-600 hover:text-green-800 px-6 py-3 font-medium transition-colors"
+                  className="flex items-center gap-2 text-green-600 hover:text-green-800 px-4 py-2 font-medium transition-colors"
                 >
-                  <Home className="w-5 h-5" />
+                  <Home className="w-4 h-4" />
                   Back to Home
                 </Link>
               </div>
             </div>
           </div>
         ) : isOrderCancelled || isOrderReturned ? (
-          <div className="mt-12 bg-gray-50 border border-gray-200 rounded-sm shadow-sm overflow-hidden">
-            <div className="p-8 sm:p-10">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
+          <div className="mt-8 bg-gray-50 border border-gray-200 shadow-sm">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
                   We're Sorry This Didn't Work Out
                 </h3>
-                <p className="text-gray-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                <p className="text-gray-600 max-w-2xl mx-auto">
                   {isOrderCancelled
                     ? "Your order has been cancelled and refund is being processed. Explore our collection for your next purchase."
                     : "Your return has been processed. Thank you for giving us a try. We'd love to serve you better next time."}
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Link
                   href="/products"
-                  className="flex items-center gap-3 bg-gray-900 text-white px-8 py-4 rounded-sm font-semibold hover:bg-gray-800 transition-all duration-200 shadow-sm"
+                  className="flex items-center gap-2 bg-gray-900 text-white px-6 py-3 font-semibold hover:bg-gray-800 transition-all duration-200"
                 >
-                  <ShoppingBag className="w-5 h-5" />
+                  <ShoppingBag className="w-4 h-4" />
                   Browse Products
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
 
                 <Link
                   href="/support"
-                  className="flex items-center gap-3 bg-white border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-sm font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                  className="flex items-center gap-2 bg-white border-2 border-gray-300 text-gray-700 px-6 py-3 font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
                 >
-                  <HeadphonesIcon className="w-5 h-5" />
+                  <HeadphonesIcon className="w-4 h-4" />
                   Contact Support
                 </Link>
               </div>
             </div>
           </div>
         ) : (
-          <div className="mt-10 bg-white border border-gray-300 rounded-sm shadow-sm overflow-hidden">
-            <div className="p-6 sm:p-8">
+          <div className="mt-8 bg-white border border-gray-300 shadow-sm">
+            <div className="p-6">
               <div className="text-center mb-6">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
                   What's Next?
                 </h3>
-                <p className="text-gray-600 text-base max-w-2xl mx-auto leading-relaxed">
+                <p className="text-gray-600 max-w-2xl mx-auto">
                   Your order is being processed. Here's what happens next and
                   what you can do while you wait.
                 </p>
               </div>
 
               {/* Process Steps */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div
-                    className={`w-12 h-12 mx-auto mb-3 rounded-full ${
+                    className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[0]?.completed ? "bg-green-600" : "bg-black"
                     } flex items-center justify-center shadow-sm`}
                   >
-                    <CheckCircle className="w-6 h-6 text-white" />
+                    <CheckCircle className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 text-base">
+                  <h4 className="font-semibold text-gray-900 mb-1">
                     Order Confirmed
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-gray-600">
                     Your order has been received and confirmed
                   </p>
                 </div>
 
                 <div className="text-center">
                   <div
-                    className={`w-12 h-12 mx-auto mb-3 rounded-full ${
+                    className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[2]?.completed
                         ? "bg-green-600"
                         : statusSteps[2]?.active
@@ -1027,19 +1161,19 @@ export default function OrderTrackingPage() {
                         : "bg-gray-300"
                     } flex items-center justify-center shadow-sm`}
                   >
-                    <Package className="w-6 h-6 text-white" />
+                    <Package className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 text-base">
+                  <h4 className="font-semibold text-gray-900 mb-1">
                     Items Prepared
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-gray-600">
                     We're carefully packaging your items
                   </p>
                 </div>
 
                 <div className="text-center">
                   <div
-                    className={`w-12 h-12 mx-auto mb-3 rounded-full ${
+                    className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[3]?.completed
                         ? "bg-green-600"
                         : statusSteps[3]?.active
@@ -1047,28 +1181,28 @@ export default function OrderTrackingPage() {
                         : "bg-gray-300"
                     } flex items-center justify-center shadow-sm`}
                   >
-                    <Truck className="w-6 h-6 text-white" />
+                    <Truck className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 text-base">
+                  <h4 className="font-semibold text-gray-900 mb-1">
                     Out for Delivery
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-gray-600">
                     Your package is on its way to you
                   </p>
                 </div>
 
                 <div className="text-center">
                   <div
-                    className={`w-12 h-12 mx-auto mb-3 rounded-full ${
+                    className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[4]?.completed ? "bg-green-600" : "bg-gray-300"
                     } flex items-center justify-center shadow-sm`}
                   >
-                    <Home className="w-6 h-6 text-white" />
+                    <Home className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1 text-base">
+                  <h4 className="font-semibold text-gray-900 mb-1">
                     Delivered
                   </h4>
-                  <p className="text-sm text-gray-600 leading-relaxed">
+                  <p className="text-sm text-gray-600">
                     Package delivered safely to your address
                   </p>
                 </div>
@@ -1078,7 +1212,7 @@ export default function OrderTrackingPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Link
                   href="/orders"
-                  className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-sm font-semibold hover:bg-gray-900 transition-all duration-200 shadow-sm"
+                  className="flex items-center gap-2 bg-black text-white px-5 py-3 font-semibold hover:bg-gray-900 transition-all duration-200"
                 >
                   <Package className="w-4 h-4" />
                   View Orders
@@ -1087,7 +1221,7 @@ export default function OrderTrackingPage() {
 
                 <Link
                   href="/products"
-                  className="flex items-center gap-2 bg-white border border-gray-400 text-gray-800 px-6 py-3 rounded-sm font-semibold hover:border-gray-500 hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                  className="flex items-center gap-2 bg-white border border-gray-400 text-gray-800 px-5 py-3 font-semibold hover:border-gray-500 hover:bg-gray-50 transition-all duration-200"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   Continue Shopping
@@ -1095,7 +1229,7 @@ export default function OrderTrackingPage() {
 
                 <Link
                   href="/"
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 px-5 py-2 font-medium transition-colors"
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900 px-4 py-2 font-medium transition-colors"
                 >
                   <Home className="w-4 h-4" />
                   Home
@@ -1104,45 +1238,6 @@ export default function OrderTrackingPage() {
             </div>
           </div>
         )}
-
-        {/* Features Footer - Enhanced with better spacing */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 sm:p-8 border border-gray-200 text-center rounded-sm shadow-sm">
-            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-7 h-7 text-blue-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2 text-lg">
-              Secure Payments
-            </h4>
-            <p className="text-gray-600 leading-relaxed">
-              All transactions are encrypted and secure with 256-bit SSL
-            </p>
-          </div>
-
-          <div className="bg-white p-6 sm:p-8 border border-gray-200 text-center rounded-sm shadow-sm">
-            <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Truck className="w-7 h-7 text-green-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2 text-lg">
-              Fast Delivery
-            </h4>
-            <p className="text-gray-600 leading-relaxed">
-              Free shipping on orders above ₹500 across India
-            </p>
-          </div>
-
-          <div className="bg-white p-6 sm:p-8 border border-gray-200 text-center rounded-sm shadow-sm">
-            <div className="w-14 h-14 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <RefreshCw className="w-7 h-7 text-purple-600" />
-            </div>
-            <h4 className="font-semibold text-gray-900 mb-2 text-lg">
-              Easy Returns
-            </h4>
-            <p className="text-gray-600 leading-relaxed">
-              30-day hassle-free return policy with pickup service
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

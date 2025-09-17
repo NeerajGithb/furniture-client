@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Share2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Check, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ImageData {
   url: string;
@@ -18,11 +18,32 @@ const ProductImageGallery = ({
   productName,
 }: ProductImageGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [actualIndex, setActualIndex] = useState(1); // Start at 1 (first real image)
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
   const [copied, setCopied] = useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const currentImage = images[selectedImageIndex];
+
+  useEffect(() => {
+    if (!isTransitioning) return;
+
+    const timer = setTimeout(() => {
+      setIsTransitioning(false);
+
+      // Handle infinite scroll wrapping
+      if (actualIndex === 0) {
+        setActualIndex(images.length);
+      } else if (actualIndex === images.length + 1) {
+        setActualIndex(1);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [actualIndex, isTransitioning, images.length]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isZooming) return;
@@ -31,8 +52,14 @@ const ProductImageGallery = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const mouseXPercent = Math.max(10, Math.min((mouseX / rect.width) * 100, 90));
-    const mouseYPercent = Math.max(10, Math.min((mouseY / rect.height) * 100, 90));
+    const mouseXPercent = Math.max(
+      10,
+      Math.min((mouseX / rect.width) * 100, 90)
+    );
+    const mouseYPercent = Math.max(
+      10,
+      Math.min((mouseY / rect.height) * 100, 90)
+    );
     setMousePosition({ x: mouseXPercent, y: mouseYPercent });
   };
 
@@ -42,6 +69,58 @@ const ProductImageGallery = ({
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       });
+    }
+  };
+
+  const goToPrevious = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+
+    const newActualIndex = actualIndex - 1;
+    setActualIndex(newActualIndex);
+
+    // Update the selected index for thumbnails
+    const newSelectedIndex =
+      selectedImageIndex === 0 ? images.length - 1 : selectedImageIndex - 1;
+    setSelectedImageIndex(newSelectedIndex);
+  };
+
+  const goToNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+
+    const newActualIndex = actualIndex + 1;
+    setActualIndex(newActualIndex);
+
+    // Update the selected index for thumbnails
+    const newSelectedIndex = (selectedImageIndex + 1) % images.length;
+    setSelectedImageIndex(newSelectedIndex);
+  };
+
+  const handleThumbnailClick = (index: number) => {
+    if (isTransitioning) return;
+    setSelectedImageIndex(index);
+    setActualIndex(index + 1);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const deltaX = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        goToNext();
+      } else {
+        goToPrevious();
+      }
     }
   };
 
@@ -55,125 +134,157 @@ const ProductImageGallery = ({
 
   return (
     <>
-      {/* Full Screen Zoom Overlay */}
-      {isZooming && currentImage && (
-        <div className="fixed inset-0 z-20 pointer-events-none hidden lg:block">
-          <div
-            className="absolute left-1/2 top-0 bottom-0 right-10  border-l border-gray-300 shadow-2xl bg-white transition-all duration-300 ease-out"
-            style={{
-              backgroundImage: `url(${currentImage.url})`,
-              backgroundSize: "200% 200%",
-              backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-              backgroundRepeat: "no-repeat",
-              filter: "contrast(1.05) brightness(1.02)",
-            }}
-          />
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row border border-gray-300 overflow-hidden max-w-[550px]">
-        {/* Thumbnail Gallery */}
-        {images.length > 1 && (
-          <div className="flex md:flex-col gap-2 order-2 md:order-1 flex-wrap md:flex-nowrap border-t md:border-t-0 md:border-r border-gray-300 p-2 md:p-0 overflow-y-auto">
-            {images.map((image, index) => (
-              <button
-                key={index}
-                onMouseEnter={() => setSelectedImageIndex(index)}
-                onClick={() => setSelectedImageIndex(index)}
-                className={`w-12 h-12 md:w-16 md:h-16 flex-shrink-0 border border-gray-200 hover:border-gray-400 ${
-                  selectedImageIndex === index ? "border-2 border-black" : ""
-                }`}
-              >
-                <img
-                  src={image.url}
-                  alt={image.alt || `${productName} ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+      <div className="">
+        {isZooming && currentImage && (
+          <div className="fixed inset-0 z-[1000] pointer-events-none hidden lg:block">
+            <div
+              className="border border-gray-300 shadow-2xl bg-white transition-all duration-300 ease-out"
+              style={{
+                width: "700px", // fixed width
+                height: "700px", // fixed height
+                position: "fixed", // fixed relative to viewport
+                top: "60px", // distance from top
+                right: "5vw", // distance from right
+                backgroundImage: `url(${currentImage.url})`,
+                backgroundSize: "170% 170%",
+                backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
+                backgroundRepeat: "no-repeat",
+                filter: "contrast(1.05) brightness(1.02)",
+              }}
+            />
           </div>
         )}
 
-        {/* Main Image */}
-        <div className="flex-1 order-1 md:order-2 p-2  flex items-center justify-center border-l md:border-l-0 border-t md:border-t-0 border-gray-300">
-          <div
-            className="relative bg-white group overflow-hidden aspect-square cursor-none transition-all duration-300 border border-gray-200"
-            onMouseMove={handleMouseMove}
-            onMouseEnter={() => setIsZooming(true)}
-            onMouseLeave={() => setIsZooming(false)}
-          >
-            <img
-              src={currentImage.url}
-              alt={currentImage.alt || productName}
-              className="w-full h-full object-cover object-center"
-            />
+        <div className="flex flex-col md:flex-row border border-gray-300 overflow-hidden max-w-[600px] md:p-2">
+          {/* Thumbnail Gallery */}
+          {images.length > 1 && (
+            <div className="flex md:flex-col gap-2 order-2 md:order-1 flex-wrap md:flex-nowrap border-t md:border-t-0 md:border-r border-gray-300 p-2 md:p-0 overflow-y-auto">
+              {images.map((image, index) => (
+                <button
+                  key={index}
+                  onMouseEnter={() => handleThumbnailClick(index)}
+                  onClick={() => handleThumbnailClick(index)}
+                  className={`w-14 h-14 md:w-16 md:h-16 flex-shrink-0 border md:border-gray-200 hover:border-gray-400 transition-colors ${
+                    selectedImageIndex === index ? "border-2 border-black" : ""
+                  }`}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.alt || `${productName} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
 
-            {isZooming && (
+          {/* Main Image Carousel */}
+          <div className="flex-1 order-1 md:order-2 md:pl-2 flex items-center justify-center border-l md:border-l-0 border-t md:border-t-0 border-gray-300">
+            <div className="relative w-full">
               <div
-                className="absolute hidden lg:block border border-gray-400"
-                style={{
-                  left: `${mousePosition.x}%`,
-                  top: `${mousePosition.y}%`,
-                  width: "20%",
-                  height: "20%",
-                  backgroundColor: "rgba(255,255,255,0.3)",
-                  pointerEvents: "none",
-                  transform: "translate(-50%, -50%)",
-                }}
+                className="relative bg-white group overflow-hidden aspect-square cursor-crosshair md:border md:border-gray-200"
+                onMouseMove={handleMouseMove}
+                onMouseEnter={() => setIsZooming(true)}
+                onMouseLeave={() => setIsZooming(false)}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
               >
-                {/* Crosshair */}
+                {/* Mobile Carousel */}
                 <div
-                  className="absolute"
+                  className="md:hidden flex h-full"
                   style={{
-                    left: "50%",
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "20px",
-                    height: "20px",
+                    transform: `translateX(-${actualIndex * 100}%)`,
+                    transition: isTransitioning
+                      ? "transform 0.3s ease-out"
+                      : "none",
                   }}
                 >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: "50%",
-                      top: "0",
-                      width: "2px",
-                      height: "20px",
-                      backgroundColor: "rgba(0,0,0,0.8)",
-                      transform: "translateX(-50%)",
-                    }}
+                  {/* Last image clone (for smooth previous transition) */}
+                  <img
+                    src={images[images.length - 1].url}
+                    alt={
+                      images[images.length - 1].alt ||
+                      `${productName} ${images.length}`
+                    }
+                    className="w-full h-full object-cover object-center flex-shrink-0"
                   />
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "0",
-                      height: "2px",
-                      width: "20px",
-                      backgroundColor: "rgba(0,0,0,0.8)",
-                      transform: "translateY(-50%)",
-                    }}
+                  {/* Real images */}
+                  {images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image.url}
+                      alt={image.alt || `${productName} ${index + 1}`}
+                      className="w-full h-full object-cover object-center flex-shrink-0"
+                    />
+                  ))}
+                  {/* First image clone (for smooth next transition) */}
+                  <img
+                    src={images[0].url}
+                    alt={images[0].alt || `${productName} 1`}
+                    className="w-full h-full object-cover object-center flex-shrink-0"
                   />
                 </div>
-              </div>
-            )}
 
-            {/* Share Button */}
-            <button
-              onClick={handleShare}
-              className="absolute top-3 right-3 p-2 bg-white bg-opacity-95 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-50 hover:scale-110 border border-gray-200 rounded"
-            >
-              {copied ? (
-                <Check className="w-4 h-4 text-green-500" />
-              ) : (
-                <Share2 className="w-4 h-4 text-gray-700" />
+                {/* Desktop Single Image */}
+                <div className="hidden md:block h-full">
+                  <img
+                    src={currentImage.url}
+                    alt={currentImage.alt || productName}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </div>
+
+                {isZooming && (
+                  <div
+                    className="absolute hidden lg:block border border-gray-400 z-10 m-2"
+                    style={{
+                      left: `${mousePosition.x}%`,
+                      top: `${mousePosition.y}%`,
+                      width: "35%",
+                      height: "35%",
+                      backgroundColor: "rgba(255,255,255,0.3)",
+                      pointerEvents: "none",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  ></div>
+                )}
+
+                {/* Share Button */}
+                <button
+                  onClick={handleShare}
+                  className="absolute top-3 right-3 p-2 bg-white bg-opacity-95 shadow-md opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-50 hover:scale-110 border border-gray-200 z-10"
+                >
+                  {copied ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <Share2 className="w-4 h-4 text-gray-700" />
+                  )}
+                </button>
+              </div>
+
+              {/* Navigation Buttons - Mobile Only */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={goToPrevious}
+                    className="absolute left-1 top-1/2 transform -translate-y-1/2 p-1 bg-white bg-opacity-90 shadow-md border border-gray-200 hover:bg-gray-50 md:hidden z-10"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-gray-700" />
+                  </button>
+                  <button
+                    onClick={goToNext}
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 bg-white bg-opacity-90 shadow-md border border-gray-200 hover:bg-gray-50 md:hidden z-10"
+                  >
+                    <ChevronRight className="w-5 h-5 text-gray-700" />
+                  </button>
+                </>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </div>
     </>
   );
 };
-
 export default ProductImageGallery;

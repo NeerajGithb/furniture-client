@@ -77,7 +77,7 @@ const CategoryGrid = () => {
               {showSkeletons
                 ? Array.from({ length: 12 }).map((_, i) => (
                     <div key={i} className="animate-pulse flex-shrink-0">
-                      <div className="w-28 h-28 bg-gray-200 mb-2"></div>
+                      <div className="w-30 h-30 bg-gray-200 mb-2"></div>
                       <div className="h-3 bg-gray-200 w-20 mx-auto"></div>
                     </div>
                   ))

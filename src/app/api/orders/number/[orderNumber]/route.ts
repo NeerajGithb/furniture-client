@@ -1,8 +1,9 @@
-// app/api/orders/number/[orderNumber]/route.ts
+// app/api/orders/number/[orderNumber]/route.ts - Enhanced with complete price details
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
 import Payment from '@/models/Payment';
+import Product from '@/models/product';
 import { connectDB } from '@/lib/dbConnect';
 import { z } from 'zod';
 
@@ -12,72 +13,229 @@ interface RouteParams {
   }>;
 }
 
-// Validation schemas
+// Validation schema
 const orderNumberSchema = z.string().min(1, 'Order number is required');
 
-// Helper function to find order by number for a user
-async function findOrderByNumber(orderNumber: string, userId: string) {
-  const order = await Order.findOne({
-    orderNumber: orderNumber,
-    userId: userId
-  }).populate({
-    path: 'items.productId',
-    select: 'name mainImage slug'
-  });
-
-  return order;
-}
-
-// Helper function to format order response
-function formatOrderResponse(order: any, payment?: any) {
+// Helper function to format complete order response
+function formatCompleteOrderResponse(order: any, payment?: any) {
   return {
     _id: order._id,
     orderNumber: order.orderNumber,
+    
+    // Enhanced items with complete details
     items: order.items.map((item: any) => ({
       _id: item._id,
       productId: item.productId?._id,
       name: item.name,
       price: item.price,
-      originalPrice: item.originalPrice,
+      originalPrice: item.originalPrice || item.price,
       quantity: item.quantity,
+      insuranceCost: item.insuranceCost || 0,
       selectedVariant: item.selectedVariant || null,
       productImage: item.productImage,
+      sku: item.sku,
+      itemId: item.itemId,
+      discount: item.discount || 0,
+      discountPercent: item.discountPercent || 0,
+      
+      // Calculated totals for each item
+      itemTotal: item.price * item.quantity,
+      originalItemTotal: (item.originalPrice || item.price) * item.quantity,
+      itemSavings: ((item.originalPrice || item.price) - item.price) * item.quantity,
+      itemInsuranceTotal: (item.insuranceCost || 0),
+      
       product: item.productId ? {
         _id: item.productId._id,
         name: item.productId.name,
         mainImage: item.productId.mainImage,
-        slug: item.productId.slug
+        slug: item.productId.slug,
+        finalPrice: item.productId.finalPrice,
+        originalPrice: item.productId.originalPrice,
+        discountPercent: item.productId.discountPercent
       } : null
     })),
+    
+    // Comprehensive price breakdown for tracking
+    priceDetails: order.priceDetails ? {
+      subtotal: order.priceDetails.subtotal,
+      originalSubtotal: order.priceDetails.originalSubtotal,
+      totalDiscount: order.priceDetails.totalDiscount,
+      totalInsurance: order.priceDetails.totalInsurance,
+      shippingCost: order.priceDetails.shippingCost,
+      tax: order.priceDetails.tax,
+      couponDiscount: order.priceDetails.couponDiscount || 0,
+      finalAmount: order.priceDetails.finalAmount,
+      savings: order.priceDetails.savings,
+      
+      // Additional breakdown for UI display
+      itemsSubtotal: order.priceDetails.subtotal,
+      insuranceTotal: order.priceDetails.totalInsurance,
+      subtotalWithInsurance: order.priceDetails.subtotal + order.priceDetails.totalInsurance,
+      totalBeforeCoupon: order.priceDetails.subtotal + order.priceDetails.totalInsurance + order.priceDetails.shippingCost + order.priceDetails.tax,
+      totalAfterCoupon: order.priceDetails.subtotal + order.priceDetails.totalInsurance + order.priceDetails.shippingCost + order.priceDetails.tax - (order.priceDetails.couponDiscount || 0),
+      grandTotal: order.priceDetails.finalAmount,
+      youSaved: order.priceDetails.savings
+    } : {
+      // Fallback calculation
+      subtotal: order.subtotal,
+      originalSubtotal: order.subtotal,
+      totalDiscount: order.discount || 0,
+      totalInsurance: order.items.reduce((sum: number, item: any) => sum + (item.insuranceCost || 0), 0),
+      shippingCost: order.shippingCost,
+      tax: order.tax,
+      couponDiscount: 0,
+      finalAmount: order.totalAmount,
+      savings: order.discount || 0,
+      itemsSubtotal: order.subtotal,
+      insuranceTotal: order.items.reduce((sum: number, item: any) => sum + (item.insuranceCost || 0), 0),
+      subtotalWithInsurance: order.subtotal + order.items.reduce((sum: number, item: any) => sum + (item.insuranceCost || 0), 0),
+      totalBeforeCoupon: order.subtotal + order.shippingCost + order.tax,
+      totalAfterCoupon: order.totalAmount,
+      grandTotal: order.totalAmount,
+      youSaved: order.discount || 0
+    },
+    
+    // Legacy fields for backward compatibility
     subtotal: order.subtotal,
     shippingCost: order.shippingCost,
     tax: order.tax,
     discount: order.discount,
     totalAmount: order.totalAmount,
+    
+    // Complete order information
     shippingAddress: order.shippingAddress,
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
     orderStatus: order.orderStatus,
+    
+    // Tracking and timeline information
     trackingNumber: order.trackingNumber,
     expectedDeliveryDate: order.expectedDeliveryDate,
     deliveredAt: order.deliveredAt,
     cancelledAt: order.cancelledAt,
     cancellationReason: order.cancellationReason,
+    refundAmount: order.refundAmount,
+    refundedAt: order.refundedAt,
     notes: order.notes,
+    
+    // Additional details
+    insuranceEnabled: order.insuranceEnabled || [],
+    couponCode: order.couponCode,
+    
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
+    
+    // Payment information
     payment: payment ? {
       _id: payment._id,
       paymentId: payment.paymentId,
       status: payment.status,
       method: payment.method,
       gateway: payment.gateway,
-      gatewayTransactionId: payment.gatewayTransactionId
-    } : null
+      gatewayTransactionId: payment.gatewayTransactionId,
+      paidAt: payment.paidAt,
+      failureReason: payment.failureReason
+    } : null,
+    
+    // Order timeline for tracking UI
+    orderTimeline: generateOrderTimeline(order),
+    
+    // Order summary and capabilities
+    orderSummary: {
+      totalItems: order.items.length,
+      totalQuantity: order.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
+      hasInsurance: (order.insuranceEnabled && order.insuranceEnabled.length > 0) || 
+                   order.items.some((item: any) => (item.insuranceCost || 0) > 0),
+      hasCoupon: !!(order.couponCode),
+      canCancel: ['pending', 'confirmed'].includes(order.orderStatus),
+      canReturn: order.orderStatus === 'delivered' && order.deliveredAt && 
+                new Date().getTime() - new Date(order.deliveredAt).getTime() <= (30 * 24 * 60 * 60 * 1000),
+      estimatedDelivery: order.expectedDeliveryDate,
+      orderAge: Math.floor((new Date().getTime() - new Date(order.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
+      isRecentOrder: new Date().getTime() - new Date(order.createdAt).getTime() <= (24 * 60 * 60 * 1000) // Within 24 hours
+    }
   };
 }
 
-// GET - Get order by order number
+// Helper function to generate order timeline
+function generateOrderTimeline(order: any) {
+  const timeline = [];
+  
+  // Order placed
+  timeline.push({
+    status: 'placed',
+    title: 'Order Placed',
+    description: `Order ${order.orderNumber} has been placed successfully`,
+    timestamp: order.createdAt,
+    completed: true,
+    icon: 'check'
+  });
+  
+  // Order confirmed
+  if (['confirmed', 'processing', 'shipped', 'delivered'].includes(order.orderStatus)) {
+    timeline.push({
+      status: 'confirmed',
+      title: 'Order Confirmed',
+      description: 'Your order has been confirmed and is being processed',
+      timestamp: order.createdAt, // This would be updated when status changes in real app
+      completed: true,
+      icon: 'check'
+    });
+  }
+  
+  // Processing
+  if (['processing', 'shipped', 'delivered'].includes(order.orderStatus)) {
+    timeline.push({
+      status: 'processing',
+      title: 'Processing',
+      description: 'Your order is being prepared for shipment',
+      timestamp: order.createdAt,
+      completed: true,
+      icon: 'package'
+    });
+  }
+  
+  // Shipped
+  if (['shipped', 'delivered'].includes(order.orderStatus)) {
+    timeline.push({
+      status: 'shipped',
+      title: 'Shipped',
+      description: order.trackingNumber ? `Shipped with tracking number: ${order.trackingNumber}` : 'Your order has been shipped',
+      timestamp: order.createdAt,
+      completed: true,
+      icon: 'truck'
+    });
+  }
+  
+  // Delivered
+  if (order.orderStatus === 'delivered') {
+    timeline.push({
+      status: 'delivered',
+      title: 'Delivered',
+      description: 'Your order has been successfully delivered',
+      timestamp: order.deliveredAt || order.createdAt,
+      completed: true,
+      icon: 'check'
+    });
+  }
+  
+  // Cancelled
+  if (order.orderStatus === 'cancelled') {
+    timeline.push({
+      status: 'cancelled',
+      title: 'Order Cancelled',
+      description: order.cancellationReason || 'Your order has been cancelled',
+      timestamp: order.cancelledAt || order.updatedAt,
+      completed: true,
+      icon: 'x',
+      type: 'error'
+    });
+  }
+  
+  return timeline;
+}
+
+// GET - Get order by order number with complete details
 export const GET = withAuth(async (
   request: NextRequest,
   user: AuthenticatedUser,
@@ -93,7 +251,13 @@ export const GET = withAuth(async (
 
     console.log(`[GET] Fetching order by number: ${validatedOrderNumber} for user: ${user.userId}`);
 
-    const order = await findOrderByNumber(validatedOrderNumber, user.userId);
+    const order = await Order.findOne({
+      orderNumber: validatedOrderNumber,
+      userId: user.userId
+    }).populate({
+      path: 'items.productId',
+      select: 'name mainImage slug finalPrice originalPrice discountPercent itemId sku'
+    });
 
     if (!order) {
       console.log(`[GET] Order not found with number: ${validatedOrderNumber} for user: ${user.userId}`);
@@ -106,7 +270,7 @@ export const GET = withAuth(async (
     // Get payment details
     const payment = await Payment.findOne({ orderId: order._id });
 
-    const orderDetails = formatOrderResponse(order, payment);
+    const orderDetails = formatCompleteOrderResponse(order, payment);
 
     console.log(`[GET] Successfully found order: ${orderDetails.orderNumber}`);
 
@@ -132,7 +296,104 @@ export const GET = withAuth(async (
   }
 });
 
-// DELETE - Delete order by order number (only cancelled orders)
+// PUT - Update order by order number
+export const PUT = withAuth(async (
+  request: NextRequest,
+  user: AuthenticatedUser,
+  { params }: RouteParams
+) => {
+  try {
+    const { orderNumber } = await params;
+    const body = await request.json();
+
+    const validatedOrderNumber = orderNumberSchema.parse(orderNumber);
+
+    await connectDB();
+
+    console.log(`[PUT] Updating order: ${validatedOrderNumber} for user: ${user.userId}`);
+
+    const order = await Order.findOne({
+      orderNumber: validatedOrderNumber,
+      userId: user.userId
+    }).populate({
+      path: 'items.productId',
+      select: 'name mainImage slug finalPrice originalPrice discountPercent'
+    });
+
+    if (!order) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      );
+    }
+
+    // Handle cancellation
+    if (body.action === 'cancel') {
+      if (!order.canCancel()) {
+        return NextResponse.json(
+          { 
+            error: 'Order cannot be cancelled',
+            orderStatus: order.orderStatus
+          },
+          { status: 400 }
+        );
+      }
+
+      await order.cancel(body.reason);
+      
+      // Restore stock
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.productId, {
+          $inc: { 
+            inStockQuantity: item.quantity,
+            totalSold: -item.quantity
+          }
+        });
+      }
+    } else {
+      // Update allowed fields
+      const allowedUpdates = ['notes'];
+      const updates: any = {};
+      
+      allowedUpdates.forEach(field => {
+        if (body[field] !== undefined) {
+          updates[field] = body[field];
+        }
+      });
+
+      if (Object.keys(updates).length > 0) {
+        Object.assign(order, updates);
+        await order.save();
+      }
+    }
+
+    const payment = await Payment.findOne({ orderId: order._id });
+    const orderDetails = formatCompleteOrderResponse(order, payment);
+
+    return NextResponse.json({
+      success: true,
+      order: orderDetails,
+      message: body.action === 'cancel' ? 'Order cancelled successfully' : 'Order updated successfully'
+    });
+
+  } catch (error) {
+    console.error('[PUT] Order update error:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0].message },
+        { status: 400 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Failed to update order' },
+      { status: 500 }
+    );
+  }
+});
+
+// DELETE - Delete order by order number
 export const DELETE = withAuth(async (
   request: NextRequest,
   user: AuthenticatedUser,
@@ -140,8 +401,6 @@ export const DELETE = withAuth(async (
 ) => {
   try {
     const { orderNumber } = await params;
-
-    // Validate order number
     const validatedOrderNumber = orderNumberSchema.parse(orderNumber);
 
     await connectDB();
@@ -154,16 +413,13 @@ export const DELETE = withAuth(async (
     });
 
     if (!order) {
-      console.log(`[DELETE] Order not found with number: ${validatedOrderNumber} for user: ${user.userId}`);
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
     }
 
-    // Only allow deletion of cancelled or returned orders
     if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned') {
-      console.log(`[DELETE] Attempted to delete non-cancelled or non-returned order: ${validatedOrderNumber}, status: ${order.orderStatus}`);
       return NextResponse.json(
         { 
           error: 'Only cancelled or returned orders can be deleted',
@@ -173,13 +429,11 @@ export const DELETE = withAuth(async (
       );
     }
 
-    // Delete related payment records first (if any)
+    // Delete payment records
     await Payment.deleteMany({ orderId: order._id });
-    console.log(`[DELETE] Deleted payment records for order: ${validatedOrderNumber}`);
-
-    // Delete the order
+    
+    // Delete order
     await Order.findByIdAndDelete(order._id);
-    console.log(`[DELETE] Successfully deleted order: ${validatedOrderNumber}`);
 
     return NextResponse.json({
       success: true,
@@ -201,100 +455,9 @@ export const DELETE = withAuth(async (
         { status: 400 }
       );
     }
-
-    return NextResponse.json(
-      { 
-        error: 'Failed to delete order',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
-});
-
-// PUT - Update order by order number (for status updates)
-export const PUT = withAuth(async (
-  request: NextRequest,
-  user: AuthenticatedUser,
-  { params }: RouteParams
-) => {
-  try {
-    const { orderNumber } = await params;
-    const body = await request.json();
-
-    // Validate order number
-    const validatedOrderNumber = orderNumberSchema.parse(orderNumber);
-
-    await connectDB();
-
-    console.log(`[PUT] Updating order: ${validatedOrderNumber} for user: ${user.userId}`);
-
-    const order = await findOrderByNumber(validatedOrderNumber, user.userId);
-
-    if (!order) {
-      console.log(`[PUT] Order not found with number: ${validatedOrderNumber} for user: ${user.userId}`);
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
-
-    // Update allowed fields
-    const allowedUpdates = ['notes'];
-    const updates: any = {};
     
-    allowedUpdates.forEach(field => {
-      if (body[field] !== undefined) {
-        updates[field] = body[field];
-      }
-    });
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: 'No valid updates provided' },
-        { status: 400 }
-      );
-    }
-
-    updates.updatedAt = new Date();
-
-    const updatedOrder = await Order.findByIdAndUpdate(
-      order._id,
-      updates,
-      { new: true, runValidators: true }
-    ).populate({
-      path: 'items.productId',
-      select: 'name mainImage slug'
-    });
-
-    // Get payment details
-    const payment = await Payment.findOne({ orderId: updatedOrder._id });
-
-    const orderDetails = formatOrderResponse(updatedOrder, payment);
-
-    console.log(`[PUT] Successfully updated order: ${orderDetails.orderNumber}`);
-
-    return NextResponse.json({
-      success: true,
-      order: orderDetails,
-      message: 'Order updated successfully'
-    });
-
-  } catch (error) {
-    console.error('[PUT] Order update error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.issues[0].message },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      { 
-        error: 'Failed to update order',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Failed to delete order' },
       { status: 500 }
     );
   }

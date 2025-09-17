@@ -1,4 +1,4 @@
-// stores/orderStore.ts
+// stores/orderStore.ts - Fixed version
 import { create } from "zustand";
 import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
 import { toast } from "react-hot-toast";
@@ -28,49 +28,149 @@ export interface OrderProduct {
     alt?: string;
   };
   slug?: string;
+  finalPrice?: number;
+  originalPrice?: number;
+  discountPercent?: number;
 }
 
+// Enhanced OrderItem interface
 export interface OrderItem {
-  originalPrice: boolean;
-  hasInsurance: any;
-  selectedVariant: any;
-  productImage: any;
   _id: string;
-  product: OrderProduct;
   productId?: string;
+  product: OrderProduct;
   name: string;
   price: number;
+  originalPrice?: number;
   quantity: number;
-  size?: string;
-  color?: string;
+  insuranceCost?: number;
+  selectedVariant?: {
+    color?: string;
+    size?: string;
+    sku?: string;
+  };
+  productImage?: string;
+
+  // NEW FIELDS from enhanced model
+  sku?: string;
+  itemId?: string;
+  discount?: number;
+  discountPercent?: number;
+
+  // Calculated fields for UI
+  itemTotal?: number;
+  originalItemTotal?: number;
+  itemSavings?: number;
+  itemInsuranceTotal?: number;
 }
 
-export interface Order {
-  carrier: any;
-  paymentId: string;
-  insuranceCost: boolean;
-  tax: number;
+// Price breakdown interface
+export interface PriceBreakdown {
+  originalSubtotal: number;
+  itemDiscount: number;
+  couponDiscount: number;
+  totalInsurance: number;
+  finalSubtotal: number;
   shippingCost: number;
-  subtotal: number;
-  discount: boolean;
+  tax: number;
+  grandTotal: number;
+  totalSavings: number;
+
+  // Additional calculated fields for UI
+  itemsSubtotal?: number;
+  insuranceTotal?: number;
+  subtotalWithInsurance?: number;
+  totalBeforeCoupon?: number;
+  totalAfterCoupon?: number;
+  youSaved?: number;
+}
+
+// Order timeline interface
+export interface OrderTimelineStep {
+  status: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  completed: boolean;
+  icon: string;
+  type?: 'success' | 'error' | 'warning';
+}
+
+// Order summary interface
+export interface OrderSummary {
+  totalItems: number;
+  totalQuantity: number;
+  hasInsurance: boolean;
+  hasCoupon: boolean;
+  canCancel: boolean;
+  canReturn: boolean;
+  estimatedDelivery?: string;
+  orderAge: number;
+  isRecentOrder: boolean;
+}
+
+// Payment information interface
+export interface PaymentInfo {
+  _id: string;
+  paymentId: string;
+  status: PaymentStatus;
+  method: PaymentMethod;
+  gateway: string;
+  gatewayTransactionId?: string;
+  paidAt?: string;
+  failureReason?: string;
+}
+
+// Enhanced Order interface
+export interface Order {
   _id: string;
   orderNumber: string;
   userId: string;
   items: OrderItem[];
+
+  // Enhanced price details
+  priceBreakdown: PriceBreakdown;
+
+  // Legacy fields (maintained for backward compatibility)
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  discount: number | boolean;
   totalAmount: number;
+
+  // Order information
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
   shippingAddress: OrderAddress;
   billingAddress?: OrderAddress;
+
+  // Tracking and timeline
+  trackingNumber?: string;
   expectedDeliveryDate?: string;
   deliveredAt?: string;
   cancelledAt?: string;
   cancellationReason?: string;
+  refundAmount?: number;
+  refundedAt?: string;
+  notes?: string;
+
+  // NEW FIELDS
+  insuranceEnabled?: string[];
+  couponCode?: string;
+  carrier?: string;
+
+  // Timestamps
   createdAt: string;
   updatedAt: string;
-  trackingNumber?: string;
-  notes?: string;
+
+  // Enhanced response fields
+  payment?: PaymentInfo;
+  orderTimeline?: OrderTimelineStep[];
+  orderSummary?: OrderSummary;
+
+  // Legacy fields (for backward compatibility)
+  paymentId?: string;
+  insuranceCost?: number | boolean;
 }
 
 export interface CreateOrderData {
@@ -78,13 +178,35 @@ export interface CreateOrderData {
     productId: string;
     quantity: number;
     price: number;
-    size?: string;
-    color?: string;
+    originalPrice?: number;
+    selectedVariant?: {
+      color?: string;
+      size?: string;
+      sku?: string;
+    };
+    insuranceCost?: number;
   }>;
-  shippingAddressId: string;
-  billingAddressId?: string;
+  addressId: string;
   paymentMethod: PaymentMethod;
-  totalAmount: number;
+  selectedItems: string[];
+  cartData: Array<{
+    productId: string;
+    quantity: number;
+    selectedVariant?: {
+      color?: string;
+      size?: string;
+      sku?: string;
+    };
+  }>;
+  totals: {
+    subtotal: number;
+    shippingCost: number;
+    insuranceCost: number;
+    totalAmount: number;
+    couponDiscount?: number;
+  };
+  insuranceEnabled?: string[];
+  couponCode?: string;
   notes?: string;
 }
 
@@ -95,7 +217,8 @@ export interface OrderFilters {
   endDate?: string;
   limit?: number;
   page?: number;
-  skip?: number; 
+  skip?: number;
+  orderNumber?: string;
 }
 
 interface OrderStore {
@@ -104,17 +227,17 @@ interface OrderStore {
   order: Order | null;
   loading: boolean;
   error: string | null;
-  deletingOrders: string[]; // Track orders being deleted
-  
+  deletingOrders: string[];
+
   // Pagination
   totalOrders: number;
   currentPage: number;
   totalPages: number;
   hasMore: boolean;
-  
+
   // Cache
   lastFetchTime: number;
-  
+
   // Actions
   initializeOrders: (userId?: string) => Promise<void>;
   fetchOrders: (filters?: OrderFilters, forceRefresh?: boolean) => Promise<void>;
@@ -125,19 +248,101 @@ interface OrderStore {
   updateOrderNotes: (orderNumber: string, notes: string) => Promise<boolean>;
   cancelOrder: (id: string, reason?: string) => Promise<boolean>;
   deleteOrderByNumber: (orderNumber: string) => Promise<boolean>;
-  
+
   // Utility actions
   clearError: () => void;
   clearOrder: () => void;
   clearOrders: () => void;
-  
+
   // Getters
   getOrderByNumber: (orderNumber: string) => Order | null;
   getOrdersByStatus: (status: OrderStatus) => Order[];
   isOrderBeingDeleted: (orderNumber: string) => boolean;
+
+  // Enhanced getters
+  getOrderPriceBreakdown: (orderNumber: string) => PriceBreakdown | null;
+  getOrderTimeline: (orderNumber: string) => OrderTimelineStep[] | null;
+  canCancelOrder: (orderNumber: string) => boolean;
+  canReturnOrder: (orderNumber: string) => boolean;
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Fixed processOrderData function
+const processOrderData = (order: any): Order => {
+  console.log("Order: in process:", order);
+
+  // Calculate item totals and savings
+  const processedItems = (order.items || []).map((item: any) => {
+    const itemPrice = item.price || 0;
+    const itemOriginalPrice = item.originalPrice || itemPrice;
+    const itemQuantity = item.quantity || 0;
+    const itemInsurance = item.insuranceCost || 0;
+
+    return {
+      ...item,
+      itemTotal: itemPrice * itemQuantity,
+      originalItemTotal: itemOriginalPrice * itemQuantity,
+      itemSavings: (itemOriginalPrice - itemPrice) * itemQuantity,
+      itemInsuranceTotal: itemInsurance * itemQuantity,
+    };
+  });
+
+  // Calculate totals from items
+  const itemsSubtotal = processedItems.reduce((sum: number, item: any) => sum + (item.itemTotal || 0), 0);
+  const originalSubtotal = processedItems.reduce((sum: number, item: any) => sum + (item.originalItemTotal || 0), 0);
+  const totalItemSavings = processedItems.reduce((sum: number, item: any) => sum + (item.itemSavings || 0), 0);
+  const totalInsurance = processedItems.reduce((sum: number, item: any) => sum + (item.itemInsuranceTotal || 0), 0);
+
+  // Handle legacy discount field
+  const legacyDiscount = typeof order.discount === 'number' ? order.discount : 0;
+  const legacyInsurance = typeof order.insuranceCost === 'number' ? order.insuranceCost : 0;
+
+  // Build comprehensive price breakdown
+  const priceBreakdown: PriceBreakdown = {
+    // Use calculated values or fallback to order values
+    originalSubtotal: originalSubtotal || order.subtotal || 0,
+    itemDiscount: totalItemSavings || legacyDiscount || 0,
+    couponDiscount: order.priceBreakdown?.couponDiscount || order.couponDiscount || 0,
+    totalInsurance: totalInsurance || legacyInsurance || 0,
+    finalSubtotal: itemsSubtotal || order.subtotal || 0,
+    shippingCost: order.priceBreakdown?.shippingCost || order.shippingCost || 0,
+    tax: order.priceBreakdown?.tax || order.tax || 0,
+    grandTotal: order.priceBreakdown?.grandTotal || order.totalAmount || 0,
+    totalSavings: (totalItemSavings || legacyDiscount || 0) + (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
+
+    // Additional UI fields
+    itemsSubtotal: itemsSubtotal || order.subtotal || 0,
+    insuranceTotal: totalInsurance || legacyInsurance || 0,
+    subtotalWithInsurance: (itemsSubtotal || order.subtotal || 0) + (totalInsurance || legacyInsurance || 0),
+    totalBeforeCoupon: (itemsSubtotal || order.subtotal || 0) + (totalInsurance || legacyInsurance || 0) + (order.shippingCost || 0),
+    totalAfterCoupon: order.totalAmount || 0,
+    youSaved: (totalItemSavings || legacyDiscount || 0) + (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
+  };
+
+  return {
+    ...order,
+    items: processedItems,
+    discount: typeof order.discount === 'number' ? order.discount : (order.discount ? 1 : 0),
+    insuranceCost: typeof order.insuranceCost === 'number' ? order.insuranceCost : (order.insuranceCost ? 1 : 0),
+    insuranceEnabled: order.insuranceEnabled || [],
+    orderTimeline: order.orderTimeline || [],
+    priceBreakdown,
+    // Ensure orderSummary is available
+    orderSummary: {
+      totalItems: processedItems.length,
+      totalQuantity: processedItems.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0),
+      hasInsurance: totalInsurance > 0,
+      hasCoupon: !!(order.couponCode || order.priceBreakdown?.couponDiscount),
+      canCancel: ['pending', 'confirmed'].includes(order.orderStatus),
+      canReturn: ['delivered'].includes(order.orderStatus),
+      estimatedDelivery: order.expectedDeliveryDate,
+      orderAge: Date.now() - new Date(order.createdAt).getTime(),
+      isRecentOrder: (Date.now() - new Date(order.createdAt).getTime()) < (7 * 24 * 60 * 60 * 1000), // 7 days
+      ...order.orderSummary
+    }
+  };
+};
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   // Initial state
@@ -152,52 +357,45 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   hasMore: false,
   lastFetchTime: 0,
 
-  // Add to the OrderStore interface
-
-// Add to the store implementation
-initializeOrders: async (userId?: string) => {
-  const state = get();
-  
-  // Skip if already initialized recently
-  if (state.orders.length > 0 && Date.now() - state.lastFetchTime < CACHE_DURATION) {
-    return;
-  }
-
-  set({ loading: true, error: null });
-
-  try {
-    // Build initial filters
-    const filters: OrderFilters = {
-      limit: 20,
-      page: 1
-    };
-
-    await get().fetchOrders(filters, true);
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Failed to initialize orders";
-    set({ error: errorMessage, loading: false });
-    console.error("Order initialization error:", errorMessage);
-  }
-},
-  // Fetch orders with improved error handling
-  fetchOrders: async (filters = {}, forceRefresh = false) => {
+  initializeOrders: async (userId?: string) => {
     const state = get();
-    
-    // Check cache validity
-    if (!forceRefresh &&
-        state.orders.length > 0 &&
-        Date.now() - state.lastFetchTime < CACHE_DURATION &&
-        !filters.page && !filters.status && !filters.skip) {
+
+    if (state.orders.length > 0 && Date.now() - state.lastFetchTime < CACHE_DURATION) {
       return;
     }
 
     set({ loading: true, error: null });
-    
+
+    try {
+      const filters: OrderFilters = {
+        limit: 20,
+        page: 1
+      };
+
+      await get().fetchOrders(filters, true);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to initialize orders";
+      set({ error: errorMessage, loading: false });
+      console.error("Order initialization error:", errorMessage);
+    }
+  },
+
+  fetchOrders: async (filters = {}, forceRefresh = false) => {
+    const state = get();
+
+    if (!forceRefresh &&
+      state.orders.length > 0 &&
+      Date.now() - state.lastFetchTime < CACHE_DURATION &&
+      !filters.page && !filters.status && !filters.skip) {
+      return;
+    }
+
+    set({ loading: true, error: null });
+
     try {
       const queryParams = new URLSearchParams();
-      
-      // Build query parameters
+
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
@@ -206,24 +404,23 @@ initializeOrders: async (userId?: string) => {
 
       const url = `/api/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await fetchWithCredentials(url);
-      
+
       if (!response.ok) {
         const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch orders');
       }
 
       const data = await handleApiResponse(response);
-      
-      // Handle both new fetch and pagination
-      const newOrders = Array.isArray(data.orders) ? data.orders : [];
+
+      const newOrders = Array.isArray(data.orders) ? data.orders.map(processOrderData) : [];
       const currentOrders = filters.skip ? state.orders : [];
-      
+
       set({
         orders: filters.skip ? [...currentOrders, ...newOrders] : newOrders,
-        totalOrders: data.total || 0,
-        currentPage: data.page || 1,
-        totalPages: data.pages || 1,
-        hasMore: data.hasMore !== undefined ? data.hasMore : (newOrders.length === (filters.limit || 50)),
+        totalOrders: data.pagination?.totalOrders || data.total || 0,
+        currentPage: data.pagination?.currentPage || data.page || 1,
+        totalPages: data.pagination?.totalPages || data.pages || 1,
+        hasMore: data.pagination?.hasMore !== undefined ? data.pagination.hasMore : (newOrders.length === (filters.limit || 50)),
         lastFetchTime: Date.now(),
         loading: false,
         error: null
@@ -232,18 +429,17 @@ initializeOrders: async (userId?: string) => {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error fetching orders";
       console.error("Orders fetch error:", errorMessage);
-      
-      set({ 
-        error: errorMessage, 
+
+      set({
+        error: errorMessage,
         loading: false,
-        orders: filters.skip ? state.orders : [] // Don't clear existing orders on pagination error
+        orders: filters.skip ? state.orders : []
       });
-      
+
       toast.error(errorMessage);
     }
   },
 
-  // Fetch single order by ID
   fetchOrderById: async (id: string) => {
     if (!id?.trim()) {
       set({ error: 'Order ID is required' });
@@ -251,17 +447,20 @@ initializeOrders: async (userId?: string) => {
     }
 
     set({ loading: true, error: null });
-    
+
     try {
       const response = await fetchWithCredentials(`/api/orders/${id}`);
-      
+
       if (!response.ok) {
         const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch order');
       }
 
       const data = await handleApiResponse(response);
-      set({ order: data.order, loading: false, error: null });
+      console.log("order data by id:", data);
+
+      const processedOrder = processOrderData(data.order);
+      set({ order: processedOrder, loading: false, error: null });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error fetching order";
@@ -271,7 +470,6 @@ initializeOrders: async (userId?: string) => {
     }
   },
 
-  // Fetch by order number
   fetchOrderByNumber: async (orderNumber: string) => {
     if (!orderNumber?.trim()) {
       set({ error: 'Order number is required' });
@@ -279,17 +477,20 @@ initializeOrders: async (userId?: string) => {
     }
 
     set({ loading: true, error: null });
-    
+
     try {
       const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`);
-      
+
       if (!response.ok) {
         const errorData = await handleApiResponse(response);
         throw new Error(errorData.error || 'Failed to fetch order');
       }
 
       const data = await handleApiResponse(response);
-      set({ order: data.order, loading: false, error: null });
+      console.log("Order by number:", data);
+
+      const processedOrder = processOrderData(data.order);
+      set({ order: processedOrder, loading: false, error: null });
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Error fetching order";
@@ -299,9 +500,8 @@ initializeOrders: async (userId?: string) => {
     }
   },
 
-  // Create new order (optimistic update)
   createOrder: async (orderData: CreateOrderData) => {
-    // Create temporary order for optimistic update
+    // Enhanced temporary order with new fields
     const tempOrder: Order = {
       _id: `temp-${Date.now()}`,
       orderNumber: "TEMP",
@@ -311,20 +511,26 @@ initializeOrders: async (userId?: string) => {
         product: { _id: i.productId, name: "Loading..." },
         name: "Loading item...",
         price: i.price,
+        originalPrice: i.originalPrice,
         quantity: i.quantity,
-        size: i.size,
-        color: i.color,
-        originalPrice: false,
-        hasInsurance: false,
-        selectedVariant: null,
-        productImage: null,
+        selectedVariant: i.selectedVariant,
+        insuranceCost: i.insuranceCost || 0,
+        sku: "",
+        itemId: "",
+        discount: 0,
+        discountPercent: 0,
+        productImage: "",
+        itemTotal: i.price * i.quantity,
+        originalItemTotal: (i.originalPrice || i.price) * i.quantity,
+        itemSavings: 0,
+        itemInsuranceTotal: i.insuranceCost || 0,
       })),
-      totalAmount: orderData.totalAmount,
+      totalAmount: orderData.totals.totalAmount,
       orderStatus: "pending",
       paymentStatus: "pending",
       paymentMethod: orderData.paymentMethod,
       shippingAddress: {
-        _id: orderData.shippingAddressId,
+        _id: orderData.addressId,
         fullName: "Loading...",
         phone: "",
         addressLine1: "",
@@ -335,18 +541,31 @@ initializeOrders: async (userId?: string) => {
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      paymentId: "",
-      insuranceCost: false,
+
+      // Enhanced fields
+      subtotal: orderData.totals.subtotal,
+      shippingCost: orderData.totals.shippingCost,
       tax: 0,
-      shippingCost: 0,
-      subtotal: orderData.totalAmount,
-      discount: false,
-      carrier: undefined
+      discount: 0,
+      insuranceEnabled: orderData.insuranceEnabled || [],
+      couponCode: orderData.couponCode,
+
+      // Enhanced price breakdown
+      priceBreakdown: {
+        originalSubtotal: orderData.totals.subtotal,
+        itemDiscount: 0,
+        couponDiscount: orderData.totals.couponDiscount || 0,
+        totalInsurance: orderData.totals.insuranceCost,
+        finalSubtotal: orderData.totals.subtotal,
+        shippingCost: orderData.totals.shippingCost,
+        tax: 0,
+        grandTotal: orderData.totals.totalAmount,
+        totalSavings: orderData.totals.couponDiscount || 0
+      }
     };
 
-    // Optimistic update
-    set(state => ({ 
-      orders: [tempOrder, ...state.orders], 
+    set(state => ({
+      orders: [tempOrder, ...state.orders],
       order: tempOrder,
       totalOrders: state.totalOrders + 1
     }));
@@ -364,9 +583,10 @@ initializeOrders: async (userId?: string) => {
       }
 
       const data = await handleApiResponse(response);
-      const newOrder = data.order;
+      console.log("Data order created:", data);
 
-      // Replace temporary order with real order
+      const newOrder = processOrderData(data.order);
+
       set(state => ({
         orders: state.orders.map(o => o._id === tempOrder._id ? newOrder : o),
         order: newOrder,
@@ -377,38 +597,36 @@ initializeOrders: async (userId?: string) => {
       return newOrder;
 
     } catch (error) {
-      // Remove temporary order on error
-      set(state => ({ 
-        orders: state.orders.filter(o => o._id !== tempOrder._id), 
+      set(state => ({
+        orders: state.orders.filter(o => o._id !== tempOrder._id),
         order: null,
         totalOrders: Math.max(0, state.totalOrders - 1)
       }));
-      
+
       const errorMessage = error instanceof Error ? error.message : "Error creating order";
       toast.error(errorMessage);
       return null;
     }
   },
 
-  // Update order status (optimistic)
+  // Rest of the methods remain the same...
   updateOrderStatus: async (id: string, status: OrderStatus) => {
     const prevState = { orders: get().orders, order: get().order };
-    
-    // Optimistic update
+
     set(state => ({
-      orders: state.orders.map(o => 
+      orders: state.orders.map(o =>
         o._id === id ? { ...o, orderStatus: status, updatedAt: new Date().toISOString() } : o
       ),
-      order: state.order?._id === id ? 
-        { ...state.order, orderStatus: status, updatedAt: new Date().toISOString() } : 
+      order: state.order?._id === id ?
+        { ...state.order, orderStatus: status, updatedAt: new Date().toISOString() } :
         state.order
     }));
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/${id}/status`, {
+      const response = await fetchWithCredentials(`/api/orders/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ orderStatus: status }),
       });
 
       if (!response.ok) {
@@ -417,9 +635,8 @@ initializeOrders: async (userId?: string) => {
       }
 
       const data = await handleApiResponse(response);
-      const updatedOrder = data.order;
+      const updatedOrder = processOrderData(data.order);
 
-      // Update with actual response
       set(state => ({
         orders: state.orders.map(o => o._id === id ? updatedOrder : o),
         order: state.order?._id === id ? updatedOrder : state.order
@@ -429,7 +646,6 @@ initializeOrders: async (userId?: string) => {
       return true;
 
     } catch (error) {
-      // Rollback on error
       set(prevState);
       const errorMessage = error instanceof Error ? error.message : "Error updating status";
       toast.error(errorMessage);
@@ -437,7 +653,6 @@ initializeOrders: async (userId?: string) => {
     }
   },
 
-  // Update order notes
   updateOrderNotes: async (orderNumber: string, notes: string) => {
     try {
       const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
@@ -452,11 +667,10 @@ initializeOrders: async (userId?: string) => {
       }
 
       const data = await handleApiResponse(response);
-      const updatedOrder = data.order;
+      const updatedOrder = processOrderData(data.order);
 
-      // Update order in state
       set(state => ({
-        orders: state.orders.map(o => 
+        orders: state.orders.map(o =>
           o.orderNumber === orderNumber ? updatedOrder : o
         ),
         order: state.order?.orderNumber === orderNumber ? updatedOrder : state.order
@@ -472,25 +686,23 @@ initializeOrders: async (userId?: string) => {
     }
   },
 
-  // Cancel order (optimistic)
   cancelOrder: async (id: string, reason?: string) => {
     const prevState = { orders: get().orders, order: get().order };
     const cancelledAt = new Date().toISOString();
-    
-    // Optimistic update
+
     set(state => ({
-      orders: state.orders.map(o => 
-        o._id === id ? { 
-          ...o, 
-          orderStatus: "cancelled", 
+      orders: state.orders.map(o =>
+        o._id === id ? {
+          ...o,
+          orderStatus: "cancelled",
           cancelledAt,
           cancellationReason: reason,
           updatedAt: cancelledAt
         } : o
       ),
-      order: state.order?._id === id ? { 
-        ...state.order, 
-        orderStatus: "cancelled", 
+      order: state.order?._id === id ? {
+        ...state.order,
+        orderStatus: "cancelled",
         cancelledAt,
         cancellationReason: reason,
         updatedAt: cancelledAt
@@ -498,10 +710,10 @@ initializeOrders: async (userId?: string) => {
     }));
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/${id}/cancel`, {
+      const response = await fetchWithCredentials(`/api/orders/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason }),
+        body: JSON.stringify({ action: 'cancel', reason }),
       });
 
       if (!response.ok) {
@@ -510,9 +722,8 @@ initializeOrders: async (userId?: string) => {
       }
 
       const data = await handleApiResponse(response);
-      const updatedOrder = data.order;
+      const updatedOrder = processOrderData(data.order);
 
-      // Update with actual response
       set(state => ({
         orders: state.orders.map(o => o._id === id ? updatedOrder : o),
         order: state.order?._id === id ? updatedOrder : state.order
@@ -522,7 +733,6 @@ initializeOrders: async (userId?: string) => {
       return true;
 
     } catch (error) {
-      // Rollback on error
       set(prevState);
       const errorMessage = error instanceof Error ? error.message : "Error cancelling order";
       toast.error(errorMessage);
@@ -530,14 +740,12 @@ initializeOrders: async (userId?: string) => {
     }
   },
 
-  // Delete order by number (only cancelled orders)
   deleteOrderByNumber: async (orderNumber: string) => {
     if (!orderNumber?.trim()) {
       toast.error('Order number is required');
       return false;
     }
 
-    // Add to deleting list
     set(state => ({
       deletingOrders: [...state.deletingOrders, orderNumber]
     }));
@@ -552,7 +760,6 @@ initializeOrders: async (userId?: string) => {
         throw new Error(errorData.error || 'Failed to delete order');
       }
 
-      // Remove order from state
       set(state => ({
         orders: state.orders.filter(o => o.orderNumber !== orderNumber),
         order: state.order?.orderNumber === orderNumber ? null : state.order,
@@ -564,7 +771,6 @@ initializeOrders: async (userId?: string) => {
       return true;
 
     } catch (error) {
-      // Remove from deleting list on error
       set(state => ({
         deletingOrders: state.deletingOrders.filter(on => on !== orderNumber)
       }));
@@ -578,23 +784,45 @@ initializeOrders: async (userId?: string) => {
   // Utils
   clearError: () => set({ error: null }),
   clearOrder: () => set({ order: null }),
-  clearOrders: () => set({ 
-    orders: [], 
-    totalOrders: 0, 
-    currentPage: 1, 
-    totalPages: 1, 
+  clearOrders: () => set({
+    orders: [],
+    totalOrders: 0,
+    currentPage: 1,
+    totalPages: 1,
     hasMore: false,
     lastFetchTime: 0,
     deletingOrders: []
   }),
 
-  // Getters
-  getOrderByNumber: (orderNumber: string) => 
+  // Enhanced getters
+  getOrderByNumber: (orderNumber: string) =>
     get().orders.find(order => order.orderNumber === orderNumber) || null,
-    
-  getOrdersByStatus: (status: OrderStatus) => 
+
+  getOrdersByStatus: (status: OrderStatus) =>
     get().orders.filter(order => order.orderStatus === status),
-    
-  isOrderBeingDeleted: (orderNumber: string) => 
+
+  isOrderBeingDeleted: (orderNumber: string) =>
     get().deletingOrders.includes(orderNumber),
+
+  // Enhanced getters
+  getOrderPriceBreakdown: (orderNumber: string) => {
+    const order = get().getOrderByNumber(orderNumber);
+    return order?.priceBreakdown || null;
+  },
+
+  getOrderTimeline: (orderNumber: string) => {
+    const order = get().getOrderByNumber(orderNumber);
+    return order?.orderTimeline || null;
+  },
+
+  canCancelOrder: (orderNumber: string) => {
+    const order = get().getOrderByNumber(orderNumber);
+    return order?.orderSummary?.canCancel ||
+      ['pending', 'confirmed'].includes(order?.orderStatus || '');
+  },
+
+  canReturnOrder: (orderNumber: string) => {
+    const order = get().getOrderByNumber(orderNumber);
+    return order?.orderSummary?.canReturn || false;
+  },
 }));

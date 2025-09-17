@@ -45,7 +45,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
   // Get data based on mode
   const cartStore = useCartStore();
   const checkoutStore = useCheckoutStore();
-
+  
   // For cart mode, use cart store data
   const cartData = mode === "cart" ? {
     selectedItems: cartStore.getSelectedCartItems(),
@@ -57,7 +57,6 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
 
   // For checkout/payment mode, use checkout store data
   const checkoutData = mode !== "cart" ? checkoutStore.getCheckoutData() : null;
-
   // Get the appropriate data based on mode
   const selectedItems = mode === "cart" ? cartData?.selectedItems || [] : checkoutStore.getSelectedItems();
   const totals = mode === "cart" ? cartData?.totals : checkoutData?.totals;

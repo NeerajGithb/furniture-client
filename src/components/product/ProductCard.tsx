@@ -162,12 +162,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
     return info.join(" • ");
   };
 
-  const formatReviewCount = (count: number) => {
-    if (count > 9999) return "9.9k+";
-    if (count > 999) return `${(count / 1000).toFixed(1)}k`;
-    return count.toString();
-  };
-
   return (
     <motion.div
       initial={{
@@ -176,13 +170,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       }}
       animate={{ opacity: 1, x: 0, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="group bg-white cursor-pointer relative w-full flex flex-col overflow-hidden p-[6px] md:p-2
+      className="group  bg-white cursor-pointer relative w-full flex flex-col overflow-hidden p-[6px]  md:p-2
            transition-shadow duration-100 hover:shadow-[0_0_3px_rgba(0,0,0,0.2)] max-md:shadow-[0_0_3px_rgba(0,0,0,0.2)]"
     >
       <div className="relative w-full overflow-hidden">
         <Link
           href={productUrl}
-          className="block aspect-[4/4] relative"
+          className="block aspect-[4/4]  relative"
           onClick={(e) => e.stopPropagation()}
         >
           {displayImage ? (

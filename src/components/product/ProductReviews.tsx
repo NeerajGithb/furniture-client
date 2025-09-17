@@ -15,6 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import useReviewStore from "@/stores/reviewStore";
+import AuthModal from "../models/AuthModal";
 
 interface ProductReviewsProps {
   productId: string;
@@ -23,7 +24,7 @@ interface ProductReviewsProps {
 
 // Skeleton Components
 const ReviewSkeleton = () => (
-  <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3 animate-pulse">
+  <div className="bg-white border border-gray-200 rounded-sm p-4 space-y-3 animate-pulse">
     <div className="flex items-start gap-3">
       <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
       <div className="flex-1 space-y-2">
@@ -54,8 +55,7 @@ const ReviewSkeleton = () => (
 
 const StatsSkeleton = () => (
   <div className="animate-pulse">
-    <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-    <div className="space-y-3">
+    <div className="space-y-3 mb-1">
       {[5, 4, 3, 2, 1].map(star => (
         <div key={star} className="flex items-center gap-3">
           <div className="w-3 h-3 bg-gray-200 rounded"></div>
@@ -110,6 +110,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     setCurrentUserId,
     reportReview,
   } = useReviewStore();
+
+  const [openAuthModal, setOpenAuthModal] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -183,6 +185,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
     if (!userId) {
       setErrorMessage("Please log in to submit a review");
+      setOpenAuthModal(true);
       return;
     }
 
@@ -348,7 +351,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     <div className="max-w-5xl mx-auto p-3 space-y-4">
       {/* Success/Error Messages */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+        <div className="bg-green-50 border border-green-200 rounded-sm p-3 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
           <span className="text-sm text-green-800">{successMessage}</span>
           <button 
@@ -362,7 +365,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       )}
 
       {errorMessage && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+        <div className="bg-red-50 border border-red-200 rounded-sm p-3 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
           <span className="text-sm text-red-800">{errorMessage}</span>
           <button 
@@ -376,7 +379,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       )}
 
       {uploadSuccess && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-sm p-3 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
           <span className="text-sm text-blue-800">{uploadSuccess}</span>
           <button 
@@ -441,11 +444,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
         </div>
 
         {/* Rate Product Button */}
-        {userId && !userHasReviewed && (
+        {!userHasReviewed && (
           <div className="lg:w-36">
             <button
               onClick={() => setShowReviewForm(!showReviewForm)}
-              className="w-full bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              className="w-full bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
               Write Review
             </button>
@@ -455,27 +458,16 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
       {/* User Already Reviewed Notice */}
       {userId && userHasReviewed && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-sm p-3 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
           <span className="text-sm text-blue-800">
             You have already reviewed this product. Thank you for your feedback!
           </span>
         </div>
       )}
-
-      {/* Login Required Notice */}
-      {!userId && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-          <span className="text-sm text-yellow-800">
-            Please log in to write reviews and vote on existing reviews.
-          </span>
-        </div>
-      )}
-
       {/* Review Form */}
       {showReviewForm && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-sm p-4 space-y-3">
           <h3 className="text-base font-medium text-gray-900">Write Your Review</h3>
 
           {/* Rating */}
@@ -493,24 +485,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
             </div>
           </div>
 
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Review Title (Optional)
-            </label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ title: e.target.value })}
-              placeholder="Summarize your experience"
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm"
-              maxLength={100}
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              {formData.title.length}/100 characters
-            </div>
-          </div>
-
           {/* Comment */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -521,7 +495,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
               onChange={(e) => setFormData({ comment: e.target.value })}
               placeholder="Share your detailed experience with this product..."
               rows={4}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
+              className="w-full p-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm"
               maxLength={1000}
             />
             <div className="text-xs text-gray-500 mt-1">
@@ -540,7 +514,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                   <img
                     src={image.url}
                     alt={`Review ${index + 1}`}
-                    className="w-16 h-16 object-cover border border-gray-300 rounded-md"
+                    className="w-16 h-16 object-cover border border-gray-300 rounded-sm"
                   />
                   <button
                     type="button"
@@ -558,7 +532,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-sm flex flex-col items-center justify-center hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Add image"
                 >
                   {uploading ? (
@@ -592,7 +566,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
               type="button"
               onClick={handleSubmitReview}
               disabled={submitting || !formData.rating || !formData.comment.trim() || formData.comment.trim().length < 10}
-              className="bg-blue-600 text-white px-4 py-2 text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="bg-blue-600 text-white px-4 py-2 text-sm font-medium rounded-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {submitting ? (
                 <>
@@ -654,7 +628,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
         {loading ? (
           Array(1).fill(0).map((_, i) => <ReviewSkeleton key={i} />)
         ) : reviews.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-6 text-gray-500">
             <div className="text-4xl mb-4">📝</div>
             <div className="text-lg font-medium mb-2">No reviews yet</div>
             <div className="text-sm">Be the first to review this product!</div>
@@ -663,7 +637,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
           reviews.map((review) => (
             <div
               key={review._id}
-              className="bg-white border border-gray-200 rounded-lg p-4 space-y-3 hover:shadow-sm transition-shadow"
+              className="bg-white border border-gray-200 rounded-sm p-4 space-y-3 hover:shadow-sm transition-shadow"
             >
               {/* Review Header */}
               <div className="flex items-start justify-between">
@@ -741,10 +715,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                 </div>
               </div>
 
-              {/* Review Title */}
-              {review.title && (
-                <h4 className="font-medium text-gray-900 text-sm break-words">{review.title}</h4>
-              )}
 
               {/* Review Content */}
               <div className="text-gray-700 text-sm leading-relaxed break-words">
@@ -888,7 +858,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
           <button
             onClick={handleLoadMore}
             disabled={loadingMore}
-            className="bg-gray-100 text-gray-700 px-6 py-2 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="bg-gray-100 text-gray-700 px-6 py-2 text-sm font-medium rounded-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {loadingMore ? (
               <>
@@ -901,6 +871,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
           </button>
         </div>
       )}
+      {/* Auth Modal */}
+      <AuthModal isOpen={openAuthModal} onClose={() => setOpenAuthModal(false)} />
     </div>
   );
 };

@@ -119,6 +119,9 @@
   transform: scale(0.97);
 }
 
+button{
+  cursor: pointer;
+}
 /* Apply to all buttons */
 button {
   transition: transform 0.1s ease, 0.1s ease;

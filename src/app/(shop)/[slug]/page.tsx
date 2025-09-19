@@ -453,18 +453,13 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   };
 
   const getPageDescription = () => {
-    if (pageType === "category" && pageData) {
-      return pageData.description || `Browse products in ${pageData.name}`;
+    if (pageType === "category" && pageData && pageData.description) {
+      return pageData.description;
     }
-    if (pageType === "subcategory" && pageData) {
-      return (
-        pageData.description ||
-        `Browse products in ${pageData.name} under ${
-          slugAnalysis.parentCategory?.name || "various categories"
-        }`
-      );
+    if (pageType === "subcategory" && pageData && pageData.description) {
+      return pageData.description;
     }
-    return "Browse our wide range of products";
+    return null; // Return null instead of default text when no description
   };
 
   if (!isInitialized || !pageType) {
@@ -484,6 +479,8 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     );
   }
 
+  const description = getPageDescription();
+
   return (
     <div className="min-h-screen bg-white ">
       <div className="mx-auto">
@@ -492,66 +489,68 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
           <main className="flex-1 min-w-0">
             <div className="py-3">
               {/* Compact Header */}
-              <div className="px-4 mb-6 flex flex-col items-center text-center">
-                <h1 className="text-xl font-semibold text-gray-800">
+              <div className="px-4 mb-4 flex flex-col items-center text-center">
+                <h1 className="text-xl font-semibold text-gray-800 mb-2">
                   {getPageTitle()}
                 </h1>
 
-                <div className="mt-3 flex items-center justify-center text-sm text-gray-600">
-                  {error ? (
-                    <div className="flex items-center gap-2 text-red-600 px-2 py-1">
-                      <AlertCircle className="w-4 h-4" />
-                      <span className="font-medium">
-                        Error loading products
-                      </span>
-                    </div>
-                  ) : !loadingProducts && products?.length > 0 ? (
-                    <div>
-                      <span className="font-semibold text-gray-900">
-                        {(currentPage - 1) * 20 + 1}–
-                        {Math.min(currentPage * 20, totalProducts)}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-semibold text-gray-900">
-                        {totalProducts?.toLocaleString() || 0}
-                      </span>{" "}
-                      {totalProducts === 1 ? "product" : "products"}
-                    </div>
-                  ) : loadingProducts ? (
-                    <div className="h-4 "></div>
-                  ) : (
-                    <div className="h-4"></div>
-                  )}
-                </div>
+                {/* Product Count - Only show when we have data */}
+                {!error && !loadingProducts && products?.length > 0 && (
+                  <div className="text-sm text-gray-600 mb-2">
+                    <span className="font-semibold text-gray-900">
+                      {(currentPage - 1) * 20 + 1}–
+                      {Math.min(currentPage * 20, totalProducts)}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-gray-900">
+                      {totalProducts?.toLocaleString() || 0}
+                    </span>{" "}
+                    {totalProducts === 1 ? "product" : "products"}
+                  </div>
+                )}
 
-                <div className="mt-2 max-w-4xl">
-                  {getPageDescription()?.length > 100 ? (
-                    <div className="flex items-center">
-                      <p
-                        className={`text-xs text-gray-500 leading-relaxed flex-1 ${
-                          !showFullDescription
-                            ? "line-clamp-1 md:line-clamp-2"
-                            : ""
-                        }`}
-                      >
-                        {getPageDescription()}
+                {/* Error Display */}
+                {error && (
+                  <div className="flex items-center gap-2 text-red-600 px-2 py-1 mb-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="font-medium text-sm">
+                      Error loading products
+                    </span>
+                  </div>
+                )}
+
+                {/* Description - Only show if available */}
+                {description && (
+                  <div className="max-w-4xl">
+                    {description.length > 100 ? (
+                      <div className="flex items-center">
+                        <p
+                          className={`text-sm text-gray-500 leading-relaxed flex-1 ${
+                            !showFullDescription
+                              ? "line-clamp-1 md:line-clamp-2"
+                              : ""
+                          }`}
+                        >
+                          {description}
+                        </p>
+                        <button
+                          type="button"
+                          className="text-red-600 md:hidden hover:text-red-700 hover:underline font-medium text-xs transition-colors flex-shrink-0 ml-2"
+                          onClick={() => setShowFullDescription((prev) => !prev)}
+                        >
+                          {showFullDescription ? "Less" : "More"}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        {description}
                       </p>
-                      <button
-                        type="button"
-                        className="text-red-600 md:hidden hover:text-red-700 hover:underline font-medium text-xs transition-colors flex-shrink-0"
-                        onClick={() => setShowFullDescription((prev) => !prev)}
-                      >
-                        {showFullDescription ? "Less" : "More"}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500 leading-relaxed">
-                      {getPageDescription()}
-                    </p>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Mobile Filter Button */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowMobileFilters(true)}
@@ -569,9 +568,10 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
                   <SlidersHorizontal className="w-4 h-4 text-slate-800 " />
                 </div>
               </motion.button>
-              {/* Compact Active Filters */}
+
+              {/* Active Filters */}
               {hasActiveFilters && (
-                <div className="px-4  my-4 md:mb-4 ">
+                <div className="px-4 my-3">
                   <div className="flex flex-wrap gap-1.5 items-center">
                     <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
                       Filters:

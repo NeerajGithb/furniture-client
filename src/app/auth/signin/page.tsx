@@ -13,7 +13,6 @@ export default function SignInPage() {
   const returnUrl = searchParams.get('returnUrl') || '/';
 
   useEffect(() => {
-    // if user already logged in, skip login page
     if (user?._id) {
       router.replace(returnUrl);
     }
@@ -25,7 +24,7 @@ export default function SignInPage() {
         isOpen={isAuthOpen}
         onClose={() => {
           setIsAuthOpen(false);
-          router.push(returnUrl); // if user closes modal, go home
+          router.push(returnUrl);
         }}
       />
     </div>

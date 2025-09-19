@@ -4,10 +4,12 @@ import { useHomeStore } from "@/stores/homeStore";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const RoomInspiration = () => {
   const { inspirations, loading, fetchInspirations } = useHomeStore();
+  const router = useRouter();
 
   useEffect(() => {
     fetchInspirations();
@@ -148,13 +150,15 @@ const RoomInspiration = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}
       >
-        <motion.button
-          className="bg-black text-white px-8 py-2 text-sm font-medium tracking-widest uppercase hover:bg-white hover:text-black border-2 border-black transition-all duration-300"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Browse All Rooms
-        </motion.button>
+        <Link href="/insparation" passHref>
+          <motion.button
+            className="bg-black text-white px-8 py-2 text-sm font-medium tracking-widest uppercase hover:bg-white hover:text-black border-2 border-black transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Browse All Rooms
+          </motion.button>
+        </Link>
       </motion.div>
     </section>
   );

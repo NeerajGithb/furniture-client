@@ -1,7 +1,6 @@
 "use client";
 
-import { Category, IInspiration } from "@/types/Product";
-import { motion } from "framer-motion";
+import { Category } from "@/types/Product";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -31,11 +30,8 @@ const categoryImages: Record<string, string> = {
     "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop",
 };
 
-const CARD_WIDTH = "w-[120px]";
-const CARD_HEIGHT = "h-[180px]";
-
 const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
-  const categories: Category[] = (inspiration.categories || []).map((c : any) =>
+  const categories: Category[] = (inspiration?.categories || []).map((c: any) =>
     typeof c === "string"
       ? {
           _id: c,
@@ -48,101 +44,115 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
           _id: c._id,
           name: c.name,
           slug: c.slug,
-          description: "",
+          description: c.description || "",
           mainImage: {
-            url: c.mainImage?.url || categoryImages["default"],
+            url: c.mainImage?.url || categoryImages[c.slug] || categoryImages["default"],
             alt: c.mainImage?.alt || c.name,
           },
         }
   );
 
+  const shouldShowEmpty = !loading && (!categories || categories.length === 0);
+
   if (loading) {
     return (
-      <section className="px-4 py-8 max-w-6xl mx-auto">
-        <div className="text-center mb-6">
-          <h2 className="text-xl md:text-2xl font-light text-black tracking-wide">
-            Shop by Category
-          </h2>
+      <section className="px-4 py-8 max-w-7xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="h-6 bg-gray-200 rounded w-48 mx-auto mb-2 animate-pulse" />
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-8 justify-items-center">
-          {[...Array(8)].map((_, idx) => (
-            <div
-              key={idx}
-              className={`animate-pulse ${CARD_WIDTH} ${CARD_HEIGHT} bg-gray-100 rounded-sm`}
-            />
-          ))}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 max-w-fit">
+            {[...Array(8)].map((_, idx) => (
+              <div key={idx} className="flex flex-col items-center space-y-3">
+                <div className="w-32 h-32 bg-gray-200 rounded-full animate-pulse" />
+                <div className="h-4 bg-gray-200 rounded w-16 animate-pulse" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
   }
 
-  if (!categories.length) return null;
+  if (shouldShowEmpty) {
+    return (
+      <section className="px-4 py-12 max-w-7xl mx-auto">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-black mb-2">No Categories Available</h3>
+          <p className="text-gray-600">
+            Categories for this collection are currently being updated.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const itemsPerRow = {
+    sm: 2,
+    md: 3,
+    lg: 4,
+    xl: 5,
+    '2xl': 6,
+  };
+  const showViewAllButton = categories.length > (itemsPerRow.md * 2);
 
   return (
-    <section className="px-4 py-12 max-w-6xl mx-auto">
-      <motion.div
-        className="text-center mb-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-2xl md:text-3xl font-light text-black mb-2 tracking-wide">
+    <section className="px-4 py-8 max-w-7xl mx-auto">
+      <div className="text-center mb-8">
+        <h2 className="text-xl md:text-3xl font-semibold text-black">
           Shop by Category
         </h2>
-        <p className="text-gray-500 text-xs tracking-wider uppercase">
-          Find what suits your space
-        </p>
-      </motion.div>
+      </div>
 
-      <div className="flex flex-wrap gap-2 mx-auto w-full">
-        {categories.map((category, idx) => {
-          const imageUrl =
-            category.mainImage?.url ||
-            categoryImages[category.slug] ||
-            categoryImages["default"];
+      <div className="flex justify-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 max-w-fit">
+          {categories.map((category) => {
+            const imageUrl =
+              category.mainImage?.url ||
+              categoryImages[category.slug] ||
+              categoryImages["default"];
 
-          return (
-            <motion.div
-              key={category._id}
-              className={`${CARD_WIDTH} ${CARD_HEIGHT}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.05 }}
-            >
-              <Link href={`/${category.slug}`}>
-                <div className="group cursor-pointer w-full h-full flex flex-col">
-                  {/* Image Box */}
-                  <div className="relative w-full aspect-square overflow-hidden rounded-full shadow-all">
-                    <Image
-                      src={imageUrl}
-                      alt={category.mainImage?.alt || `${category.name} category`}
-                      fill
-                      className="object-cover aspect-square w-[120px] h-[120px]  rounded-full contrast-110 transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-500 flex items-center justify-center">
-                      <motion.div
-                        className="opacity-0 group-hover:opacity-100"
-                        initial={{ opacity: 0 }}
-                        whileHover={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                      </motion.div>
+            return (
+              <div key={category._id} className="w-full max-w-[260px]">
+                <Link href={`/${category.slug}`}>
+                  <div className="group cursor-pointer w-full flex flex-col items-center">
+                    <div className="relative w-32 h-32 mb-4 overflow-hidden rounded-full border border-gray-200 group-hover:border-gray-400 transition-colors duration-200">
+                      <Image
+                        src={imageUrl}
+                        alt={category.mainImage?.alt || `${category.name} category`}
+                        fill
+                        className="object-cover rounded-full group-hover:scale-105 transition-transform duration-200"
+                        sizes="(max-width: 640px) 150px, 128px"
+                        priority={false}
+                      />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="text-base font-medium text-black group-hover:text-gray-600 transition-colors duration-200 leading-tight">
+                        {category.name}
+                      </h3>
                     </div>
                   </div>
-
-                  {/* Title */}
-                  <div className="flex-1 flex items-center justify-center mt-2">
-                    <h3 className="text-sm font-light text-black tracking-wide uppercase group-hover:text-gray-600 transition-colors duration-500 text-center">
-                      {category.name}
-                    </h3>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          );
-        })}
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       </div>
+
+      {showViewAllButton && (
+        <div className="text-center mt-8">
+          <Link
+            href="/categories"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors font-medium"
+          >
+            View All Categories
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        </div>
+      )}
     </section>
   );
 };

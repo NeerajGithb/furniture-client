@@ -524,7 +524,7 @@ const FilterSidebar = ({
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
       if (!categorySlug) {
-        router.push("/products");
+        return;
       } else {
         router.push(`/${categorySlug}`);
       }
@@ -534,7 +534,7 @@ const FilterSidebar = ({
   const handleSubcategoryChange = useCallback(
     (subcategorySlug: string) => {
       if (!subcategorySlug) {
-        router.push("/products");
+        return;
       } else {
         // If subcategory is selected
         router.push(`/${subcategorySlug}`);

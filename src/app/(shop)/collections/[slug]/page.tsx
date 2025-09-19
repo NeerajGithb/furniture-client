@@ -8,8 +8,8 @@ import RelatedProducts from "@/components/inspiration/RelatedProducts";
 import NewArrivals from "@/components/inspiration/NewArrivals";
 import MoreInspirationIdeas from "@/components/inspiration/MoreInspirationIdeas";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Loader2 } from "lucide-react";
+
+import { ArrowLeft, Home, Search } from "lucide-react";
 
 const Page = () => {
   const params = useParams();
@@ -58,24 +58,23 @@ const Page = () => {
     initialized,
   ]);
 
+  console.log("inspirationSlug : ",inspirationSlug);
+  console.log("currentInspiration : ",currentInspiration);
+
   if (inspirationLoading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-screen flex items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center"
-            >
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900 mx-auto mb-6" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                <Loader2 />
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-black mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-black mb-2">
+                Loading Collection
               </h2>
               <p className="text-gray-600">
-                Discovering beautiful design ideas for you...
+                Please wait...
               </p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -85,87 +84,87 @@ const Page = () => {
   if (inspirationError) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="min-h-screen flex items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-md mx-auto"
-            >
-              <div className="bg-gray-50 rounded-2xl p-8 sm:p-12">
-                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg
-                    className="w-8 h-8 text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="min-h-screen flex items-center justify-center py-12">
+            <div className="text-center max-w-lg mx-auto">
+              <div className="bg-white border border-gray-200 rounded-lg p-8 sm:p-12">
+                <h2 className="text-2xl font-bold text-black mb-4">
+                  Collection Not Found
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  We couldn't find the collection you're looking for.
+                </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => router.back()}
-                    className="px-6 py-3 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors duration-200 font-medium"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 text-black bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors font-medium"
                   >
+                    <ArrowLeft className="w-4 h-4" />
                     Go Back
                   </button>
                   <Link
-                    href="/inspiration"
-                    className="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium text-center"
+                    href="/"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors font-medium"
                   >
+                    <Home className="w-4 h-4" />
+                    Go Home
+                  </Link>
+                  <Link
+                    href="/collections"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    <Search className="w-4 h-4" />
                     Browse Collections
                   </Link>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!currentInspiration && !inspirationLoading) {
+  if (!currentInspiration && !inspirationLoading && isInitialized) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="min-h-screen flex items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-md mx-auto"
-            >
-              <div className="bg-gray-50 rounded-2xl p-8 sm:p-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="min-h-screen flex items-center justify-center py-12">
+            <div className="text-center max-w-lg mx-auto">
+              <div className="bg-white border border-gray-200 rounded-lg p-8 sm:p-12">
+                <h2 className="text-2xl font-bold text-black mb-4">
+                  Collection Not Available
+                </h2>
                 <p className="text-gray-600 mb-8">
-                  The inspiration you're looking for doesn't exist.
+                  The collection you're looking for is currently not available.
                 </p>
-                <Link
-                  href="/inspiration"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium"
-                >
-                  Browse All Collections
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={() => router.back()}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 text-black bg-white border border-gray-300 rounded hover:bg-gray-50 transition-colors font-medium"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </Link>
+                    <ArrowLeft className="w-4 h-4" />
+                    Go Back
+                  </button>
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    <Home className="w-4 h-4" />
+                    Go Home
+                  </Link>
+                  <Link
+                    href="/collections"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors font-medium"
+                  >
+                    <Search className="w-4 h-4" />
+                    Browse All Collections
+                  </Link>
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -175,48 +174,36 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-white">
       {currentInspiration && (
-        <>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+        <div className="w-full">
+          {/* Category Grid Section */}
+          <div className="mb-8">
             <CategoryGrid inspiration={currentInspiration} loading={false} />
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          {/* Related Products Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
             <RelatedProducts
               inspirationSlug={currentInspiration.slug}
               limit={20}
             />
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
+          {/* New Arrivals Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
             <NewArrivals
               inspirationSlug={currentInspiration.slug}
               limit={20}
               sort="newest"
             />
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
+          {/* More Inspiration Ideas Section */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
             <MoreInspirationIdeas
               currentInspirationId={currentInspiration._id}
             />
-          </motion.div>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

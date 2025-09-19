@@ -119,7 +119,7 @@ export default function AddressesPage() {
     selected: string;
     onSelect: (type: AddressType) => void;
   }) => (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2 sm:gap-3">
       {(["home", "work", "other"] as AddressType[]).map((type) => {
         const config = addressTypeConfig[type];
         const Icon = config.icon;
@@ -133,7 +133,7 @@ export default function AddressesPage() {
             className={`flex items-center gap-1.5 px-3 py-2 border rounded-sm text-xs font-medium transition-all ${
               selected === type
                 ? `${config.border} ${config.bg} ${config.color}`
-                : "border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50"
+                : "border-gray-300 hover:border-gray-400 text-gray-600 hover:bg-gray-50"
             }`}
           >
             <Icon className="w-3 h-3" />
@@ -146,7 +146,7 @@ export default function AddressesPage() {
 
   if (userLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -169,26 +169,26 @@ export default function AddressesPage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="max-w-4xl mx-auto px-4 py-6"
+        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6"
       >
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-6"
+          className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6"
         >
           <Link href="/profile">
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 bg-white rounded-sm shadow-sm hover:shadow border"
+              className="p-2 bg-white rounded-sm shadow-sm hover:shadow border border-gray-300"
             >
               <ArrowLeft className="w-4 h-4 text-gray-600" />
             </motion.div>
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Addresses</h1>
-            <p className="text-sm text-gray-600">Manage delivery addresses</p>
+          <div className="flex-1">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Addresses</h1>
+            <p className="text-xs sm:text-sm text-gray-600">Manage delivery addresses</p>
           </div>
         </motion.div>
 
@@ -196,13 +196,13 @@ export default function AddressesPage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleAddNew}
-            className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-sm text-sm font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto justify-center sm:justify-start"
           >
             <Plus className="w-4 h-4" />
             Add Address
@@ -214,7 +214,7 @@ export default function AddressesPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 bg-red-50 border border-red-200 rounded-sm"
+            className="mb-4 p-3 bg-red-50 border border-red-300 rounded-sm"
           >
             <p className="text-sm text-red-600">{error}</p>
           </motion.div>
@@ -227,9 +227,9 @@ export default function AddressesPage() {
               initial={{ opacity: 0, scale: 0.98, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: -10 }}
-              className="bg-white rounded-sm shadow-sm border mb-6"
+              className="bg-white rounded-sm shadow-sm border border-gray-300 mb-4 sm:mb-6"
             >
-              <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-gray-300 bg-gray-50 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900 text-sm">
                   {formTitle}
                 </h3>
@@ -256,7 +256,7 @@ export default function AddressesPage() {
                 </div>
 
                 {/* Contact Info */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700">
                       Full Name *
@@ -267,7 +267,7 @@ export default function AddressesPage() {
                         updateAddressForm({ fullName: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Enter name"
                     />
                   </div>
@@ -282,7 +282,7 @@ export default function AddressesPage() {
                       }
                       required
                       type="tel"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Phone number"
                     />
                   </div>
@@ -300,7 +300,7 @@ export default function AddressesPage() {
                         updateAddressForm({ addressLine1: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Street address"
                     />
                   </div>
@@ -313,14 +313,14 @@ export default function AddressesPage() {
                       onChange={(e) =>
                         updateAddressForm({ addressLine2: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Apartment, suite (optional)"
                     />
                   </div>
                 </div>
 
                 {/* Location */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="block text-xs font-medium text-gray-700">
                       City *
@@ -331,7 +331,7 @@ export default function AddressesPage() {
                         updateAddressForm({ city: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="City"
                     />
                   </div>
@@ -345,7 +345,7 @@ export default function AddressesPage() {
                         updateAddressForm({ state: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="State"
                     />
                   </div>
@@ -359,14 +359,14 @@ export default function AddressesPage() {
                         updateAddressForm({ postalCode: e.target.value })
                       }
                       required
-                      className="w-full px-3 py-2 border border-gray-200 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="PIN"
                     />
                   </div>
                 </div>
 
                 {/* Default Checkbox */}
-                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-sm cursor-pointer">
+                <label className="flex items-center gap-2 p-3 bg-gray-50 rounded-sm cursor-pointer border border-gray-300">
                   <input
                     type="checkbox"
                     checked={addressForm.isDefault}
@@ -381,13 +381,13 @@ export default function AddressesPage() {
                 </label>
 
                 {/* Action Buttons */}
-                <div className="flex gap-2 pt-2">
+                <div className="flex flex-col sm:flex-row gap-2 pt-2">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading || !isValidForm()}
-                    className="flex items-center gap-1 bg-gray-900 text-white px-4 py-2 rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-center gap-1 bg-gray-900 text-white px-4 py-2 rounded-sm text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -401,7 +401,7 @@ export default function AddressesPage() {
                     whileTap={{ scale: 0.98 }}
                     type="button"
                     onClick={() => setShowAddressForm(false)}
-                    className="flex items-center gap-1 border border-gray-200 text-gray-600 px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-50 transition-colors"
+                    className="flex items-center justify-center gap-1 border border-gray-300 text-gray-600 px-4 py-2 rounded-sm text-sm font-medium hover:bg-gray-50 transition-colors"
                   >
                     <X className="w-4 h-4" />
                     Cancel
@@ -429,13 +429,13 @@ export default function AddressesPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12 bg-white rounded-sm border-2 border-dashed border-gray-200"
+            className="text-center py-8 sm:py-12 bg-white rounded-sm border-2 border-dashed border-gray-300"
           >
             <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No addresses
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 mb-4 px-4">
               Add your first address for faster checkout
             </p>
             <motion.button
@@ -455,7 +455,7 @@ export default function AddressesPage() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid gap-4 md:grid-cols-2"
+              className="grid gap-4 grid-cols-1 lg:grid-cols-2"
             >
               {addresses.map((addr) => {
                 const config =
@@ -470,28 +470,28 @@ export default function AddressesPage() {
                     exit={{ opacity: 0, y: -10 }}
                     layout
                     whileHover={{ y: -2 }}
-                    className="bg-white rounded-sm shadow-sm hover:shadow border transition-all"
+                    className="bg-white rounded-sm shadow-sm hover:shadow border border-gray-300 transition-all"
                   >
                     <div className="p-4">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`p-2 ${config.bg} rounded-sm`}>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className={`p-2 ${config.bg} rounded-sm flex-shrink-0`}>
                             <Icon className={`w-4 h-4 ${config.color}`} />
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h4 className="font-semibold text-gray-900 text-sm">
                                 {config.label}
                               </h4>
                               {addr.isDefault && (
-                                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
                                   <Star className="w-3 h-3 fill-current" />
                                   Default
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-600">
+                            <p className="text-xs text-gray-600 truncate">
                               {addr.fullName}
                             </p>
                           </div>
@@ -508,13 +508,13 @@ export default function AddressesPage() {
                           {addr.city}, {addr.state} - {addr.postalCode}
                         </p>
                         <p className="text-xs text-gray-600 flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          {addr.phone}
+                          <Phone className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{addr.phone}</span>
                         </p>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-300">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}

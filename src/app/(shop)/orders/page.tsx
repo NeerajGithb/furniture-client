@@ -79,7 +79,7 @@ const DeleteConfirmModal = ({
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-lg shadow-xl max-w-sm w-full p-4 mx-2"
+        className="bg-white rounded-xs shadow-xl max-w-sm w-full p-4 mx-2"
       >
         <div className="flex items-center gap-2 mb-3">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -99,7 +99,7 @@ const DeleteConfirmModal = ({
           <p className="text-gray-700 mb-2 text-sm">
             Are you sure you want to delete this order?
           </p>
-          <div className="bg-gray-50 rounded-lg p-2">
+          <div className="bg-gray-50 rounded-xs p-2">
             <div className="text-sm font-medium text-gray-900 truncate">
               Order #{orderNumber}
             </div>
@@ -116,14 +116,14 @@ const DeleteConfirmModal = ({
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
+            className="px-3 py-2 border border-gray-300 text-gray-700 rounded-xs hover:bg-gray-50 transition-colors disabled:opacity-50 text-sm"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
+            className="px-3 py-2 bg-red-600 text-white rounded-xs hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-1 text-sm"
           >
             {isDeleting ? (
               <>
@@ -353,7 +353,7 @@ export default function OrdersPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm w-full">
+        <div className="bg-white p-6 rounded-xs shadow-lg text-center max-w-sm w-full">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
           <h1 className="text-lg font-bold text-gray-900 mb-2">
             Unable to load orders
@@ -361,7 +361,7 @@ export default function OrdersPage() {
           <p className="text-gray-600 mb-4 text-sm">{error}</p>
           <button
             onClick={handleRefresh}
-            className="w-full bg-black text-white py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 text-sm"
+            className="w-full bg-black text-white py-2 rounded-xs font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-1 text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             Retry
@@ -397,7 +397,7 @@ export default function OrdersPage() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="p-2 border border-gray-300 rounded-xs hover:bg-gray-50 transition-colors disabled:opacity-50"
                 title="Refresh orders"
               >
                 <RefreshCw
@@ -406,7 +406,7 @@ export default function OrdersPage() {
               </button>
               <Link
                 href="/products"
-                className="bg-black text-white px-3 sm:px-4 py-2 rounded-lg font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1 text-xs sm:text-sm"
+                className="bg-black text-white px-3 sm:px-4 py-2 rounded-xs font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1 text-xs sm:text-sm"
               >
                 <ShoppingBag className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="hidden xs:inline">Shop</span>
@@ -416,7 +416,7 @@ export default function OrdersPage() {
         </div>
 
         {/* Filters */}
-        <div className="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
+        <div className="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-xs border border-gray-200">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -425,7 +425,7 @@ export default function OrdersPage() {
                 placeholder="Search orders..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 sm:pl-10 pr-8 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black/10 focus:border-black transition-colors text-sm"
+                className="w-full pl-9 sm:pl-10 pr-8 py-2 sm:py-2.5 border border-gray-300 rounded-xs focus:ring-2 focus:ring-black/10 focus:border-black transition-colors text-sm"
               />
               {search && (
                 <button
@@ -441,7 +441,7 @@ export default function OrdersPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full pl-9 sm:pl-10 pr-8 py-2 sm:py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-black/10 focus:border-black transition-colors appearance-none text-sm"
+                className="w-full pl-9 sm:pl-10 pr-8 py-2 sm:py-2.5 border border-gray-300 rounded-xs bg-white focus:ring-2 focus:ring-black/10 focus:border-black transition-colors appearance-none text-sm"
               >
                 <option value="all">All Status</option>
                 {Object.entries(statusConfig).map(([status, config]) => (
@@ -456,7 +456,7 @@ export default function OrdersPage() {
 
         {/* Orders List */}
         {filteredOrders.length === 0 ? (
-          <div className="bg-white p-8 sm:p-12 rounded-lg text-center">
+          <div className="bg-white p-8 sm:p-12 rounded-xs text-center">
             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
               {search || filterStatus !== "all"
@@ -471,7 +471,7 @@ export default function OrdersPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/products"
-                className="bg-black text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors text-sm"
+                className="bg-black text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xs font-semibold hover:bg-gray-800 transition-colors text-sm"
               >
                 Browse Products
               </Link>
@@ -481,7 +481,7 @@ export default function OrdersPage() {
                     setSearch("");
                     setFilterStatus("all");
                   }}
-                  className="border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
+                  className="border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xs font-semibold hover:bg-gray-50 transition-colors text-sm"
                 >
                   Clear Filters
                 </button>
@@ -508,7 +508,7 @@ export default function OrdersPage() {
                     exit={{ opacity: 0, x: -100 }}
                     layout
                     onClick={() => router.push(`/order-success?orderNumber=${order.orderNumber}`)}
-                    className={`bg-white rounded-lg border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all overflow-hidden cursor-pointer ${
+                    className={`bg-white rounded-xs border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all overflow-hidden cursor-pointer ${
                       isDeleting ? "opacity-50 pointer-events-none" : ""
                     }`}
                   >
@@ -580,7 +580,7 @@ export default function OrdersPage() {
                       <div className="space-y-2 sm:space-y-3">
                         {order.items.slice(0, isExpanded ? order.items.length : 2).map((item) => (
                           <div key={item._id} className="flex gap-2 sm:gap-3">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-100 rounded-xs overflow-hidden border border-gray-200 flex-shrink-0">
                               {item.product?.mainImage?.url ? (
                                 <Image
                                   src={item.product.mainImage.url}
@@ -675,7 +675,7 @@ export default function OrdersPage() {
                               <Link
                                 href={`/products/${order.items[0].product._id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="p-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                                className="p-2 border border-gray-300 rounded-xs hover:border-gray-400 transition-colors"
                                 title="View Product"
                               >
                                 <Eye className="w-3 h-3" />
@@ -685,7 +685,7 @@ export default function OrdersPage() {
                             {order.orderStatus === "delivered" && (
                               <>
                                 <button
-                                  className="p-2 border border-gray-300 rounded-lg hover:border-yellow-400 hover:bg-yellow-50 transition-colors"
+                                  className="p-2 border border-gray-300 rounded-xs hover:border-yellow-400 hover:bg-yellow-50 transition-colors"
                                   title="Rate & Review"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -695,7 +695,7 @@ export default function OrdersPage() {
                                   <Star className="w-3 h-3" />
                                 </button>
                                 <button
-                                  className="p-2 border border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                                  className="p-2 border border-gray-300 rounded-xs hover:border-blue-400 hover:bg-blue-50 transition-colors"
                                   title="Reorder"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -708,7 +708,7 @@ export default function OrdersPage() {
                             )}
 
                             <button
-                              className="p-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                              className="p-2 border border-gray-300 rounded-xs hover:border-gray-400 transition-colors"
                               title="Download Invoice"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -719,7 +719,7 @@ export default function OrdersPage() {
                             </button>
 
                             <button
-                              className="p-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                              className="p-2 border border-gray-300 rounded-xs hover:border-gray-400 transition-colors"
                               title="Support"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -739,7 +739,7 @@ export default function OrdersPage() {
                                   e.stopPropagation();
                                   handleCancelOrder(order);
                                 }}
-                                className="px-2 sm:px-3 py-1.5 sm:py-2 border border-red-300 text-red-700 rounded-lg font-medium hover:bg-red-50 transition-colors text-xs"
+                                className="px-2 sm:px-3 py-1.5 sm:py-2 border border-red-300 text-red-700 rounded-xs font-medium hover:bg-red-50 transition-colors text-xs"
                               >
                                 <span className="inline">Cancel</span>
                               </button>
@@ -748,7 +748,7 @@ export default function OrdersPage() {
                             <Link
                               href={`/order-success?orderNumber=${order.orderNumber}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="px-2 sm:px-3 py-1.5 sm:py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors text-xs flex items-center gap-1"
+                              className="px-2 sm:px-3 py-1.5 sm:py-2 bg-black text-white rounded-xs font-medium hover:bg-gray-800 transition-colors text-xs flex items-center gap-1"
                             >
                               <span className="inline">Details</span>
                               <ChevronRight className="w-3 h-3" />
@@ -759,7 +759,7 @@ export default function OrdersPage() {
                               <Link
                                 href={`/orders/track?orderNumber=${order.orderNumber}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors text-xs flex items-center gap-1"
+                                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-800 text-white rounded-xs font-medium hover:bg-gray-700 transition-colors text-xs flex items-center gap-1"
                               >
                                 <span className="inline">Track Order</span>
                                 <ChevronRight className="w-3 h-3 hidden sm:block" />
@@ -771,7 +771,7 @@ export default function OrdersPage() {
                                   handleDeleteOrder(order);
                                 }}
                                 disabled={isDeleting}
-                                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors text-xs flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-2 sm:px-3 py-1.5 sm:py-2 bg-red-600 text-white rounded-xs font-medium hover:bg-red-700 transition-colors text-xs flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 {isDeleting ? (
                                   <>
@@ -804,7 +804,7 @@ export default function OrdersPage() {
             <button
               onClick={handleLoadMore}
               disabled={loadingMore}
-              className="bg-white border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto text-sm"
+              className="bg-white border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xs font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto text-sm"
             >
               {loadingMore ? (
                 <>
@@ -821,7 +821,7 @@ export default function OrdersPage() {
         {/* Summary Stats */}
         {orders.length > 0 && (
           <div className="mt-8 sm:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 text-center">
+            <div className="bg-white p-3 sm:p-4 rounded-xs border border-gray-200 text-center">
               <div className="text-lg sm:text-2xl font-bold text-green-600">
                 {orders.filter((o) => o.orderStatus === "delivered").length}
               </div>
@@ -830,7 +830,7 @@ export default function OrdersPage() {
                 Delivered
               </div>
             </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 text-center">
+            <div className="bg-white p-3 sm:p-4 rounded-xs border border-gray-200 text-center">
               <div className="text-lg sm:text-2xl font-bold text-blue-600">
                 {
                   orders.filter((o) =>
@@ -845,7 +845,7 @@ export default function OrdersPage() {
                 Active
               </div>
             </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 text-center">
+            <div className="bg-white p-3 sm:p-4 rounded-xs border border-gray-200 text-center">
               <div className="text-lg sm:text-2xl font-bold text-gray-900">
                 ₹
                 {orders
@@ -859,7 +859,7 @@ export default function OrdersPage() {
                 <span className="xs:inline hidden">Spent</span>
               </div>
             </div>
-            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 text-center">
+            <div className="bg-white p-3 sm:p-4 rounded-xs border border-gray-200 text-center">
               <div className="text-lg sm:text-2xl font-bold text-gray-900">
                 {orders.reduce((sum, o) => sum + o.items.length, 0)}
               </div>
@@ -874,15 +874,15 @@ export default function OrdersPage() {
 
         {/* Quick Actions Section */}
         {orders.length > 0 && (
-          <div className="mt-6 sm:mt-8 bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+          <div className="mt-6 sm:mt-8 bg-white rounded-xs border border-gray-200 p-4 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Quick Actions</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <Link
                 href="/orders?status=pending"
                 onClick={() => setFilterStatus("pending")}
-                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-xs flex items-center justify-center flex-shrink-0">
                   <Package className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -896,9 +896,9 @@ export default function OrdersPage() {
               <Link
                 href="/orders?status=shipped"
                 onClick={() => setFilterStatus("shipped")}
-                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-xs flex items-center justify-center flex-shrink-0">
                   <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -911,9 +911,9 @@ export default function OrdersPage() {
 
               <Link
                 href="/products"
-                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-xs flex items-center justify-center flex-shrink-0">
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -924,9 +924,9 @@ export default function OrdersPage() {
 
               <Link
                 href="/support"
-                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-xs flex items-center justify-center flex-shrink-0">
                   <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0 flex-1">

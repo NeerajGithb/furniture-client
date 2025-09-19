@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { initializeApp, resetApp } from "@/stores/globalStoreManager";
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { initializeApp, resetApp } from '@/stores/globalStoreManager';
 
 const AuthContext = createContext();
 
@@ -14,9 +14,9 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await fetchWithCredentials("/api/auth/me", {
-        method: "GET",
-        credentials: "include",
+      const res = await fetchWithCredentials('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
       });
 
       if (res.status === 401) {
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
 
   const initializeStores = async () => {
     if (storesInitialized) return;
-    
+
     try {
       await initializeApp();
       setStoresInitialized(true);
@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   const resetStores = async () => {
     if (!storesInitialized) return;
-    
+
     try {
       await resetApp();
       setStoresInitialized(false);
@@ -80,9 +80,9 @@ export const AuthProvider = ({ children }) => {
 
   const attemptTokenRefresh = async () => {
     try {
-      const res = await fetchWithCredentials("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
+      const res = await fetchWithCredentials('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
       });
 
       return res.ok;
@@ -96,9 +96,9 @@ export const AuthProvider = ({ children }) => {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetchWithCredentials("/api/auth/refresh", {
-          method: "POST",
-          credentials: "include",
+        const res = await fetchWithCredentials('/api/auth/refresh', {
+          method: 'POST',
+          credentials: 'include',
         });
 
         if (!res.ok) {
@@ -124,13 +124,13 @@ export const AuthProvider = ({ children }) => {
         clearInterval(refreshIntervalRef.current);
         refreshIntervalRef.current = null;
       }
-      
+
       setUser(null);
       await resetStores();
-      
-      await fetchWithCredentials("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
+
+      await fetchWithCredentials('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
       });
 
       window.location.reload();
@@ -151,16 +151,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider 
-      value={{ 
-        user, 
-        loading, 
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
         storesInitialized,
-        setUser, 
+        setUser,
         refetch: fetchUser,
         logout,
         initializeStores: () => initializeStores(),
-        resetStores: () => resetStores()
+        resetStores: () => resetStores(),
       }}
     >
       {children}

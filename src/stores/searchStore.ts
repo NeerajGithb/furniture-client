@@ -34,8 +34,8 @@ interface SearchState {
   suggestion: string | null;
   relatedCategories: RelatedCategory[];
   normalized: string | null;
-  fallback: boolean;   // shows if results are fallback
-  noResults: boolean;  // shows if query returned nothing
+  fallback: boolean; // shows if results are fallback
+  noResults: boolean; // shows if query returned nothing
 
   // Filter data (these should come from layout, not fetched here)
   categories: any[];
@@ -148,15 +148,12 @@ const useSearchStore = create<SearchState>((set, get) => ({
         searchParams.set('page', (currentPage + 1).toString());
       }
 
-      );
-
       const response = await fetch(`/api/search?${searchParams.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await handleApiResponse(response);
-      
 
       if (!data.ok) {
         throw new Error(data.error || 'Search failed');

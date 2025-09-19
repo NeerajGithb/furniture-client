@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import HeroBanner from "@/components/homepage/HeroBanner";
-import CategoryGrid from "@/components/homepage/CategoryGrid";
-import ProductShowcase from "@/components/homepage/ProductShowcase";
-import RoomInspiration from "@/components/homepage/RoomInspiration";
-import NewsletterSignup from "@/components/homepage/NewsletterSignup";
+import { motion } from 'framer-motion';
+import HeroBanner from '@/components/homepage/HeroBanner';
+import CategoryGrid from '@/components/homepage/CategoryGrid';
+import ProductShowcase from '@/components/homepage/ProductShowcase';
+import RoomInspiration from '@/components/homepage/RoomInspiration';
+import NewsletterSignup from '@/components/homepage/NewsletterSignup';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },

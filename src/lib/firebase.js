@@ -1,13 +1,13 @@
-"use client";
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+'use client';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 let app = null;
 let auth = null;
 let provider = null;
 
 export function initFirebase() {
-  if (typeof window === "undefined") return { app: null, auth: null, provider: null };
+  if (typeof window === 'undefined') return { app: null, auth: null, provider: null };
 
   if (!app) {
     const firebaseConfig = {

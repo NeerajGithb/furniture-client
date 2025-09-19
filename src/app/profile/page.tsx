@@ -1,26 +1,26 @@
 // app/profile/page.tsx
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useProfileStore } from "@/stores/profileStore";
-import { motion } from "framer-motion";
-import { 
-  User, 
-  Phone, 
-  Mail, 
-  Calendar, 
-  Loader2, 
-  Edit3, 
+import { useEffect } from 'react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useProfileStore } from '@/stores/profileStore';
+import { motion } from 'framer-motion';
+import {
+  User,
+  Phone,
+  Mail,
+  Calendar,
+  Loader2,
+  Edit3,
   Camera,
   Check,
   X,
-  Shield
-} from "lucide-react";
+  Shield,
+} from 'lucide-react';
 
 export default function ProfileOverview() {
   const { user: currentUser, loading: userLoading } = useCurrentUser();
-  
+
   const {
     user,
     loading,
@@ -102,10 +102,14 @@ export default function ProfileOverview() {
                 />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-800 to-black rounded-xs flex items-center justify-center text-white text-lg font-medium shadow-md">
-                  {(user.name || "").split(' ').map((n) => n.charAt(0)).join('').slice(0, 2)}
+                  {(user.name || '')
+                    .split(' ')
+                    .map((n) => n.charAt(0))
+                    .join('')
+                    .slice(0, 2)}
                 </div>
               )}
-              
+
               <label className="absolute -bottom-1 -right-1 bg-white text-gray-700 p-2 rounded-xs shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-100 cursor-pointer">
                 {uploadingImage ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -176,7 +180,7 @@ export default function ProfileOverview() {
                     ) : (
                       <Check className="w-4 h-4" />
                     )}
-                    <span>{loading ? "Saving..." : "Save Changes"}</span>
+                    <span>{loading ? 'Saving...' : 'Save Changes'}</span>
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -193,9 +197,7 @@ export default function ProfileOverview() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {user.name}
-                  </h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{user.name}</h2>
                   <p className="text-sm text-gray-600 mt-0.5">Member</p>
                 </div>
 
@@ -203,37 +205,45 @@ export default function ProfileOverview() {
                   <div className="flex items-start gap-3 py-2">
                     <Mail className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">Email Address</p>
+                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">
+                        Email Address
+                      </p>
                       <p className="text-sm text-gray-700 mt-0.5 break-all">{user.email}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-3 py-2">
                     <Phone className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">Phone Number</p>
-                      <p className="text-sm text-gray-700 mt-0.5">{user.phone || "Not provided"}</p>
+                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">
+                        Phone Number
+                      </p>
+                      <p className="text-sm text-gray-700 mt-0.5">{user.phone || 'Not provided'}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-3 py-2">
                     <Calendar className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">Member Since</p>
+                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">
+                        Member Since
+                      </p>
                       <p className="text-sm text-gray-700 mt-0.5">
-                        {new Date(user.createdAt).toLocaleDateString("en-IN", {
+                        {new Date(user.createdAt).toLocaleDateString('en-IN', {
                           year: 'numeric',
                           month: 'long',
-                          day: 'numeric'
+                          day: 'numeric',
                         })}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start gap-3 py-2">
                     <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">Account Status</p>
+                      <p className="text-xs font-medium text-gray-900 uppercase tracking-wide">
+                        Account Status
+                      </p>
                       <p className="text-sm text-green-600 font-medium mt-0.5">Active</p>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from "@/lib/dbConnect";
+import { connectDB } from '@/lib/dbConnect';
 import Product from '@/models/product';
 import Category from '@/models/category';
 import SubCategory from '@/models/subcategory';
@@ -18,8 +18,12 @@ export async function GET(request: NextRequest) {
     // Essential filters
     const category = searchParams.get('category')?.trim();
     const subcategory = searchParams.get('subcategory')?.trim();
-    const minPrice = searchParams.get('minPrice') ? Math.max(0, parseFloat(searchParams.get('minPrice')!)) : null;
-    const maxPrice = searchParams.get('maxPrice') ? Math.max(0, parseFloat(searchParams.get('maxPrice')!)) : null;
+    const minPrice = searchParams.get('minPrice')
+      ? Math.max(0, parseFloat(searchParams.get('minPrice')!))
+      : null;
+    const maxPrice = searchParams.get('maxPrice')
+      ? Math.max(0, parseFloat(searchParams.get('maxPrice')!))
+      : null;
     const material = searchParams.get('material')?.trim();
     const inStock = searchParams.get('inStock') === 'true';
     const onSale = searchParams.get('onSale') === 'true';
@@ -27,8 +31,17 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort') || 'newest';
 
     console.log(`[API] Processing request with params:`, {
-      page, limit, category, subcategory, minPrice, maxPrice,
-      material, inStock, onSale, discount, sort
+      page,
+      limit,
+      category,
+      subcategory,
+      minPrice,
+      maxPrice,
+      material,
+      inStock,
+      onSale,
+      discount,
+      sort,
     });
 
     // Build query object
@@ -54,7 +67,7 @@ export async function GET(request: NextRequest) {
           products: [],
           pagination: { page, limit, total: 0, pages: 0 },
           filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } },
-          message: `Category '${category}' not found`
+          message: `Category '${category}' not found`,
         });
       }
     }
@@ -69,7 +82,7 @@ export async function GET(request: NextRequest) {
           products: [],
           pagination: { page, limit, total: 0, pages: 0 },
           filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } },
-          message: `Subcategory '${subcategory}' not found`
+          message: `Subcategory '${subcategory}' not found`,
         });
       }
     }
@@ -124,9 +137,6 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    );
-    
-
     // Execute queries in parallel for better performance
     const [products, total] = await Promise.all([
       Product.find(query)
@@ -137,7 +147,7 @@ export async function GET(request: NextRequest) {
         .sort(sortQuery)
         .lean()
         .exec(),
-      Product.countDocuments(query)
+      Product.countDocuments(query),
     ]);
 
     // Get filters data only on first page or when no filters applied
@@ -147,14 +157,18 @@ export async function GET(request: NextRequest) {
       materials: string[];
       priceRange: { minPrice: number; maxPrice: number };
     };
-    let filtersData: FiltersDataType = { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } };
+    let filtersData: FiltersDataType = {
+      categories: [],
+      materials: [],
+      priceRange: { minPrice: 0, maxPrice: 100000 },
+    };
 
     if (page === 1) {
       const [categories, materials, priceStats] = await Promise.all([
         Category.find({}).select('name slug').lean<CategoryType[]>(),
         Product.distinct('material', {
           material: { $nin: [null, '', undefined] },
-          isPublished: { $ne: false }
+          isPublished: { $ne: false },
         }),
         Product.aggregate([
           { $match: { isPublished: { $ne: false } } },
@@ -162,16 +176,16 @@ export async function GET(request: NextRequest) {
             $group: {
               _id: null,
               minPrice: { $min: '$finalPrice' },
-              maxPrice: { $max: '$finalPrice' }
-            }
-          }
-        ])
+              maxPrice: { $max: '$finalPrice' },
+            },
+          },
+        ]),
       ]);
 
       filtersData = {
         categories: categories || [],
-        materials: (materials || []).filter(m => m && typeof m === 'string').sort(),
-        priceRange:  { minPrice: 0, maxPrice: 100000 }
+        materials: (materials || []).filter((m) => m && typeof m === 'string').sort(),
+        priceRange: { minPrice: 0, maxPrice: 100000 },
       };
     }
 
@@ -188,43 +202,44 @@ export async function GET(request: NextRequest) {
         category: category || null,
         subcategory: subcategory || null,
         material: material || null,
-        priceRange: (minPrice !== null || maxPrice !== null) ? { min: minPrice, max: maxPrice } : null,
+        priceRange:
+          minPrice !== null || maxPrice !== null ? { min: minPrice, max: maxPrice } : null,
         inStock: inStock || null,
         onSale: onSale || null,
         discount: discount || null, // NEW: Include discount in applied filters
-        sort
+        sort,
       },
       meta: {
         fetchTime: Date.now() - startTime,
         cached: false,
-        hasMore: page < Math.ceil(total / limit)
-      }
+        hasMore: page < Math.ceil(total / limit),
+      },
     };
 
-     - startTime}ms)`);
-    
     // Add cache headers for better performance
     const response = NextResponse.json(responseData);
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 
     return response;
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     console.error('[API ERROR]', {
       message: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
-      duration: Date.now() - startTime
+      duration: Date.now() - startTime,
     });
 
-    return NextResponse.json({
-      error: 'Internal server error',
-      message: process.env.NODE_ENV === 'development' ? errorMessage : 'Something went wrong',
-      timestamp: new Date().toISOString(),
-      products: [],
-      pagination: { page: 1, limit: 24, total: 0, pages: 0 },
-      filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } }
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : 'Something went wrong',
+        timestamp: new Date().toISOString(),
+        products: [],
+        pagination: { page: 1, limit: 24, total: 0, pages: 0 },
+        filters: { categories: [], materials: [], priceRange: { minPrice: 0, maxPrice: 100000 } },
+      },
+      { status: 500 },
+    );
   }
 }

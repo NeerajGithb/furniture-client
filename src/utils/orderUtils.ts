@@ -1,5 +1,4 @@
-// utils/orderUtils.ts
-import { toast } from "react-hot-toast";
+import { toast } from 'react-hot-toast';
 
 export interface DeleteOrderOptions {
   showConfirm?: boolean;
@@ -12,14 +11,15 @@ export interface DeleteOrderOptions {
 export async function deleteOrderWithConfirmation(
   orderNumber: string,
   deleteFunction: (orderNumber: string) => Promise<boolean>,
-  options: DeleteOrderOptions = {}
+  options: DeleteOrderOptions = {},
 ): Promise<boolean> {
   const { showConfirm = true, customMessage } = options;
 
   if (showConfirm) {
-    const message = customMessage || 
+    const message =
+      customMessage ||
       `Are you sure you want to delete order #${orderNumber}? This action cannot be undone.`;
-    
+
     const confirmed = window.confirm(message);
     if (!confirmed) {
       return false;
@@ -28,7 +28,7 @@ export async function deleteOrderWithConfirmation(
 
   try {
     const success = await deleteFunction(orderNumber);
-    
+
     if (success) {
       toast.success(`Order #${orderNumber} deleted successfully`);
       return true;
@@ -46,26 +46,27 @@ export async function deleteOrderWithConfirmation(
 /**
  * Check if an order can be deleted
  */
-export function canDeleteOrder(orderStatus: string, createdAt: string): { 
-  canDelete: boolean; 
-  reason?: string; 
+export function canDeleteOrder(
+  orderStatus: string,
+  createdAt: string,
+): {
+  canDelete: boolean;
+  reason?: string;
 } {
-  // Only cancelled orders can be deleted
   if (orderStatus !== 'cancelled') {
-    return { 
-      canDelete: false, 
-      reason: 'Only cancelled orders can be deleted' 
+    return {
+      canDelete: false,
+      reason: 'Only cancelled orders can be deleted',
     };
   }
 
-  // Check if order is older than 30 days (optional business rule)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   if (new Date(createdAt) > thirtyDaysAgo) {
-    return { 
-      canDelete: false, 
-      reason: 'Cancelled orders can only be deleted after 30 days' 
+    return {
+      canDelete: false,
+      reason: 'Cancelled orders can only be deleted after 30 days',
     };
   }
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 import {
   ShoppingBag,
   Shield,
@@ -10,22 +10,22 @@ import {
   Package,
   CreditCard,
   Loader2,
-} from "lucide-react";
-import Link from "next/link";
-import { useCartStore } from "@/stores/cartStore";
-import { useCheckoutStore } from "@/stores/checkoutStore";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useCartStore } from '@/stores/cartStore';
+import { useCheckoutStore } from '@/stores/checkoutStore';
 
 interface PriceSummaryCardProps {
-  mode: "cart" | "checkout" | "payment";
-  
+  mode: 'cart' | 'checkout' | 'payment';
+
   // Action handlers
   onCheckout?: () => void;
   onProceedToPayment?: () => void;
   onPlaceOrder?: () => void;
-  
+
   // State
   placingOrder?: boolean;
-  
+
   // Display options
   showItemDetails?: boolean;
   showTrustSignals?: boolean;
@@ -45,23 +45,27 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
   // Get data based on mode
   const cartStore = useCartStore();
   const checkoutStore = useCheckoutStore();
-  
+
   // For cart mode, use cart store data
-  const cartData = mode === "cart" ? {
-    selectedItems: cartStore.getSelectedCartItems(),
-    totals: cartStore.checkout.totals,
-    selectedAddressId: "",
-    selectedPaymentMethod: "",
-    hasInsurance: cartStore.hasInsurance,
-  } : null;
+  const cartData =
+    mode === 'cart'
+      ? {
+          selectedItems: cartStore.getSelectedCartItems(),
+          totals: cartStore.checkout.totals,
+          selectedAddressId: '',
+          selectedPaymentMethod: '',
+          hasInsurance: cartStore.hasInsurance,
+        }
+      : null;
 
   // For checkout/payment mode, use checkout store data
-  const checkoutData = mode !== "cart" ? checkoutStore.getCheckoutData() : null;
+  const checkoutData = mode !== 'cart' ? checkoutStore.getCheckoutData() : null;
   // Get the appropriate data based on mode
-  const selectedItems = mode === "cart" ? cartData?.selectedItems || [] : checkoutStore.getSelectedItems();
-  const totals = mode === "cart" ? cartData?.totals : checkoutData?.totals;
-  const selectedAddressId = mode === "cart" ? "" : checkoutData?.selectedAddressId || "";
-  const selectedPaymentMethod = mode === "cart" ? "" : checkoutData?.selectedPaymentMethod || "";
+  const selectedItems =
+    mode === 'cart' ? cartData?.selectedItems || [] : checkoutStore.getSelectedItems();
+  const totals = mode === 'cart' ? cartData?.totals : checkoutData?.totals;
+  const selectedAddressId = mode === 'cart' ? '' : checkoutData?.selectedAddressId || '';
+  const selectedPaymentMethod = mode === 'cart' ? '' : checkoutData?.selectedPaymentMethod || '';
 
   if (!totals) {
     return (
@@ -75,7 +79,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
   // Calculate original price total for display
   const originalPriceTotal = selectedItems.reduce((total, item) => {
     const originalPrice = item.product?.originalPrice || item.product?.finalPrice || 0;
-    return total + (originalPrice * item.quantity);
+    return total + originalPrice * item.quantity;
   }, 0);
 
   // Free shipping threshold
@@ -85,24 +89,24 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
 
   const getButtonText = () => {
     switch (mode) {
-      case "cart":
+      case 'cart':
         return `Proceed to Checkout (${totals.selectedQuantity})`;
-      case "checkout":
-        return "Proceed to Payment";
-      case "payment":
-        return "PLACE ORDER";
+      case 'checkout':
+        return 'Proceed to Payment';
+      case 'payment':
+        return 'PLACE ORDER';
       default:
-        return "Continue";
+        return 'Continue';
     }
   };
 
   const getButtonAction = () => {
     switch (mode) {
-      case "cart":
+      case 'cart':
         return onCheckout;
-      case "checkout":
+      case 'checkout':
         return onProceedToPayment;
-      case "payment":
+      case 'payment':
         return onPlaceOrder;
       default:
         return undefined;
@@ -110,26 +114,26 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
   };
 
   const isButtonDisabled = () => {
-    if (mode === "payment") {
+    if (mode === 'payment') {
       return placingOrder || !selectedAddressId || !selectedPaymentMethod;
     }
-    if (mode === "checkout") {
+    if (mode === 'checkout') {
       return !selectedAddressId;
     }
     return totals.selectedQuantity === 0;
   };
 
   const getDisabledReason = () => {
-    if (mode === "payment" && !selectedPaymentMethod) {
-      return "Select a payment method to continue";
+    if (mode === 'payment' && !selectedPaymentMethod) {
+      return 'Select a payment method to continue';
     }
-    if ((mode === "checkout" || mode === "payment") && !selectedAddressId) {
-      return "Select a delivery address to continue";
+    if ((mode === 'checkout' || mode === 'payment') && !selectedAddressId) {
+      return 'Select a delivery address to continue';
     }
     if (totals.selectedQuantity === 0) {
-      return "Select items to continue";
+      return 'Select items to continue';
     }
-    return "";
+    return '';
   };
 
   return (
@@ -138,19 +142,17 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
           <ShoppingBag className="w-5 h-5" />
-          {mode === "payment" ? "Order Summary" : "Price Details"}
+          {mode === 'payment' ? 'Order Summary' : 'Price Details'}
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          {totals.selectedQuantity} {totals.selectedQuantity === 1 ? "item" : "items"} selected
+          {totals.selectedQuantity} {totals.selectedQuantity === 1 ? 'item' : 'items'} selected
         </p>
       </div>
 
       {/* Items Preview */}
       {showItemDetails && selectedItems.length > 0 && (
         <div className="p-4 border-b border-gray-200">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">
-            Items in your order
-          </h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-3">Items in your order</h4>
           <div className="space-y-3 max-h-40 overflow-y-auto">
             {selectedItems.slice(0, 3).map((item, index) => (
               <div key={item.productId || index} className="flex items-center gap-3">
@@ -158,7 +160,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
                   {item.product?.mainImage?.url ? (
                     <img
                       src={item.product.mainImage.url}
-                      alt={item.product?.name || "Product"}
+                      alt={item.product?.name || 'Product'}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.style.display = 'none';
@@ -173,19 +175,19 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-gray-900 truncate">
-                    {item.product?.name || "Product"}
+                    {item.product?.name || 'Product'}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {/* Original price with strikethrough and taxes label */}
-                    {item.product?.originalPrice && 
-                     item.product.originalPrice > item.product.finalPrice && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-500 line-through">
-                          ₹{item.product.originalPrice.toLocaleString()}
-                        </span>
-                        <span className="text-xs text-gray-500">(Incl. taxes)</span>
-                      </div>
-                    )}
+                    {item.product?.originalPrice &&
+                      item.product.originalPrice > item.product.finalPrice && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-gray-500 line-through">
+                            ₹{item.product.originalPrice.toLocaleString()}
+                          </span>
+                          <span className="text-xs text-gray-500">(Incl. taxes)</span>
+                        </div>
+                      )}
                     {/* Final price in bold */}
                     <span className="text-sm font-bold text-gray-900">
                       ₹{item.product?.finalPrice?.toLocaleString() || 0}
@@ -200,11 +202,10 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
                   </div>
                 </div>
                 {/* Insurance indicator */}
-                {mode === "cart" && cartData?.hasInsurance(item.productId) && (
+                {mode === 'cart' && cartData?.hasInsurance(item.productId) && (
                   <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
                 )}
-                {mode !== "cart" && 
-                 checkoutData?.insuranceEnabled?.includes(item.productId) && (
+                {mode !== 'cart' && checkoutData?.insuranceEnabled?.includes(item.productId) && (
                   <Shield className="w-4 h-4 text-blue-600 flex-shrink-0" />
                 )}
               </div>
@@ -223,11 +224,9 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
         {/* Subtotal - showing original price total */}
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-700">
-            Price ({totals.selectedQuantity} {totals.selectedQuantity === 1 ? "item" : "items"})
+            Price ({totals.selectedQuantity} {totals.selectedQuantity === 1 ? 'item' : 'items'})
           </span>
-          <span className="font-medium text-gray-900">
-            ₹{originalPriceTotal.toLocaleString()}
-          </span>
+          <span className="font-medium text-gray-900">₹{originalPriceTotal.toLocaleString()}</span>
         </div>
 
         {/* Discount */}
@@ -257,8 +256,8 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
             <Truck className="w-3 h-3" />
             Delivery Charges
           </span>
-          <span className={`font-medium ${isFreeShipping ? "text-green-600" : "text-gray-900"}`}>
-            {isFreeShipping ? "FREE" : `₹${totals.shippingCost}`}
+          <span className={`font-medium ${isFreeShipping ? 'text-green-600' : 'text-gray-900'}`}>
+            {isFreeShipping ? 'FREE' : `₹${totals.shippingCost}`}
           </span>
         </div>
 
@@ -274,15 +273,13 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
         <div className="border-t border-gray-200 pt-3">
           <div className="flex justify-between items-center">
             <span className="font-medium text-gray-900">
-              {mode === "payment" ? "Amount Payable" : "Total Amount"}
+              {mode === 'payment' ? 'Amount Payable' : 'Total Amount'}
             </span>
             <span className="text-lg font-semibold text-gray-900">
               ₹{totals.totalAmount.toLocaleString()}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Inclusive of all taxes and charges
-          </p>
+          <p className="text-xs text-gray-500 mt-1">Inclusive of all taxes and charges</p>
         </div>
       </div>
 
@@ -292,7 +289,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
           onClick={getButtonAction()}
           disabled={isButtonDisabled()}
           className="w-full bg-black text-white py-3 px-4 font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 rounded relative group"
-          title={isButtonDisabled() ? getDisabledReason() : ""}
+          title={isButtonDisabled() ? getDisabledReason() : ''}
         >
           {placingOrder ? (
             <>
@@ -301,7 +298,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
             </>
           ) : (
             <>
-              {mode === "payment" ? (
+              {mode === 'payment' ? (
                 <CreditCard className="w-4 h-4" />
               ) : (
                 <ArrowRight className="w-4 h-4" />
@@ -309,7 +306,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
               {getButtonText()}
             </>
           )}
-          
+
           {/* Tooltip for disabled state */}
           {isButtonDisabled() && !placingOrder && (
             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -320,7 +317,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
         </button>
 
         {/* Continue Shopping Link */}
-        {showContinueShopping && mode !== "payment" && (
+        {showContinueShopping && mode !== 'payment' && (
           <Link
             href="/products"
             className="block text-center text-blue-600 hover:text-blue-700 text-sm font-medium mt-3 transition-colors"
@@ -345,7 +342,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
             <Check className="w-3 h-3 text-green-600" />
             <span>Fast & reliable delivery</span>
           </div>
-          {mode === "payment" && (
+          {mode === 'payment' && (
             <>
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <Check className="w-3 h-3 text-green-600" />

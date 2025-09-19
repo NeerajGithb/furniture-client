@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { Check, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
+import { Check, Share2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ImageData {
   url: string;
@@ -13,10 +13,7 @@ interface ProductImageGalleryProps {
   productName: string;
 }
 
-const ProductImageGallery = ({
-  images,
-  productName,
-}: ProductImageGalleryProps) => {
+const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [actualIndex, setActualIndex] = useState(1); // Start at 1 (first real image)
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -52,14 +49,8 @@ const ProductImageGallery = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const mouseXPercent = Math.max(
-      10,
-      Math.min((mouseX / rect.width) * 100, 90)
-    );
-    const mouseYPercent = Math.max(
-      10,
-      Math.min((mouseY / rect.height) * 100, 90)
-    );
+    const mouseXPercent = Math.max(10, Math.min((mouseX / rect.width) * 100, 90));
+    const mouseYPercent = Math.max(10, Math.min((mouseY / rect.height) * 100, 90));
     setMousePosition({ x: mouseXPercent, y: mouseYPercent });
   };
 
@@ -80,8 +71,7 @@ const ProductImageGallery = ({
     setActualIndex(newActualIndex);
 
     // Update the selected index for thumbnails
-    const newSelectedIndex =
-      selectedImageIndex === 0 ? images.length - 1 : selectedImageIndex - 1;
+    const newSelectedIndex = selectedImageIndex === 0 ? images.length - 1 : selectedImageIndex - 1;
     setSelectedImageIndex(newSelectedIndex);
   };
 
@@ -140,16 +130,16 @@ const ProductImageGallery = ({
             <div
               className="border border-gray-300 shadow-2xl bg-white transition-all duration-300 ease-out"
               style={{
-                width: "700px", // fixed width
-                height: "700px", // fixed height
-                position: "fixed", // fixed relative to viewport
-                top: "60px", // distance from top
-                right: "5vw", // distance from right
+                width: '700px', // fixed width
+                height: '700px', // fixed height
+                position: 'fixed', // fixed relative to viewport
+                top: '60px', // distance from top
+                right: '5vw', // distance from right
                 backgroundImage: `url(${currentImage.url})`,
-                backgroundSize: "170% 170%",
+                backgroundSize: '170% 170%',
                 backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,
-                backgroundRepeat: "no-repeat",
-                filter: "contrast(1.05) brightness(1.02)",
+                backgroundRepeat: 'no-repeat',
+                filter: 'contrast(1.05) brightness(1.02)',
               }}
             />
           </div>
@@ -165,7 +155,7 @@ const ProductImageGallery = ({
                   onMouseEnter={() => handleThumbnailClick(index)}
                   onClick={() => handleThumbnailClick(index)}
                   className={`w-14 h-14 md:w-16 md:h-16 flex-shrink-0 border md:border-gray-200 hover:border-gray-400 transition-colors ${
-                    selectedImageIndex === index ? "border-2 border-black" : ""
+                    selectedImageIndex === index ? 'border-2 border-black' : ''
                   }`}
                 >
                   <img
@@ -195,18 +185,13 @@ const ProductImageGallery = ({
                   className="md:hidden flex h-full"
                   style={{
                     transform: `translateX(-${actualIndex * 100}%)`,
-                    transition: isTransitioning
-                      ? "transform 0.3s ease-out"
-                      : "none",
+                    transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
                   }}
                 >
                   {/* Last image clone (for smooth previous transition) */}
                   <img
                     src={images[images.length - 1].url}
-                    alt={
-                      images[images.length - 1].alt ||
-                      `${productName} ${images.length}`
-                    }
+                    alt={images[images.length - 1].alt || `${productName} ${images.length}`}
                     className="w-full h-full object-cover object-center flex-shrink-0"
                   />
                   {/* Real images */}
@@ -241,11 +226,11 @@ const ProductImageGallery = ({
                     style={{
                       left: `${mousePosition.x}%`,
                       top: `${mousePosition.y}%`,
-                      width: "35%",
-                      height: "35%",
-                      backgroundColor: "rgba(255,255,255,0.3)",
-                      pointerEvents: "none",
-                      transform: "translate(-50%, -50%)",
+                      width: '35%',
+                      height: '35%',
+                      backgroundColor: 'rgba(255,255,255,0.3)',
+                      pointerEvents: 'none',
+                      transform: 'translate(-50%, -50%)',
                     }}
                   ></div>
                 )}

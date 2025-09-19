@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { Star, Heart, ShoppingCart, Check, Loader2, Eye } from "lucide-react";
-import { useState } from "react";
-import { Product } from "@/types/Product";
-import slugify from "slugify";
-import { toast } from "react-hot-toast";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useCartStore } from "@/stores/cartStore";
-import { useWishlistStore } from "@/stores/wishlistStore";
-import { usePathname } from "next/navigation";
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { Star, Heart, ShoppingCart, Check, Loader2, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { Product } from '@/types/Product';
+import slugify from 'slugify';
+import { toast } from 'react-hot-toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import { usePathname } from 'next/navigation';
 
 interface ProductCardProps {
   product: Product;
@@ -20,7 +20,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const { user } = useCurrentUser();
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = pathname === '/';
   const {
     addToCart,
     updatingItems: cartUpdatingItems,
@@ -39,17 +39,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
 
   const [imageLoading, setImageLoading] = useState(true);
 
-  const dataInitialized = user?._id
-    ? cartInitialized && wishlistInitialized
-    : true;
-  const cleanName = product.name.replace(/\s*\(Copy\)\s*/g, "").trim();
+  const dataInitialized = user?._id ? cartInitialized && wishlistInitialized : true;
+  const cleanName = product.name.replace(/\s*\(Copy\)\s*/g, '').trim();
 
   const hasDiscount = product.discountPercent && product.discountPercent > 0;
-  const discountPercentage = hasDiscount
-    ? Math.round(product.discountPercent!)
-    : 0;
-  const isOutOfStock =
-    product.inStockQuantity !== undefined && product.inStockQuantity <= 0;
+  const discountPercentage = hasDiscount ? Math.round(product.discountPercent!) : 0;
+  const isOutOfStock = product.inStockQuantity !== undefined && product.inStockQuantity <= 0;
   const isLowStock =
     product.inStockQuantity !== undefined &&
     product.inStockQuantity > 0 &&
@@ -76,12 +71,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
     e.stopPropagation();
 
     if (!user?._id) {
-      toast.error("Please login to add items to cart");
+      toast.error('Please login to add items to cart');
       return;
     }
 
     if (isOutOfStock) {
-      toast.error("Product is out of stock");
+      toast.error('Product is out of stock');
       return;
     }
 
@@ -93,7 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
     e.stopPropagation();
 
     if (!user?._id) {
-      toast.error("Please login to manage wishlist");
+      toast.error('Please login to manage wishlist');
       return;
     }
 
@@ -116,26 +111,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           <Star
             key={i}
             className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400 flex-shrink-0"
-          />
+          />,
         );
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
-          <div
-            key={i}
-            className="relative w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0"
-          >
+          <div key={i} className="relative w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0">
             <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-300 absolute" />
             <div className="overflow-hidden w-1/2">
               <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-400 text-amber-400" />
             </div>
-          </div>
+          </div>,
         );
       } else {
         stars.push(
-          <Star
-            key={i}
-            className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-300 flex-shrink-0"
-          />
+          <Star key={i} className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-300 flex-shrink-0" />,
         );
       }
     }
@@ -149,17 +138,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
       info.push(product.material);
     }
 
-    if (
-      product.dimensions?.length &&
-      product.dimensions?.width &&
-      product.dimensions?.height
-    ) {
+    if (product.dimensions?.length && product.dimensions?.width && product.dimensions?.height) {
       info.push(
-        `${product.dimensions.length}×${product.dimensions.width}×${product.dimensions.height}cm`
+        `${product.dimensions.length}×${product.dimensions.width}×${product.dimensions.height}cm`,
       );
     }
 
-    return info.join(" • ");
+    return info.join(' • ');
   };
 
   return (
@@ -184,7 +169,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               src={displayImage}
               alt={product.mainImage?.alt || cleanName}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 saturate-200${
-                imageLoading ? "opacity-0" : "opacity-100"
+                imageLoading ? 'opacity-0' : 'opacity-100'
               }`}
               onLoad={() => setImageLoading(false)}
               onError={() => setImageLoading(false)}
@@ -192,9 +177,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <div className="text-gray-400 text-xs sm:text-sm font-medium">
-                No Image
-              </div>
+              <div className="text-gray-400 text-xs sm:text-sm font-medium">No Image</div>
             </div>
           )}
 
@@ -237,9 +220,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               >
                 <ShoppingCart className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
                 {cartItem?.quantity && (
-                  <span className="text-[10px] sm:text-xs">
-                    {cartItem.quantity}
-                  </span>
+                  <span className="text-[10px] sm:text-xs">{cartItem.quantity}</span>
                 )}
               </motion.div>
             )}
@@ -250,22 +231,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               onClick={handleWishlistToggle}
               disabled={isAddingToWishlist || !user?._id}
               className={`p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-colors duration-200 hover:bg-white ${
-                productWishlisted
-                  ? "text-red-500"
-                  : "text-gray-400 hover:text-red-500"
+                productWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
               } ${
-                !user?._id || !dataInitialized
-                  ? "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer"
+                !user?._id || !dataInitialized ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               {isAddingToWishlist ? (
                 <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
               ) : (
                 <Heart
-                  className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                    productWishlisted ? "fill-current" : ""
-                  }`}
+                  className={`w-3 h-3 sm:w-4 sm:h-4 ${productWishlisted ? 'fill-current' : ''}`}
                 />
               )}
             </motion.button>
@@ -321,8 +296,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               disabled={isOutOfStock || isAddingToCart}
               className={`flex-1 h-full text-white text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 rounded-xs backdrop-blur-sm ${
                 productInCart
-                  ? "bg-emerald-600 hover:bg-emerald-700 shadow-sm"
-                  : "bg-gray-900 hover:bg-black shadow-sm"
+                  ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm'
+                  : 'bg-gray-900 hover:bg-black shadow-sm'
               } disabled:bg-gray-400 disabled:cursor-not-allowed hover:shadow-md`}
             >
               {isAddingToCart ? (

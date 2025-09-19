@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const CategoryImageSchema = new mongoose.Schema(
   {
@@ -19,9 +19,10 @@ const CategoryImageSchema = new mongoose.Schema(
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
 CategoryImageSchema.index({ imageType: 1 });
 
-export default mongoose.models.CategoryImage || mongoose.model("CategoryImage", CategoryImageSchema);
+export default mongoose.models.CategoryImage ||
+  mongoose.model('CategoryImage', CategoryImageSchema);

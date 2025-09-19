@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect } from "react";
-import CategoryGrid from "@/components/inspiration/CategoryGrid";
-import { useHomeStore } from "@/stores/homeStore";
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect } from 'react';
+import CategoryGrid from '@/components/inspiration/CategoryGrid';
+import { useHomeStore } from '@/stores/homeStore';
 
 const InspirationPage = () => {
   const { inspirations, loading, fetchInspirations } = useHomeStore();
@@ -38,18 +38,15 @@ const InspirationPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Discover carefully curated room designs and shop the complete looks
-            that inspire your perfect space
+            Discover carefully curated room designs and shop the complete looks that inspire your
+            perfect space
           </motion.p>
         </div>
       </motion.section>
 
       {/* Inspiration Categories Grid */}
       <div className="px-4 sm:px-6 lg:px-8">
-        <CategoryGrid
-          inspiration={{ categories: inspirations as any }}
-          loading={loading}
-        />
+        <CategoryGrid inspiration={{ categories: inspirations as any }} loading={loading} />
       </div>
 
       {/* Featured Room Styles */}
@@ -72,30 +69,25 @@ const InspirationPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {[
               {
-                style: "Scandinavian",
+                style: 'Scandinavian',
                 image:
-                  "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop",
-                description:
-                  "Clean lines, natural materials, and minimalist beauty",
+                  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop',
+                description: 'Clean lines, natural materials, and minimalist beauty',
               },
               {
-                style: "Industrial",
+                style: 'Industrial',
                 image:
-                  "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800&h=600&fit=crop",
-                description: "Raw materials and urban-inspired design elements",
+                  'https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=800&h=600&fit=crop',
+                description: 'Raw materials and urban-inspired design elements',
               },
               {
-                style: "Bohemian",
+                style: 'Bohemian',
                 image:
-                  "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=600&fit=crop",
-                description:
-                  "Eclectic patterns and globally-inspired textures",
+                  'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&h=600&fit=crop',
+                description: 'Eclectic patterns and globally-inspired textures',
               },
             ].map((style, idx) => (
-              <Link
-                key={style.style}
-                href={`/products?style=${style.style.toLowerCase()}`}
-              >
+              <Link key={style.style} href={`/products?style=${style.style.toLowerCase()}`}>
                 <motion.div
                   className="group cursor-pointer"
                   initial={{ opacity: 0, y: 20 }}
@@ -114,9 +106,7 @@ const InspirationPage = () => {
                     />
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition duration-300" />
                     <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
-                      <h3 className="text-lg sm:text-xl font-medium mb-1 sm:mb-2">
-                        {style.style}
-                      </h3>
+                      <h3 className="text-lg sm:text-xl font-medium mb-1 sm:mb-2">{style.style}</h3>
                       <p className="text-xs sm:text-sm opacity-90 leading-snug">
                         {style.description}
                       </p>
@@ -140,8 +130,8 @@ const InspirationPage = () => {
               Ready to Transform Your Space?
             </h3>
             <p className="text-sm sm:text-base text-neutral-600 mb-6 sm:mb-8 leading-relaxed">
-              Browse our complete collection of furniture and decor to bring
-              these inspiring looks to life in your own home.
+              Browse our complete collection of furniture and decor to bring these inspiring looks
+              to life in your own home.
             </p>
 
             {/* 🔗 Fixed: Shop button links to /products */}

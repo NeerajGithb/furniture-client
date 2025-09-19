@@ -1,31 +1,30 @@
-"use client";
+'use client';
 
-import { Toaster, toast } from "react-hot-toast";
-import { X } from "lucide-react";
+import { Toaster, toast } from 'react-hot-toast';
+import { X } from 'lucide-react';
 
-// Custom toast component with built-in close button
 const CustomToast = ({ t, message }) => {
   const getBackgroundColor = () => {
     switch (t.type) {
-      case "success":
-        return "#15803d";
-      case "error":
-        return "#b91c1c";
-      case "loading":
-        return "#1d4ed8";
+      case 'success':
+        return '#15803d';
+      case 'error':
+        return '#b91c1c';
+      case 'loading':
+        return '#1d4ed8';
       default:
-        return "#1f1f1f";
+        return '#1f1f1f';
     }
   };
 
   const getIcon = () => {
     switch (t.type) {
-      case "success":
-        return "✅";
-      case "error":
-        return "❌";
-      case "loading":
-        return "⏳";
+      case 'success':
+        return '✅';
+      case 'error':
+        return '❌';
+      case 'loading':
+        return '⏳';
       default:
         return null;
     }
@@ -33,57 +32,57 @@ const CustomToast = ({ t, message }) => {
 
   return (
     <div
-      className={`custom-toast ${t.visible ? "animate-enter" : "animate-exit"}`}
+      className={`custom-toast ${t.visible ? 'animate-enter' : 'animate-exit'}`}
       style={{
         background: getBackgroundColor(),
-        borderRadius: "6px",
-        padding: "10px 14px",
-        fontSize: "14px",
+        borderRadius: '6px',
+        padding: '10px 14px',
+        fontSize: '14px',
         fontWeight: 500,
-        color: "#fff",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        cursor: "default",
-        position: "relative",
-        overflow: "hidden",
-        minWidth: "200px",
-        maxWidth: "360px", // increased for long text
-        lineHeight: "1.4",
-        display: "flex",
-        alignItems: "flex-start", // better multiline support
-        gap: "8px",
+        color: '#fff',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        cursor: 'default',
+        position: 'relative',
+        overflow: 'hidden',
+        minWidth: '200px',
+        maxWidth: '360px',
+        lineHeight: '1.4',
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '8px',
       }}
     >
       <button
         onClick={() => toast.dismiss(t.id)}
         style={{
-          all: "unset",
-          color: "rgba(255, 255, 255, 0.7)",
-          cursor: "pointer",
-          padding: "2px",
-          borderRadius: "4px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 0.2s ease",
-          marginTop: "2px",
+          all: 'unset',
+          color: 'rgba(255, 255, 255, 0.7)',
+          cursor: 'pointer',
+          padding: '2px',
+          borderRadius: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          marginTop: '2px',
         }}
         onMouseEnter={(e) => {
-          e.target.style.background = "rgba(255, 255, 255, 0.1)";
-          e.target.style.color = "#fff";
+          e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+          e.target.style.color = '#fff';
         }}
         onMouseLeave={(e) => {
-          e.target.style.background = "transparent";
-          e.target.style.color = "rgba(255, 255, 255, 0.7)";
+          e.target.style.background = 'transparent';
+          e.target.style.color = 'rgba(255, 255, 255, 0.7)';
         }}
       >
         <X size={16} />
       </button>
-      {getIcon() && <span style={{ marginTop: "2px" }}>{getIcon()}</span>}
+      {getIcon() && <span style={{ marginTop: '2px' }}>{getIcon()}</span>}
       <span
         style={{
           flex: 1,
-          wordBreak: "break-word",
-          whiteSpace: "normal", // allow wrapping
+          wordBreak: 'break-word',
+          whiteSpace: 'normal',
         }}
       >
         {message}
@@ -92,15 +91,15 @@ const CustomToast = ({ t, message }) => {
       {/* Progress bar */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           bottom: 0,
           left: 0,
-          height: "1.5px",
-          width: "100%",
-          background: "rgba(255, 255, 255, 0.7)",
-          transformOrigin: "left",
-          animation: t.visible ? "toast-progress-bar 4s linear forwards" : "none",
-          borderRadius: "0 0 6px 6px",
+          height: '1.5px',
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.7)',
+          transformOrigin: 'left',
+          animation: t.visible ? 'toast-progress-bar 4s linear forwards' : 'none',
+          borderRadius: '0 0 6px 6px',
         }}
       />
     </div>
@@ -111,13 +110,13 @@ const ToastProvider = () => {
   return (
     <>
       <Toaster
-        position='top-right'
+        position="top-right"
         toastOptions={{
           duration: 4000,
         }}
         containerStyle={{
           zIndex: 999999,
-          margin: "36px 0 16px 16px",
+          margin: '36px 0 16px 16px',
         }}
       >
         {(t) => <CustomToast t={t} message={t.message} />}
@@ -177,7 +176,6 @@ const ToastProvider = () => {
   );
 };
 
-// Helper functions for easy usage
 export const showToast = {
   success: (message) => toast.success(message),
   error: (message) => toast.error(message),

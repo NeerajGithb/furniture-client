@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Settings,
   User,
@@ -14,15 +14,12 @@ import {
   Loader2,
   ShoppingCart,
   Heart,
-} from "lucide-react";
-import toast from "react-hot-toast";
-import Image from "next/image";
-import { useOrderStore } from "@/stores/orderStore";
-import {
-  fetchWithCredentials,
-  handleApiResponse,
-} from "@/utils/fetchWithCredentials";
-import { resetApp } from "@/stores/globalStoreManager";
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import Image from 'next/image';
+import { useOrderStore } from '@/stores/orderStore';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
+import { resetApp } from '@/stores/globalStoreManager';
 
 const Avatar = ({ src, alt, fallbackText }) => {
   const [imageError, setImageError] = useState(false);
@@ -71,57 +68,56 @@ export default function UserDropdown({ isOpen, onClose }) {
 
   const userMenuItems = [
     {
-      id: "profile",
-      label: "Profile",
+      id: 'profile',
+      label: 'Profile',
       icon: User,
-      href: "/profile",
+      href: '/profile',
     },
     {
-      id: "orders",
-      label: "Orders",
+      id: 'orders',
+      label: 'Orders',
       icon: ShoppingBag,
-      href: "/orders",
+      href: '/orders',
       badge:
-        orders.length > 0 &&
-        orders.some((order) => order.status !== "completed")
-          ? orders.filter((order) => order.status !== "completed").length
+        orders.length > 0 && orders.some((order) => order.status !== 'completed')
+          ? orders.filter((order) => order.status !== 'completed').length
           : undefined,
     },
     {
-      id: "cart",
-      label: "Cart",
+      id: 'cart',
+      label: 'Cart',
       icon: ShoppingCart, // better icon for cart
-      href: "/cart",
+      href: '/cart',
     },
     {
-      id: "wishlist",
-      label: "Wishlist",
+      id: 'wishlist',
+      label: 'Wishlist',
       icon: Heart,
-      href: "/wishlist",
+      href: '/wishlist',
     },
     {
-      id: "addresses",
-      label: "Addresses",
+      id: 'addresses',
+      label: 'Addresses',
       icon: MapPin,
-      href: "/profile/address",
+      href: '/profile/address',
     },
     {
-      id: "settings",
-      label: "Settings",
+      id: 'settings',
+      label: 'Settings',
       icon: Settings,
-      href: "/profile/settings",
+      href: '/profile/settings',
     },
   ];
 
   const allMenuItems =
-    user?.role === "admin"
+    user?.role === 'admin'
       ? [
           ...userMenuItems,
           {
-            id: "admin",
-            label: "Dashboard",
+            id: 'admin',
+            label: 'Dashboard',
             icon: LayoutDashboard,
-            href: "/admin",
+            href: '/admin',
           },
         ]
       : userMenuItems;
@@ -133,8 +129,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       const targetItem = allMenuItems.find((item) => item.id === navigatingTo);
       if (
         targetItem &&
-        (pathname === targetItem.href ||
-          pathname.startsWith(targetItem.href + "/"))
+        (pathname === targetItem.href || pathname.startsWith(targetItem.href + '/'))
       ) {
         setLoadingStates((prev) => ({ ...prev, [navigatingTo]: false }));
         setNavigatingTo(null);
@@ -157,7 +152,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       const isOutsideDropdown = !dropdownRef.current.contains(event.target);
 
       // Check if the click/touch is not on the dropdown trigger
-      const isNotOnTrigger = !event.target.closest("[data-dropdown-trigger]");
+      const isNotOnTrigger = !event.target.closest('[data-dropdown-trigger]');
 
       // If both conditions are met, close the dropdown
       if (isOutsideDropdown && isNotOnTrigger) {
@@ -191,39 +186,35 @@ export default function UserDropdown({ isOpen, onClose }) {
     if (isOpen) {
       // Use both mousedown and touchstart for comprehensive coverage
       // mousedown catches regular clicks
-      document.addEventListener("mousedown", handleOutsideInteraction, true);
+      document.addEventListener('mousedown', handleOutsideInteraction, true);
       // touchstart catches touch interactions
-      document.addEventListener("touchstart", handleOutsideInteraction, true);
+      document.addEventListener('touchstart', handleOutsideInteraction, true);
       // click as a fallback for any missed interactions
-      document.addEventListener("click", handleOutsideInteraction, true);
+      document.addEventListener('click', handleOutsideInteraction, true);
 
       // Scroll and resize handlers
-      window.addEventListener("scroll", handleScroll, true);
-      window.addEventListener("resize", handleResize);
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleOutsideInteraction, true);
-      document.removeEventListener(
-        "touchstart",
-        handleOutsideInteraction,
-        true
-      );
-      document.removeEventListener("click", handleOutsideInteraction, true);
-      window.removeEventListener("scroll", handleScroll, true);
-      window.removeEventListener("resize", handleResize);
+      document.removeEventListener('mousedown', handleOutsideInteraction, true);
+      document.removeEventListener('touchstart', handleOutsideInteraction, true);
+      document.removeEventListener('click', handleOutsideInteraction, true);
+      window.removeEventListener('scroll', handleScroll, true);
+      window.removeEventListener('resize', handleResize);
     };
   }, [isOpen, onClose]);
 
   useEffect(() => {
     const handleEscape = (event) => {
-      if (event.key === "Escape" && isOpen) {
+      if (event.key === 'Escape' && isOpen) {
         onClose();
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
   const handleMenuClick = async (item) => {
@@ -238,10 +229,10 @@ export default function UserDropdown({ isOpen, onClose }) {
     try {
       await router.push(item.href);
     } catch (error) {
-      console.error("Navigation error:", error);
+      console.error('Navigation error:', error);
       setLoadingStates((prev) => ({ ...prev, [item.id]: false }));
       setNavigatingTo(null);
-      toast.error("Navigation failed");
+      toast.error('Navigation failed');
     }
   };
 
@@ -258,23 +249,23 @@ export default function UserDropdown({ isOpen, onClose }) {
     setIsLoggingOut(true);
 
     try {
-      const res = await fetchWithCredentials("/api/auth/logout", {
-        method: "POST",
+      const res = await fetchWithCredentials('/api/auth/logout', {
+        method: 'POST',
       });
       const data = await handleApiResponse(res);
 
       if (!res.ok) {
-        toast.error(data?.error || "Logout failed");
+        toast.error(data?.error || 'Logout failed');
         setIsLoggingOut(false);
         return;
       }
 
       setUser(null);
       await resetApp();
-      toast.success("Logged out successfully");
-      router.push("/");
+      toast.success('Logged out successfully');
+      router.push('/');
     } catch (err) {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong');
       setIsLoggingOut(false);
     }
   };
@@ -290,7 +281,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       scale: 1,
       y: 0,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 400,
         damping: 25,
         staggerChildren: 0.02,
@@ -312,7 +303,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       opacity: 1,
       x: 0,
       transition: {
-        type: "spring",
+        type: 'spring',
         stiffness: 500,
         damping: 30,
       },
@@ -336,10 +327,7 @@ export default function UserDropdown({ isOpen, onClose }) {
             className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg border border-gray-200 rounded-xs overflow-hidden z-[60]"
           >
             {/* User Profile Section */}
-            <motion.div
-              variants={itemVariants}
-              className="p-3 border-b border-gray-100 bg-gray-50"
-            >
+            <motion.div variants={itemVariants} className="p-3 border-b border-gray-100 bg-gray-50">
               <div className="flex items-center gap-3">
                 <Avatar
                   src={user?.photoURL || user?.avatar}
@@ -347,7 +335,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                   fallbackText={
                     user?.name?.charAt(0)?.toUpperCase() ||
                     user?.displayName?.charAt(0)?.toUpperCase() ||
-                    "U"
+                    'U'
                   }
                 />
                 <div className="flex-1 min-w-0">
@@ -357,7 +345,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                     transition={{ delay: 0.05 }}
                     className="text-sm font-medium text-gray-900 truncate"
                   >
-                    {user?.name || user?.displayName || "User"}
+                    {user?.name || user?.displayName || 'User'}
                   </motion.p>
                   <motion.p
                     initial={{ opacity: 0, y: 2 }}
@@ -365,7 +353,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                     transition={{ delay: 0.1 }}
                     className="text-xs text-gray-500 truncate"
                   >
-                    {user?.email || "user@example.com"}
+                    {user?.email || 'user@example.com'}
                   </motion.p>
                 </div>
               </div>
@@ -387,10 +375,10 @@ export default function UserDropdown({ isOpen, onClose }) {
                     disabled={isLoading}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-none ${
                       isLoading
-                        ? "cursor-not-allowed opacity-60"
+                        ? 'cursor-not-allowed opacity-60'
                         : isActive
-                        ? "bg-gray-100 text-black font-medium cursor-default"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer"
+                        ? 'bg-gray-100 text-black font-medium cursor-default'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 cursor-pointer'
                     }`}
                   >
                     <motion.div
@@ -398,7 +386,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                       animate={isLoading ? { rotate: 360 } : { rotate: 0 }}
                       transition={
                         isLoading
-                          ? { duration: 1, repeat: Infinity, ease: "linear" }
+                          ? { duration: 1, repeat: Infinity, ease: 'linear' }
                           : { duration: 0.2 }
                       }
                     >
@@ -406,9 +394,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                         <Loader2 className="w-3.5 h-3.5 text-gray-600" />
                       ) : (
                         <IconComponent
-                          className={`w-3.5 h-3.5 ${
-                            isActive ? "text-black" : "text-gray-600"
-                          }`}
+                          className={`w-3.5 h-3.5 ${isActive ? 'text-black' : 'text-gray-600'}`}
                         />
                       )}
                     </motion.div>
@@ -421,7 +407,7 @@ export default function UserDropdown({ isOpen, onClose }) {
                         animate={{ scale: 1 }}
                         whileHover={{ scale: 1.05 }}
                         transition={{
-                          type: "spring",
+                          type: 'spring',
                           stiffness: 400,
                           damping: 25,
                           delay: 0.1 + index * 0.02,
@@ -437,17 +423,14 @@ export default function UserDropdown({ isOpen, onClose }) {
             </div>
 
             {/* Logout Section */}
-            <motion.div
-              variants={itemVariants}
-              className="border-t border-gray-100 pt-1"
-            >
+            <motion.div variants={itemVariants} className="border-t border-gray-100 pt-1">
               <motion.button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium transition-none ${
                   isLoggingOut
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                    ? 'cursor-not-allowed text-gray-400'
+                    : 'text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer'
                 }`}
               >
                 <motion.div
@@ -455,17 +438,13 @@ export default function UserDropdown({ isOpen, onClose }) {
                   animate={isLoggingOut ? { rotate: 360 } : { rotate: 0 }}
                   transition={
                     isLoggingOut
-                      ? { duration: 1, repeat: Infinity, ease: "linear" }
+                      ? { duration: 1, repeat: Infinity, ease: 'linear' }
                       : { duration: 0.2 }
                   }
                 >
-                  {isLoggingOut ? (
-                    <Loader2 className="w-4 h-4" />
-                  ) : (
-                    <LogOut className="w-4 h-4" />
-                  )}
+                  {isLoggingOut ? <Loader2 className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
                 </motion.div>
-                <span>{isLoggingOut ? "Signing Out..." : "Sign Out"}</span>
+                <span>{isLoggingOut ? 'Signing Out...' : 'Sign Out'}</span>
               </motion.button>
             </motion.div>
           </motion.div>

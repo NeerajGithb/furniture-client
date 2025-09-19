@@ -13,23 +13,17 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { reviewId, action } = body;
 
     if (!reviewId || !action) {
-      return NextResponse.json(
-        { error: 'Review ID and action are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Review ID and action are required' }, { status: 400 });
     }
 
     if (!Types.ObjectId.isValid(reviewId)) {
-      return NextResponse.json(
-        { error: 'Invalid review ID format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid review ID format' }, { status: 400 });
     }
 
     if (action !== 'helpful' && action !== 'unhelpful') {
       return NextResponse.json(
         { error: 'Invalid action. Must be "helpful" or "unhelpful"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,37 +31,34 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     const review = await Review.findById(reviewId);
     if (!review) {
-      return NextResponse.json(
-        { error: 'Review not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 });
     }
 
     // Check if user has already voted on this review
     const existingVote = await UserVote.findOne({
       userId: new Types.ObjectId(user.userId),
-      reviewId: new Types.ObjectId(reviewId)
+      reviewId: new Types.ObjectId(reviewId),
     });
 
     if (existingVote) {
       // If same vote type, remove the vote (toggle off)
       if (existingVote.voteType === action) {
         await UserVote.deleteOne({ _id: existingVote._id });
-        
+
         // Decrease the corresponding vote count
         if (action === 'helpful') {
           review.helpfulVotes = Math.max(0, (review.helpfulVotes || 0) - 1);
         } else {
           review.unhelpfulVotes = Math.max(0, (review.unhelpfulVotes || 0) - 1);
         }
-        
+
         await review.save();
 
         return NextResponse.json({
           message: `${action} vote removed`,
           helpfulVotes: review.helpfulVotes,
           unhelpfulVotes: review.unhelpfulVotes,
-          userVote: null
+          userVote: null,
         });
       } else {
         // If different vote type, update the vote
@@ -90,7 +81,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           message: `Vote changed to ${action}`,
           helpfulVotes: review.helpfulVotes,
           unhelpfulVotes: review.unhelpfulVotes,
-          userVote: action
+          userVote: action,
         });
       }
     } else {
@@ -98,7 +89,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       const newVote = new UserVote({
         userId: new Types.ObjectId(user.userId),
         reviewId: new Types.ObjectId(reviewId),
-        voteType: action
+        voteType: action,
       });
 
       await newVote.save();
@@ -116,24 +107,22 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         message: `Marked as ${action}`,
         helpfulVotes: review.helpfulVotes,
         unhelpfulVotes: review.unhelpfulVotes,
-        userVote: action
+        userVote: action,
       });
     }
-
   } catch (error) {
     console.error('Review vote error:', error);
-    
+
     // Handle duplicate vote error
-    if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 11000) {
-      return NextResponse.json(
-        { error: 'You have already voted on this review' },
-        { status: 400 }
-      );
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as any).code === 11000
+    ) {
+      return NextResponse.json({ error: 'You have already voted on this review' }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update vote' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update vote' }, { status: 500 });
   }
 });

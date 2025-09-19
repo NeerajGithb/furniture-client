@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { ChevronRight, ChevronDown, X } from "lucide-react";
-import { Avatar } from "./Avatar";
-import { usePathname } from "next/navigation";
-import AuthModal from "../models/AuthModal";
-import { useProductStore } from "@/stores/productStore";
-import { useHomeStore } from "@/stores/homeStore";
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
+import { ChevronRight, ChevronDown, X } from 'lucide-react';
+import { Avatar } from './Avatar';
+import { usePathname } from 'next/navigation';
+import AuthModal from '../models/AuthModal';
+import { useProductStore } from '@/stores/productStore';
+import { useHomeStore } from '@/stores/homeStore';
 
 const quickLinkItems = [
-  { href: "/orders", label: "My Orders" },
-  { href: "/wishlist", label: "Wishlist" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact/Help" },
+  { href: '/orders', label: 'My Orders' },
+  { href: '/wishlist', label: 'Wishlist' },
+  { href: '/about', label: 'About Us' },
+  { href: '/contact', label: 'Contact/Help' },
 ];
 
 // Selectors
@@ -40,11 +40,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const categories = useProductStore(categoriesSelector);
   const subcategories = useProductStore(subcategoriesSelector);
   const loadingCategories = useProductStore(loadingCategoriesSelector);
-  const {
-    inspirations,
-    loading: loadingInspirations,
-    fetchInspirations,
-  } = useHomeStore();
+  const { inspirations, loading: loadingInspirations, fetchInspirations } = useHomeStore();
 
   const initializeRef = useRef(false);
   useEffect(() => {
@@ -78,9 +74,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       if (!wasExpanded) {
         // Auto-expand all categories for this inspiration
-        const inspiration = transformedInspirations.find(
-          (insp) => insp.name === inspirationName
-        );
+        const inspiration = transformedInspirations.find((insp) => insp.name === inspirationName);
         if (inspiration?.categories) {
           const newExpandedCategories = {};
           inspiration.categories.forEach((category) => {
@@ -105,19 +99,18 @@ export default function Sidebar({ isOpen, onClose }) {
             const sidebarRect = sidebarElement.getBoundingClientRect();
 
             // Calculate relative position within sidebar
-            const relativeTop =
-              inspirationRect.top - sidebarRect.top + sidebarElement.scrollTop;
+            const relativeTop = inspirationRect.top - sidebarRect.top + sidebarElement.scrollTop;
 
             // Scroll to position inspiration just below header
             sidebarElement.scrollTo({
               top: relativeTop - headerHeight + 108, // Small padding
-              behavior: "smooth",
+              behavior: 'smooth',
             });
           }
         }, 200); // Longer delay for all animations to complete
       }
     },
-    [transformedInspirations, expandedInspirations]
+    [transformedInspirations, expandedInspirations],
   );
   const toggleCategory = useCallback((categoryId) => {
     setExpandedCategories((prev) => ({
@@ -135,10 +128,7 @@ export default function Sidebar({ isOpen, onClose }) {
       return (
         <div className="space-y-2">
           {Array.from({ length: 4 }, (_, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between py-2 px-2"
-            >
+            <div key={i} className="flex items-center justify-between py-2 px-2">
               <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
               <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
             </div>
@@ -163,7 +153,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 }
               }}
               className={`border-b px-2 border-gray-300 last:border-b-0 ${
-                isActive && isExpanded ? "bg-white" : ""
+                isActive && isExpanded ? 'bg-white' : ''
               }`}
             >
               {/* Inspiration Header */}
@@ -173,11 +163,11 @@ export default function Sidebar({ isOpen, onClose }) {
                   className={`w-full text-left py-[14px] px-3 text-sm font-semibold rounded transition-colors duration-150
                     ${
                       isActive && isExpanded
-                        ? "text-[#C62878] bg-white"
-                        : "text-gray-800 hover:text-black hover:bg-gray-200"
+                        ? 'text-[#C62878] bg-white'
+                        : 'text-gray-800 hover:text-black hover:bg-gray-200'
                     }`}
                 >
-                  {inspiration.name.replace(/inspiration/i, "").trim()}
+                  {inspiration.name.replace(/inspiration/i, '').trim()}
                 </button>
 
                 {inspirationCategories.length > 0 && (
@@ -188,7 +178,7 @@ export default function Sidebar({ isOpen, onClose }) {
                   >
                     <motion.div
                       animate={{ rotate: isExpanded ? 90 : 0 }}
-                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
                     >
                       <ChevronRight size={16} />
                     </motion.div>
@@ -201,9 +191,9 @@ export default function Sidebar({ isOpen, onClose }) {
                 {isExpanded && inspirationCategories.length > 0 && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
+                    animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
                     className="overflow-hidden"
                   >
                     <div className="pl-4 pb-2 space-y-1">
@@ -211,24 +201,20 @@ export default function Sidebar({ isOpen, onClose }) {
                         const categorySubcategories =
                           subcategories?.filter((sub) => {
                             const categoryId =
-                              typeof sub.categoryId === "object"
+                              typeof sub.categoryId === 'object'
                                 ? sub.categoryId?._id
                                 : sub.categoryId;
                             return categoryId === category._id;
                           }) || [];
 
-                        const isCategoryExpanded =
-                          expandedCategories[category._id];
+                        const isCategoryExpanded = expandedCategories[category._id];
 
                         return (
-                          <div
-                            key={category._id}
-                            className="border-l-2 border-gray-100 pl-2"
-                          >
+                          <div key={category._id} className="border-l-2 border-gray-100 pl-2">
                             {/* Category Header */}
                             <div className="flex items-center justify-between">
                               <Link
-                                href={`/${category.slug || ""}`}
+                                href={`/${category.slug || ''}`}
                                 onClick={handleLinkClick}
                                 className="flex-1 py-2 px-2 text-xs font-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded transition-colors duration-150"
                               >
@@ -247,7 +233,7 @@ export default function Sidebar({ isOpen, onClose }) {
                                     }}
                                     transition={{
                                       duration: 0.15,
-                                      ease: "easeInOut",
+                                      ease: 'easeInOut',
                                     }}
                                   >
                                     <ChevronDown size={12} />
@@ -258,34 +244,31 @@ export default function Sidebar({ isOpen, onClose }) {
 
                             {/* Subcategories List */}
                             <AnimatePresence>
-                              {isCategoryExpanded &&
-                                categorySubcategories.length > 0 && (
-                                  <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: "auto", opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{
-                                      duration: 0.25,
-                                      ease: "easeInOut",
-                                    }}
-                                    className="overflow-hidden"
-                                  >
-                                    <div className="pl-3 space-y-1 border-l border-gray-100 ml-2">
-                                      {categorySubcategories.map(
-                                        (subcategory) => (
-                                          <Link
-                                            key={subcategory._id}
-                                            href={`/${subcategory.slug}`}
-                                            onClick={handleLinkClick}
-                                            className="block py-1.5 px-2 text-xs text-gray-600 hover:text-black hover:bg-gray-50 rounded transition-colors duration-150"
-                                          >
-                                            {subcategory.name}
-                                          </Link>
-                                        )
-                                      )}
-                                    </div>
-                                  </motion.div>
-                                )}
+                              {isCategoryExpanded && categorySubcategories.length > 0 && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{
+                                    duration: 0.25,
+                                    ease: 'easeInOut',
+                                  }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="pl-3 space-y-1 border-l border-gray-100 ml-2">
+                                    {categorySubcategories.map((subcategory) => (
+                                      <Link
+                                        key={subcategory._id}
+                                        href={`/${subcategory.slug}`}
+                                        onClick={handleLinkClick}
+                                        className="block py-1.5 px-2 text-xs text-gray-600 hover:text-black hover:bg-gray-50 rounded transition-colors duration-150"
+                                      >
+                                        {subcategory.name}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
                             </AnimatePresence>
                           </div>
                         );
@@ -329,10 +312,10 @@ export default function Sidebar({ isOpen, onClose }) {
             <motion.aside
               ref={sidebarRef}
               className={`fixed top-0 left-0 h-full w-[60%] max-w-[300px] bg-gray-200 z-[1000] overflow-y-auto shadow-2xl`}
-              initial={{ x: "-100%" }}
+              initial={{ x: '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "tween", duration: 0.3 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.3 }}
             >
               <div className="">
                 <div ref={headerSectionRef} className="p-4">
@@ -356,23 +339,18 @@ export default function Sidebar({ isOpen, onClose }) {
                       >
                         <div className="flex items-center gap-3 overflow-hidden">
                           <Avatar
-                            src={user?.photoURL || ""}
+                            src={user?.photoURL || ''}
                             alt="User Avatar"
-                            fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
+                            fallbackText={user?.name?.[0]?.toUpperCase() || 'U'}
                           />
                           <div className="overflow-hidden">
                             <div className="text-sm font-semibold text-gray-800 truncate">
-                              {user?.name || "User"}
+                              {user?.name || 'User'}
                             </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {user?.email}
-                            </div>
+                            <div className="text-xs text-gray-500 truncate">{user?.email}</div>
                           </div>
                         </div>
-                        <ChevronRight
-                          size={16}
-                          className="text-gray-400 flex-shrink-0"
-                        />
+                        <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
                       </Link>
                     ) : (
                       <button
@@ -390,18 +368,12 @@ export default function Sidebar({ isOpen, onClose }) {
 
                 {/* Inspirations Section */}
                 <div className="mb-6">
-                  <div
-                    className={`border-t border-gray-300`}
-                  >
-                    {InspirationsList}
-                  </div>
+                  <div className={`border-t border-gray-300`}>{InspirationsList}</div>
                 </div>
 
                 {/* Quick Links */}
                 <div className="border-t border-gray-300 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                    Quick Links
-                  </h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Links</h3>
                   <div className="space-y-1">
                     {quickLinkItems.map(({ href, label }) => {
                       const isActive = pathname === href;
@@ -412,15 +384,15 @@ export default function Sidebar({ isOpen, onClose }) {
                           onClick={handleLinkClick}
                           className={`relative group flex items-center justify-between px-1 py-2 rounded-lg transition-all duration-150 text-sm font-medium ${
                             isActive
-                              ? "bg-black text-white"
-                              : "text-gray-700 hover:text-black hover:bg-gray-50"
+                              ? 'bg-black text-white'
+                              : 'text-gray-700 hover:text-black hover:bg-gray-50'
                           }`}
                         >
                           <span>{label}</span>
                           <ChevronRight
                             size={14}
                             className={`transition-colors duration-150 ${
-                              isActive ? "text-white" : "text-gray-400"
+                              isActive ? 'text-white' : 'text-gray-400'
                             }`}
                           />
                         </Link>

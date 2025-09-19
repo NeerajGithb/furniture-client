@@ -1,4 +1,3 @@
-// models/Order.ts - MINIMAL CHANGES: Only add new fields without breaking existing logic
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IOrderItem {
@@ -14,8 +13,7 @@ export interface IOrderItem {
     sku?: string;
   };
   productImage?: string;
-  
-  // NEW FIELDS - Add these to match your Product schema
+
   sku?: string;
   itemId?: string;
   discount?: number;
@@ -33,7 +31,6 @@ export interface IShippingAddress {
   country: string;
 }
 
-// NEW INTERFACE - Add comprehensive price details
 export interface IPriceBreakdown {
   originalSubtotal: number;
   itemDiscount: number;
@@ -58,7 +55,14 @@ export interface IOrder extends Document {
   shippingAddress: IShippingAddress;
   paymentMethod: 'card' | 'upi' | 'netbanking' | 'cod' | 'wallet';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  orderStatus: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+  orderStatus:
+    | 'pending'
+    | 'confirmed'
+    | 'processing'
+    | 'shipped'
+    | 'delivered'
+    | 'cancelled'
+    | 'returned';
   trackingNumber?: string;
   expectedDeliveryDate?: Date;
   deliveredAt?: Date;
@@ -67,16 +71,14 @@ export interface IOrder extends Document {
   refundAmount?: number;
   refundedAt?: Date;
   notes?: string;
-  
-  // NEW FIELDS - Add these for enhanced tracking
+
   priceBreakdown?: IPriceBreakdown;
   insuranceEnabled?: string[];
   couponCode?: string;
-  
+
   createdAt: Date;
   updatedAt: Date;
-  
-  // Methods
+
   canCancel(): boolean;
   cancel(reason?: string): Promise<IOrder>;
   markAsDelivered(): Promise<IOrder>;
@@ -86,58 +88,59 @@ const OrderItemSchema = new Schema<IOrderItem>({
   productId: {
     type: Schema.Types.ObjectId,
     ref: 'Product',
-    required: true
+    required: true,
   },
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   price: {
     type: Number,
     required: true,
-    min: 0
+    min: 0,
   },
   originalPrice: {
     type: Number,
-    min: 0
+    min: 0,
   },
   quantity: {
     type: Number,
     required: true,
-    min: 1
+    min: 1,
   },
   insuranceCost: {
     type: Number,
-    min: 0
+    min: 0,
   },
   selectedVariant: {
     type: {
       color: { type: String, trim: true },
       size: { type: String, trim: true },
-      sku: { type: String, trim: true }
+      sku: { type: String, trim: true },
     },
     required: false,
-    default: undefined
+    default: undefined,
   },
   productImage: {
     type: String,
-    trim: true
+    trim: true,
   },
-  // NEW FIELDS
+
   sku: { type: String, trim: true },
   itemId: { type: String, trim: true },
   discount: { type: Number, min: 0, default: 0 },
-  discountPercent: { type: Number, min: 0, max: 100, default: 0 }
+  discountPercent: { type: Number, min: 0, max: 100, default: 0 },
 });
 
-// Clean up selectedVariant pre-save
-OrderItemSchema.pre('save', function(next) {
-  if (this.selectedVariant && 
-      typeof this.selectedVariant === 'object' &&
-      !this.selectedVariant.color && 
-      !this.selectedVariant.size && 
-      !this.selectedVariant.sku) {
+OrderItemSchema.pre('save', function (next) {
+  if (
+    this.selectedVariant &&
+    typeof this.selectedVariant === 'object' &&
+    !this.selectedVariant.color &&
+    !this.selectedVariant.size &&
+    !this.selectedVariant.sku
+  ) {
     this.selectedVariant = undefined;
   }
   next();
@@ -151,10 +154,9 @@ const ShippingAddressSchema = new Schema<IShippingAddress>({
   city: { type: String, required: true, trim: true },
   state: { type: String, required: true, trim: true },
   postalCode: { type: String, required: true, trim: true },
-  country: { type: String, required: true, default: 'India' }
+  country: { type: String, required: true, default: 'India' },
 });
 
-// NEW SCHEMA - Price breakdown
 const PriceBreakdownSchema = new Schema<IPriceBreakdown>({
   originalSubtotal: { type: Number, required: true, min: 0 },
   itemDiscount: { type: Number, default: 0, min: 0 },
@@ -164,112 +166,113 @@ const PriceBreakdownSchema = new Schema<IPriceBreakdown>({
   shippingCost: { type: Number, default: 0, min: 0 },
   tax: { type: Number, default: 0, min: 0 },
   grandTotal: { type: Number, required: true, min: 0 },
-  totalSavings: { type: Number, default: 0, min: 0 }
+  totalSavings: { type: Number, default: 0, min: 0 },
 });
 
-const OrderSchema = new Schema<IOrder>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  orderNumber: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  items: [OrderItemSchema],
-  subtotal: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  shippingCost: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  tax: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  discount: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  totalAmount: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  shippingAddress: {
-    type: ShippingAddressSchema,
-    required: true
-  },
-  paymentMethod: {
-    type: String,
-    enum: ['card', 'upi', 'netbanking', 'cod', 'wallet'],
-    required: true
-  },
-  paymentStatus: {
-    type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
-    default: 'pending'
-  },
-  orderStatus: {
-    type: String,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
-    default: 'pending'
-  },
-  trackingNumber: {
-    type: String,
-    trim: true
-  },
-  expectedDeliveryDate: Date,
-  deliveredAt: Date,
-  cancelledAt: Date,
-  cancellationReason: {
-    type: String,
-    trim: true
-  },
-  refundAmount: {
-    type: Number,
-    min: 0
-  },
-  refundedAt: Date,
-  notes: {
-    type: String,
-    trim: true,
-    maxlength: 500
-  },
-  
-  // NEW FIELDS - Add these without breaking existing logic
-  priceBreakdown: {
-    type: PriceBreakdownSchema,
-    required: false
-  },
-  insuranceEnabled: [{
-    type: String
-  }],
-  couponCode: {
-    type: String,
-    trim: true
-  }
-}, {
-  timestamps: true
-});
+const OrderSchema = new Schema<IOrder>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    orderNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    items: [OrderItemSchema],
+    subtotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    shippingCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    tax: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    shippingAddress: {
+      type: ShippingAddressSchema,
+      required: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ['card', 'upi', 'netbanking', 'cod', 'wallet'],
+      required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'paid', 'failed', 'refunded'],
+      default: 'pending',
+    },
+    orderStatus: {
+      type: String,
+      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'],
+      default: 'pending',
+    },
+    trackingNumber: {
+      type: String,
+      trim: true,
+    },
+    expectedDeliveryDate: Date,
+    deliveredAt: Date,
+    cancelledAt: Date,
+    cancellationReason: {
+      type: String,
+      trim: true,
+    },
+    refundAmount: {
+      type: Number,
+      min: 0,
+    },
+    refundedAt: Date,
+    notes: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
 
-// Indexes for performance
+    priceBreakdown: {
+      type: PriceBreakdownSchema,
+      required: false,
+    },
+    insuranceEnabled: [
+      {
+        type: String,
+      },
+    ],
+    couponCode: {
+      type: String,
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
 OrderSchema.index({ userId: 1 });
 OrderSchema.index({ orderStatus: 1 });
 OrderSchema.index({ paymentStatus: 1 });
 OrderSchema.index({ createdAt: -1 });
 
-// FIX: Generate order number BEFORE validation
-OrderSchema.pre('validate', function(next) {
-  // Generate orderNumber if not exists
+OrderSchema.pre('validate', function (next) {
   if (!this.orderNumber) {
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -278,14 +281,13 @@ OrderSchema.pre('validate', function(next) {
   next();
 });
 
-// NEW: Calculate price breakdown before save
-OrderSchema.pre('save', function(next) {
+OrderSchema.pre('save', function (next) {
   if (this.items && this.items.length > 0) {
     let originalSubtotal = 0;
     let itemDiscount = 0;
     let totalInsurance = 0;
 
-    this.items.forEach(item => {
+    this.items.forEach((item) => {
       const itemOriginalPrice = (item.originalPrice || item.price) * item.quantity;
       const itemFinalPrice = item.price * item.quantity;
       const itemDiscountAmount = itemOriginalPrice - itemFinalPrice;
@@ -296,25 +298,27 @@ OrderSchema.pre('save', function(next) {
       totalInsurance += itemInsuranceAmount;
     });
 
-    // Create price breakdown
     this.priceBreakdown = {
       originalSubtotal,
       itemDiscount,
-      couponDiscount: 0, // Will be set if coupon applied
+      couponDiscount: 0,
       totalInsurance,
       finalSubtotal: this.subtotal,
       shippingCost: this.shippingCost || 0,
       tax: this.tax || 0,
       grandTotal: this.totalAmount,
-      totalSavings: itemDiscount + (this.priceBreakdown?.couponDiscount || 0)
+      totalSavings: itemDiscount + (this.priceBreakdown?.couponDiscount || 0),
     };
   }
-  
+
   next();
 });
 
-// Static methods
-OrderSchema.statics.getUserOrders = function(userId: string, page: number = 1, limit: number = 10) {
+OrderSchema.statics.getUserOrders = function (
+  userId: string,
+  page: number = 1,
+  limit: number = 10,
+) {
   const skip = (page - 1) * limit;
   return this.find({ userId })
     .populate('items.productId', 'name mainImage')
@@ -323,28 +327,27 @@ OrderSchema.statics.getUserOrders = function(userId: string, page: number = 1, l
     .limit(limit);
 };
 
-OrderSchema.statics.getOrderByNumber = function(orderNumber: string) {
+OrderSchema.statics.getOrderByNumber = function (orderNumber: string) {
   return this.findOne({ orderNumber }).populate('items.productId', 'name mainImage');
 };
 
-// Instance methods
-OrderSchema.methods.canCancel = function() {
+OrderSchema.methods.canCancel = function () {
   return ['pending', 'confirmed'].includes(this.orderStatus);
 };
 
-OrderSchema.methods.cancel = function(reason?: string) {
+OrderSchema.methods.cancel = function (reason?: string) {
   if (!this.canCancel()) {
     throw new Error('Order cannot be cancelled');
   }
-  
+
   this.orderStatus = 'cancelled';
   this.cancelledAt = new Date();
   if (reason) this.cancellationReason = reason;
-  
+
   return this.save();
 };
 
-OrderSchema.methods.markAsDelivered = function() {
+OrderSchema.methods.markAsDelivered = function () {
   this.orderStatus = 'delivered';
   this.deliveredAt = new Date();
   if (this.paymentMethod === 'cod') {

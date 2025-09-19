@@ -1,6 +1,6 @@
 // context/Providers.js
-"use client";
-import { AuthProvider } from "./AuthContext";
+'use client';
+import { AuthProvider } from './AuthContext';
 
 export default function Providers({ children }) {
   return <AuthProvider>{children}</AuthProvider>;

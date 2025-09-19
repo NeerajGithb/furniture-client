@@ -6,13 +6,13 @@ class CacheManager {
     this.searchCache = new Map();
     this.suggestionCache = new Map();
     this.rateLimitCache = new Map();
-    
+
     // Cache settings
     this.SEARCH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
     this.SUGGESTION_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
     this.RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
     this.MAX_REQUESTS_PER_WINDOW = 30;
-    
+
     // Auto-cleanup intervals
     this.startCleanupIntervals();
   }
@@ -40,11 +40,8 @@ class CacheManager {
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
     const remoteAddress = request.headers.get('remote-addr');
-    
-    return forwarded?.split(',')[0]?.trim() || 
-           realIP || 
-           remoteAddress || 
-           'unknown';
+
+    return forwarded?.split(',')[0]?.trim() || realIP || remoteAddress || 'unknown';
   }
 
   /**
@@ -54,26 +51,26 @@ class CacheManager {
     try {
       const now = Date.now();
       const windowStart = now - this.RATE_LIMIT_WINDOW;
-      
+
       if (!this.rateLimitCache.has(clientId)) {
         this.rateLimitCache.set(clientId, []);
       }
-      
+
       const requests = this.rateLimitCache.get(clientId);
-      
+
       // Remove old requests outside the window
-      const recentRequests = requests.filter(timestamp => timestamp > windowStart);
+      const recentRequests = requests.filter((timestamp) => timestamp > windowStart);
       this.rateLimitCache.set(clientId, recentRequests);
-      
+
       // Check if limit exceeded
       if (recentRequests.length >= this.MAX_REQUESTS_PER_WINDOW) {
         return true;
       }
-      
+
       // Add current request
       recentRequests.push(now);
       this.rateLimitCache.set(clientId, recentRequests);
-      
+
       return false;
     } catch (error) {
       console.error('Rate limiting error:', error);
@@ -88,26 +85,26 @@ class CacheManager {
     try {
       const key = this.generateSearchKey(query, page, pageSize);
       const cached = this.searchCache.get(key);
-      
+
       if (!cached) {
         return { cacheHit: false };
       }
-      
+
       // Check TTL
       if (Date.now() - cached.timestamp > this.SEARCH_CACHE_TTL) {
         this.searchCache.delete(key);
         return { cacheHit: false };
       }
-      
+
       // Update hit count
       cached.hits = (cached.hits || 0) + 1;
       cached.lastAccess = Date.now();
-      
+
       return {
         cacheHit: true,
         data: cached.data,
         hits: cached.hits,
-        cacheAge: Date.now() - cached.timestamp
+        cacheAge: Date.now() - cached.timestamp,
       };
     } catch (error) {
       console.error('Cache retrieval error:', error);
@@ -121,20 +118,21 @@ class CacheManager {
   setCachedSearch(query, page, pageSize, data) {
     try {
       const key = this.generateSearchKey(query, page, pageSize);
-      
+
       // Only cache successful results with products
       if (data && data.ok && data.products && data.products.length > 0) {
         this.searchCache.set(key, {
           data,
           timestamp: Date.now(),
           hits: 0,
-          lastAccess: Date.now()
+          lastAccess: Date.now(),
         });
-        
+
         // Limit cache size (keep most recent 100 entries)
         if (this.searchCache.size > 100) {
-          const oldest = Array.from(this.searchCache.entries())
-            .sort((a, b) => a[1].lastAccess - b[1].lastAccess)[0][0];
+          const oldest = Array.from(this.searchCache.entries()).sort(
+            (a, b) => a[1].lastAccess - b[1].lastAccess,
+          )[0][0];
           this.searchCache.delete(oldest);
         }
       }
@@ -150,26 +148,26 @@ class CacheManager {
     try {
       const key = this.generateSuggestionKey(query);
       const cached = this.suggestionCache.get(key);
-      
+
       if (!cached) {
         return { cacheHit: false };
       }
-      
+
       // Check TTL
       if (Date.now() - cached.timestamp > this.SUGGESTION_CACHE_TTL) {
         this.suggestionCache.delete(key);
         return { cacheHit: false };
       }
-      
+
       // Update hit count
       cached.hits = (cached.hits || 0) + 1;
       cached.lastAccess = Date.now();
-      
+
       return {
         cacheHit: true,
         data: cached.data,
         hits: cached.hits,
-        cacheAge: Date.now() - cached.timestamp
+        cacheAge: Date.now() - cached.timestamp,
       };
     } catch (error) {
       console.error('Suggestion cache retrieval error:', error);
@@ -183,18 +181,19 @@ class CacheManager {
   setCachedSuggestion(query, data) {
     try {
       const key = this.generateSuggestionKey(query);
-      
+
       this.suggestionCache.set(key, {
         data,
         timestamp: Date.now(),
         hits: 0,
-        lastAccess: Date.now()
+        lastAccess: Date.now(),
       });
-      
+
       // Limit suggestion cache size
       if (this.suggestionCache.size > 200) {
-        const oldest = Array.from(this.suggestionCache.entries())
-          .sort((a, b) => a[1].lastAccess - b[1].lastAccess)[0][0];
+        const oldest = Array.from(this.suggestionCache.entries()).sort(
+          (a, b) => a[1].lastAccess - b[1].lastAccess,
+        )[0][0];
         this.suggestionCache.delete(oldest);
       }
     } catch (error) {
@@ -210,7 +209,7 @@ class CacheManager {
       searchCacheSize: this.searchCache.size,
       suggestionCacheSize: this.suggestionCache.size,
       rateLimitRecords: this.rateLimitCache.size,
-      totalCacheEntries: this.searchCache.size + this.suggestionCache.size
+      totalCacheEntries: this.searchCache.size + this.suggestionCache.size,
     };
   }
 
@@ -220,27 +219,27 @@ class CacheManager {
   clearExpired() {
     try {
       const now = Date.now();
-      
+
       // Clear expired search cache
       for (const [key, value] of this.searchCache.entries()) {
         if (now - value.timestamp > this.SEARCH_CACHE_TTL) {
           this.searchCache.delete(key);
         }
       }
-      
+
       // Clear expired suggestion cache
       for (const [key, value] of this.suggestionCache.entries()) {
         if (now - value.timestamp > this.SUGGESTION_CACHE_TTL) {
           this.suggestionCache.delete(key);
         }
       }
-      
+
       // Clear old rate limit records
       for (const [clientId, requests] of this.rateLimitCache.entries()) {
-        const recentRequests = requests.filter(timestamp => 
-          now - timestamp <= this.RATE_LIMIT_WINDOW
+        const recentRequests = requests.filter(
+          (timestamp) => now - timestamp <= this.RATE_LIMIT_WINDOW,
         );
-        
+
         if (recentRequests.length === 0) {
           this.rateLimitCache.delete(clientId);
         } else {
@@ -260,13 +259,6 @@ class CacheManager {
     setInterval(() => {
       this.clearExpired();
     }, 2 * 60 * 1000);
-    
-    // Log stats every 5 minutes in development
-    if (process.env.NODE_ENV === 'development') {
-      setInterval(() => {
-        );
-      }, 5 * 60 * 1000);
-    }
   }
 
   /**
@@ -274,14 +266,21 @@ class CacheManager {
    */
   async warmUpCache() {
     const commonSearches = [
-      'sofa', 'chair', 'table', 'bed', 'cabinet',
-      '3 seater sofa', 'dining table', 'office chair',
-      'wooden table', 'leather sofa', 'king bed'
+      'sofa',
+      'chair',
+      'table',
+      'bed',
+      'cabinet',
+      '3 seater sofa',
+      'dining table',
+      'office chair',
+      'wooden table',
+      'leather sofa',
+      'king bed',
     ];
-    
+
     // This could be called during app initialization
     // Implementation would depend on your specific needs
-    
   }
 
   /**
@@ -293,7 +292,7 @@ class CacheManager {
         this.searchCache.clear();
         return;
       }
-      
+
       // Clear cache entries matching pattern
       for (const key of this.searchCache.keys()) {
         if (key.includes(pattern)) {

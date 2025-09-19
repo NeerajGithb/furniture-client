@@ -9,11 +9,13 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   try {
     await connectDB();
 
-    const addresses = await Address.find({ userId: user.userId })
-      .sort({ isDefault: -1, createdAt: -1 });
+    const addresses = await Address.find({ userId: user.userId }).sort({
+      isDefault: -1,
+      createdAt: -1,
+    });
 
     return NextResponse.json({
-      addresses: addresses.map(addr => ({
+      addresses: addresses.map((addr) => ({
         _id: addr._id,
         type: addr.type,
         fullName: addr.fullName,
@@ -25,16 +27,12 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         postalCode: addr.postalCode,
         country: addr.country,
         isDefault: addr.isDefault,
-        createdAt: addr.createdAt
-      }))
+        createdAt: addr.createdAt,
+      })),
     });
-
   } catch (error) {
     console.error('Address GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch addresses' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch addresses' }, { status: 500 });
   }
 });
 
@@ -52,51 +50,45 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       state,
       postalCode,
       country,
-      isDefault
+      isDefault,
     } = body;
 
     // Validate required fields
-    if (!fullName?.trim() || !phone?.trim() || !addressLine1?.trim() || 
-        !city?.trim() || !state?.trim() || !postalCode?.trim()) {
-      return NextResponse.json(
-        { error: 'Required fields are missing' },
-        { status: 400 }
-      );
+    if (
+      !fullName?.trim() ||
+      !phone?.trim() ||
+      !addressLine1?.trim() ||
+      !city?.trim() ||
+      !state?.trim() ||
+      !postalCode?.trim()
+    ) {
+      return NextResponse.json({ error: 'Required fields are missing' }, { status: 400 });
     }
 
     // Validate phone number (Indian format)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(phone.trim().replace(/\s+/g, ''))) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
     }
 
     // Validate postal code (Indian PIN code)
     const pinCodeRegex = /^[0-9]{6}$/;
     if (!pinCodeRegex.test(postalCode.trim())) {
-      return NextResponse.json(
-        { error: 'Invalid postal code format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid postal code format' }, { status: 400 });
     }
 
     await connectDB();
 
     // Check if this is the first address or if setting as default
-    const existingAddressCount = await Address.countDocuments({ 
-      userId: user.userId 
+    const existingAddressCount = await Address.countDocuments({
+      userId: user.userId,
     });
 
     const shouldBeDefault = existingAddressCount === 0 || isDefault;
 
     // If setting as default, unset other defaults first
     if (shouldBeDefault) {
-      await Address.updateMany(
-        { userId: user.userId },
-        { isDefault: false }
-      );
+      await Address.updateMany({ userId: user.userId }, { isDefault: false });
     }
 
     const newAddress = new Address({
@@ -110,7 +102,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       state: state.trim(),
       postalCode: postalCode.trim(),
       country: country || 'India',
-      isDefault: shouldBeDefault
+      isDefault: shouldBeDefault,
     });
 
     await newAddress.save();
@@ -128,15 +120,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         state: newAddress.state,
         postalCode: newAddress.postalCode,
         country: newAddress.country,
-        isDefault: newAddress.isDefault
-      }
+        isDefault: newAddress.isDefault,
+      },
     });
-
   } catch (error) {
     console.error('Address POST error:', error);
-    return NextResponse.json(
-      { error: 'Failed to add address' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to add address' }, { status: 500 });
   }
 });

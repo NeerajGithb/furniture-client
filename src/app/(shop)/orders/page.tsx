@@ -1,13 +1,13 @@
 // app/orders/page.tsx - Fully Responsive Version
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useOrderStore } from "@/stores/orderStore";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from 'react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useOrderStore } from '@/stores/orderStore';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import {
   Package,
@@ -35,10 +35,10 @@ import {
   AlertTriangle,
   CheckCircle,
   MoreHorizontal,
-} from "lucide-react";
-import CancelOrderModal from "@/components/models/CancelOrderModal";
-import type { Order, OrderStatus } from "@/stores/orderStore";
-import toast from "react-hot-toast";
+} from 'lucide-react';
+import CancelOrderModal from '@/components/models/CancelOrderModal';
+import type { Order, OrderStatus } from '@/stores/orderStore';
+import toast from 'react-hot-toast';
 
 interface CancelModalState {
   isOpen: boolean;
@@ -86,30 +86,18 @@ const DeleteConfirmModal = ({
             <AlertTriangle className="w-5 h-5 text-red-600" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-gray-900 truncate">
-              Delete Order
-            </h3>
-            <p className="text-gray-600 text-xs">
-              This action cannot be undone
-            </p>
+            <h3 className="text-base font-semibold text-gray-900 truncate">Delete Order</h3>
+            <p className="text-gray-600 text-xs">This action cannot be undone</p>
           </div>
         </div>
 
         <div className="mb-4">
-          <p className="text-gray-700 mb-2 text-sm">
-            Are you sure you want to delete this order?
-          </p>
+          <p className="text-gray-700 mb-2 text-sm">Are you sure you want to delete this order?</p>
           <div className="bg-gray-50 rounded-xs p-2">
-            <div className="text-sm font-medium text-gray-900 truncate">
-              Order #{orderNumber}
-            </div>
-            <div className="text-xs text-gray-600">
-              Amount: ₹{totalAmount.toLocaleString()}
-            </div>
+            <div className="text-sm font-medium text-gray-900 truncate">Order #{orderNumber}</div>
+            <div className="text-xs text-gray-600">Amount: ₹{totalAmount.toLocaleString()}</div>
           </div>
-          <p className="text-red-600 text-xs mt-2">
-            ⚠️ This will permanently remove the order.
-          </p>
+          <p className="text-red-600 text-xs mt-2">⚠️ This will permanently remove the order.</p>
         </div>
 
         <div className="flex gap-2 justify-end">
@@ -146,39 +134,39 @@ const DeleteConfirmModal = ({
 // Status configurations
 const statusConfig = {
   pending: {
-    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     icon: Package,
-    label: "Pending",
+    label: 'Pending',
   },
   confirmed: {
-    color: "bg-blue-100 text-blue-800 border-blue-200",
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: CheckCircle,
-    label: "Confirmed",
+    label: 'Confirmed',
   },
   processing: {
-    color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     icon: Package,
-    label: "Processing",
+    label: 'Processing',
   },
   shipped: {
-    color: "bg-purple-100 text-purple-800 border-purple-200",
+    color: 'bg-purple-100 text-purple-800 border-purple-200',
     icon: Truck,
-    label: "Shipped",
+    label: 'Shipped',
   },
   delivered: {
-    color: "bg-green-100 text-green-800 border-green-200",
+    color: 'bg-green-100 text-green-800 border-green-200',
     icon: CheckCircle,
-    label: "Delivered",
+    label: 'Delivered',
   },
   cancelled: {
-    color: "bg-red-100 text-red-800 border-red-200",
+    color: 'bg-red-100 text-red-800 border-red-200',
     icon: AlertCircle,
-    label: "Cancelled",
+    label: 'Cancelled',
   },
   returned: {
-    color: "bg-gray-100 text-gray-800 border-gray-200",
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
     icon: AlertTriangle,
-    label: "Returned",
+    label: 'Returned',
   },
 } as const;
 
@@ -191,11 +179,11 @@ const paymentMethodIcons = {
 } as const;
 
 const paymentMethodLabels = {
-  cod: "COD",
-  card: "Card",
-  upi: "UPI",
-  netbanking: "Banking",
-  wallet: "Wallet",
+  cod: 'COD',
+  card: 'Card',
+  upi: 'UPI',
+  netbanking: 'Banking',
+  wallet: 'Wallet',
 } as const;
 
 export default function OrdersPage() {
@@ -214,8 +202,8 @@ export default function OrdersPage() {
     totalOrders,
   } = useOrderStore();
 
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const [loadingMore, setLoadingMore] = useState(false);
   const [cancelModal, setCancelModal] = useState<CancelModalState>({
     isOpen: false,
@@ -231,7 +219,7 @@ export default function OrdersPage() {
     if (userLoading) return;
 
     if (!user?._id) {
-      router.replace("/auth/signin?returnUrl=" + encodeURIComponent("/orders"));
+      router.replace('/auth/signin?returnUrl=' + encodeURIComponent('/orders'));
       return;
     }
 
@@ -242,12 +230,9 @@ export default function OrdersPage() {
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||
-      order.items.some((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
+      order.items.some((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
-    const matchesStatus =
-      filterStatus === "all" || order.orderStatus === filterStatus;
+    const matchesStatus = filterStatus === 'all' || order.orderStatus === filterStatus;
 
     return matchesSearch && matchesStatus;
   });
@@ -263,25 +248,25 @@ export default function OrdersPage() {
       })),
     };
 
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    params.set("action", "cancel");
-    params.set("orderNumber", order.orderNumber);
-    window.history.replaceState(null, "", `/orders?${params.toString()}`);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('action', 'cancel');
+    params.set('orderNumber', order.orderNumber);
+    window.history.replaceState(null, '', `/orders?${params.toString()}`);
     setCancelModal({ isOpen: true, order: cancelModalOrder });
   };
 
   const handleCloseModal = () => {
     setCancelModal({ isOpen: false });
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    params.delete("action");
-    params.delete("orderNumber");
-    const newUrl = params.toString() ? `/orders?${params.toString()}` : "/orders";
-    window.history.replaceState(null, "", newUrl);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.delete('action');
+    params.delete('orderNumber');
+    const newUrl = params.toString() ? `/orders?${params.toString()}` : '/orders';
+    window.history.replaceState(null, '', newUrl);
   };
 
   const handleDeleteOrder = (order: Order) => {
-    if (order.orderStatus !== "cancelled" && order.orderStatus !== "returned") {
-      toast.error("Only cancelled or returned orders can be deleted");
+    if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned') {
+      toast.error('Only cancelled or returned orders can be deleted');
       return;
     }
 
@@ -317,7 +302,7 @@ export default function OrdersPage() {
     try {
       await fetchOrders({ limit: 20, skip: orders.length });
     } catch (error) {
-      console.error("Error loading more orders:", error);
+      console.error('Error loading more orders:', error);
     } finally {
       setLoadingMore(false);
     }
@@ -325,14 +310,14 @@ export default function OrdersPage() {
 
   const handleReorder = async (order: Order) => {
     try {
-      router.push("/cart");
+      router.push('/cart');
     } catch (error) {
-      console.error("Error reordering:", error);
+      console.error('Error reordering:', error);
     }
   };
 
   const handleDownloadInvoice = (orderNumber: string) => {
-    window.open(`/api/orders/number/${orderNumber}/invoice`, "_blank");
+    window.open(`/api/orders/number/${orderNumber}/invoice`, '_blank');
   };
 
   const handleContactSupport = (orderNumber: string) => {
@@ -355,9 +340,7 @@ export default function OrdersPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-xs shadow-lg text-center max-w-sm w-full">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <h1 className="text-lg font-bold text-gray-900 mb-2">
-            Unable to load orders
-          </h1>
+          <h1 className="text-lg font-bold text-gray-900 mb-2">Unable to load orders</h1>
           <p className="text-gray-600 mb-4 text-sm">{error}</p>
           <button
             onClick={handleRefresh}
@@ -385,11 +368,11 @@ export default function OrdersPage() {
                 {totalOrders > 0 ? (
                   <>
                     {filteredOrders.length} of {totalOrders} order
-                    {totalOrders !== 1 ? "s" : ""}
-                    {search || filterStatus !== "all" ? " (filtered)" : ""}
+                    {totalOrders !== 1 ? 's' : ''}
+                    {search || filterStatus !== 'all' ? ' (filtered)' : ''}
                   </>
                 ) : (
-                  "Track and manage your purchases"
+                  'Track and manage your purchases'
                 )}
               </p>
             </div>
@@ -400,9 +383,7 @@ export default function OrdersPage() {
                 className="p-2 border border-gray-300 rounded-xs hover:bg-gray-50 transition-colors disabled:opacity-50"
                 title="Refresh orders"
               >
-                <RefreshCw
-                  className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               <Link
                 href="/products"
@@ -429,7 +410,7 @@ export default function OrdersPage() {
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => setSearch('')}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X className="w-4 h-4" />
@@ -459,14 +440,12 @@ export default function OrdersPage() {
           <div className="bg-white p-8 sm:p-12 rounded-xs text-center">
             <Package className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
             <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
-              {search || filterStatus !== "all"
-                ? "No orders found"
-                : "No orders yet"}
+              {search || filterStatus !== 'all' ? 'No orders found' : 'No orders yet'}
             </h2>
             <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm sm:text-base">
-              {search || filterStatus !== "all"
-                ? "Try adjusting your search or filters"
-                : "Start shopping to see your orders here"}
+              {search || filterStatus !== 'all'
+                ? 'Try adjusting your search or filters'
+                : 'Start shopping to see your orders here'}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link
@@ -475,11 +454,11 @@ export default function OrdersPage() {
               >
                 Browse Products
               </Link>
-              {(search || filterStatus !== "all") && (
+              {(search || filterStatus !== 'all') && (
                 <button
                   onClick={() => {
-                    setSearch("");
-                    setFilterStatus("all");
+                    setSearch('');
+                    setFilterStatus('all');
                   }}
                   className="border border-gray-300 text-gray-700 px-4 sm:px-6 py-2 sm:py-3 rounded-xs font-semibold hover:bg-gray-50 transition-colors text-sm"
                 >
@@ -492,11 +471,9 @@ export default function OrdersPage() {
           <div className="space-y-3 sm:space-y-4">
             <AnimatePresence>
               {filteredOrders.map((order) => {
-                const statusInfo =
-                  statusConfig[order.orderStatus as keyof typeof statusConfig];
+                const statusInfo = statusConfig[order.orderStatus as keyof typeof statusConfig];
                 const StatusIcon = statusInfo?.icon || Package;
-                const PaymentIcon =
-                  paymentMethodIcons[order.paymentMethod] || CreditCard;
+                const PaymentIcon = paymentMethodIcons[order.paymentMethod] || CreditCard;
                 const isDeleting = isOrderBeingDeleted(order.orderNumber);
                 const isExpanded = expandedOrder === order._id;
 
@@ -509,7 +486,7 @@ export default function OrdersPage() {
                     layout
                     onClick={() => router.push(`/order-success?orderNumber=${order.orderNumber}`)}
                     className={`bg-white rounded-xs border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all overflow-hidden cursor-pointer ${
-                      isDeleting ? "opacity-50 pointer-events-none" : ""
+                      isDeleting ? 'opacity-50 pointer-events-none' : ''
                     }`}
                   >
                     {/* Order Header */}
@@ -522,24 +499,23 @@ export default function OrdersPage() {
                             </h3>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${
-                                statusInfo?.color || "bg-gray-100 text-gray-800"
+                                statusInfo?.color || 'bg-gray-100 text-gray-800'
                               }`}
                             >
                               <StatusIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                              <span className="hidden xs:inline">{statusInfo?.label || order.orderStatus}</span>
+                              <span className="hidden xs:inline">
+                                {statusInfo?.label || order.orderStatus}
+                              </span>
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-gray-600">
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
-                              {new Date(order.createdAt).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )}
+                              {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
                             </span>
                             <span
                               className="flex items-center gap-1"
@@ -550,13 +526,13 @@ export default function OrdersPage() {
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                order.paymentStatus === "paid"
-                                  ? "bg-green-100 text-green-700"
-                                  : order.paymentStatus === "pending"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : order.paymentStatus === "refunded"
-                                  ? "bg-blue-100 text-blue-700"
-                                  : "bg-red-100 text-red-700"
+                                order.paymentStatus === 'paid'
+                                  ? 'bg-green-100 text-green-700'
+                                  : order.paymentStatus === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : order.paymentStatus === 'refunded'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-red-100 text-red-700'
                               }`}
                             >
                               {order.paymentStatus.toUpperCase()}
@@ -569,7 +545,7 @@ export default function OrdersPage() {
                             ₹{order.totalAmount.toLocaleString()}
                           </div>
                           <div className="text-xs sm:text-sm text-gray-600">
-                            {order.items.length} item{order.items.length > 1 ? "s" : ""}
+                            {order.items.length} item{order.items.length > 1 ? 's' : ''}
                           </div>
                         </div>
                       </div>
@@ -630,11 +606,7 @@ export default function OrdersPage() {
                               }}
                               className="text-xs sm:text-sm text-gray-600 font-medium hover:text-gray-800"
                             >
-                              {isExpanded ? (
-                                "Show less"
-                              ) : (
-                                `+${order.items.length - 2} more items`
-                              )}
+                              {isExpanded ? 'Show less' : `+${order.items.length - 2} more items`}
                             </button>
                           </div>
                         )}
@@ -646,16 +618,19 @@ export default function OrdersPage() {
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
                         <div className="flex items-center gap-2 text-xs sm:text-sm">
                           {order.expectedDeliveryDate &&
-                            order.orderStatus !== "delivered" &&
-                            order.orderStatus !== "cancelled" && (
+                            order.orderStatus !== 'delivered' &&
+                            order.orderStatus !== 'cancelled' && (
                               <div className="flex items-center gap-1 text-green-700 bg-green-50 px-2 py-1 rounded-full">
                                 <Truck className="w-3 h-3" />
                                 <span className="font-medium">
-                                  By{" "}
-                                  {new Date(order.expectedDeliveryDate).toLocaleDateString("en-IN", {
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
+                                  By{' '}
+                                  {new Date(order.expectedDeliveryDate).toLocaleDateString(
+                                    'en-IN',
+                                    {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    },
+                                  )}
                                 </span>
                               </div>
                             )}
@@ -682,7 +657,7 @@ export default function OrdersPage() {
                               </Link>
                             )}
 
-                            {order.orderStatus === "delivered" && (
+                            {order.orderStatus === 'delivered' && (
                               <>
                                 <button
                                   className="p-2 border border-gray-300 rounded-xs hover:border-yellow-400 hover:bg-yellow-50 transition-colors"
@@ -732,8 +707,8 @@ export default function OrdersPage() {
 
                           {/* Main Actions */}
                           <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2">
-                            {(order.orderStatus === "pending" ||
-                              order.orderStatus === "confirmed") && (
+                            {(order.orderStatus === 'pending' ||
+                              order.orderStatus === 'confirmed') && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -754,8 +729,8 @@ export default function OrdersPage() {
                               <ChevronRight className="w-3 h-3" />
                             </Link>
 
-                            {order.orderStatus !== "cancelled" &&
-                            order.orderStatus !== "returned" ? (
+                            {order.orderStatus !== 'cancelled' &&
+                            order.orderStatus !== 'returned' ? (
                               <Link
                                 href={`/orders/track?orderNumber=${order.orderNumber}`}
                                 onClick={(e) => e.stopPropagation()}
@@ -764,7 +739,7 @@ export default function OrdersPage() {
                                 <span className="inline">Track Order</span>
                                 <ChevronRight className="w-3 h-3 hidden sm:block" />
                               </Link>
-                            ) : ( 
+                            ) : (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -812,7 +787,7 @@ export default function OrdersPage() {
                   Loading...
                 </>
               ) : (
-                "Load More Orders"
+                'Load More Orders'
               )}
             </button>
           </div>
@@ -823,7 +798,7 @@ export default function OrdersPage() {
           <div className="mt-8 sm:mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white p-3 sm:p-4 rounded-xs border border-gray-200 text-center">
               <div className="text-lg sm:text-2xl font-bold text-green-600">
-                {orders.filter((o) => o.orderStatus === "delivered").length}
+                {orders.filter((o) => o.orderStatus === 'delivered').length}
               </div>
               <div className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center justify-center gap-1">
                 <CheckCircle className="w-3 h-3" />
@@ -834,9 +809,7 @@ export default function OrdersPage() {
               <div className="text-lg sm:text-2xl font-bold text-blue-600">
                 {
                   orders.filter((o) =>
-                    ["pending", "confirmed", "processing", "shipped"].includes(
-                      o.orderStatus
-                    )
+                    ['pending', 'confirmed', 'processing', 'shipped'].includes(o.orderStatus),
                   ).length
                 }
               </div>
@@ -849,7 +822,7 @@ export default function OrdersPage() {
               <div className="text-lg sm:text-2xl font-bold text-gray-900">
                 ₹
                 {orders
-                  .filter((o) => o.orderStatus === "delivered")
+                  .filter((o) => o.orderStatus === 'delivered')
                   .reduce((sum, o) => sum + o.totalAmount, 0)
                   .toLocaleString()}
               </div>
@@ -875,36 +848,42 @@ export default function OrdersPage() {
         {/* Quick Actions Section */}
         {orders.length > 0 && (
           <div className="mt-6 sm:mt-8 bg-white rounded-xs border border-gray-200 p-4 sm:p-6">
-            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Quick Actions</h3>
+            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">
+              Quick Actions
+            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <Link
                 href="/orders?status=pending"
-                onClick={() => setFilterStatus("pending")}
+                onClick={() => setFilterStatus('pending')}
                 className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-xs flex items-center justify-center flex-shrink-0">
                   <Package className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">Pending</div>
+                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                    Pending
+                  </div>
                   <div className="text-xs text-gray-600">
-                    {orders.filter((o) => o.orderStatus === "pending").length} orders
+                    {orders.filter((o) => o.orderStatus === 'pending').length} orders
                   </div>
                 </div>
               </Link>
 
               <Link
                 href="/orders?status=shipped"
-                onClick={() => setFilterStatus("shipped")}
+                onClick={() => setFilterStatus('shipped')}
                 className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-gray-200 rounded-xs hover:bg-gray-50 transition-colors"
               >
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-xs flex items-center justify-center flex-shrink-0">
                   <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">Shipped</div>
+                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                    Shipped
+                  </div>
                   <div className="text-xs text-gray-600">
-                    {orders.filter((o) => o.orderStatus === "shipped").length} orders
+                    {orders.filter((o) => o.orderStatus === 'shipped').length} orders
                   </div>
                 </div>
               </Link>
@@ -917,7 +896,9 @@ export default function OrdersPage() {
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">Shop More</div>
+                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                    Shop More
+                  </div>
                   <div className="text-xs text-gray-600">Browse products</div>
                 </div>
               </Link>
@@ -930,7 +911,9 @@ export default function OrdersPage() {
                   <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">Support</div>
+                  <div className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                    Support
+                  </div>
                   <div className="text-xs text-gray-600">Get help</div>
                 </div>
               </Link>

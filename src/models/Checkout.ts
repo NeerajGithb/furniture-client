@@ -1,4 +1,3 @@
-// models/Checkout.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ICheckoutItem {
@@ -10,7 +9,7 @@ export interface ICheckoutItem {
 export interface ICheckout extends Document {
   userId: Schema.Types.ObjectId;
   items: ICheckoutItem[];
-  sessionId: string; // To identify unique checkout sessions
+  sessionId: string;
   selectedAddressId?: Schema.Types.ObjectId;
   selectedPaymentMethod?: string;
   expiresAt: Date;
@@ -22,49 +21,51 @@ const CheckoutItemSchema = new Schema<ICheckoutItem>({
   productId: {
     type: Schema.Types.ObjectId,
     ref: 'Product',
-    required: true
+    required: true,
   },
   quantity: {
     type: Number,
     required: true,
-    min: 1
+    min: 1,
   },
   hasInsurance: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
-const CheckoutSchema = new Schema<ICheckout>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const CheckoutSchema = new Schema<ICheckout>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    items: [CheckoutItemSchema],
+    sessionId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    selectedAddressId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Address',
+    },
+    selectedPaymentMethod: {
+      type: String,
+      enum: ['cod', 'card', 'upi', 'netbanking', 'wallet'],
+    },
+    expiresAt: {
+      type: Date,
+      default: Date.now,
+      expires: 3600,
+    },
   },
-  items: [CheckoutItemSchema],
-  sessionId: {
-    type: String,
-    required: true,
-    unique: true
+  {
+    timestamps: true,
   },
-  selectedAddressId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Address'
-  },
-  selectedPaymentMethod: {
-    type: String,
-    enum: ['cod', 'card', 'upi', 'netbanking', 'wallet']
-  },
-  expiresAt: {
-    type: Date,
-    default: Date.now,
-    expires: 3600 // Expires after 1 hour
-  }
-}, {
-  timestamps: true
-});
+);
 
-// Index for performance
 CheckoutSchema.index({ userId: 1 });
 CheckoutSchema.index({ sessionId: 1 });
 CheckoutSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

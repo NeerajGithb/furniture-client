@@ -1,13 +1,13 @@
 // PaymentPage.tsx - Fixed version with responsive design and fixed bottom button
 
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef, JSX } from "react";
-import { useRouter } from "next/navigation";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useCheckoutStore } from "@/stores/checkoutStore";
-import { useAddressStore } from "@/stores/addressStore";
-import PriceSummaryCard from "@/components/ui/PriceSummaryCard";
+import { useEffect, useState, useCallback, useMemo, useRef, JSX } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCheckoutStore } from '@/stores/checkoutStore';
+import { useAddressStore } from '@/stores/addressStore';
+import PriceSummaryCard from '@/components/ui/PriceSummaryCard';
 import {
   Smartphone,
   Banknote,
@@ -20,11 +20,11 @@ import {
   ChevronRight,
   MapPin,
   Edit3,
-} from "lucide-react";
-import { toast } from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
-import { fetchWithCredentials } from "@/utils/fetchWithCredentials";
-import { useCartStore } from "@/stores/cartStore";
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
+import { useCartStore } from '@/stores/cartStore';
 
 interface PaymentMethod {
   id: string;
@@ -54,60 +54,58 @@ const PaymentPage = () => {
 
   //cart store
   const { removeFromCart } = useCartStore();
-  
+
   // Address store
   const { addresses } = useAddressStore();
 
   // Local state
   const [showUPIForm, setShowUPIForm] = useState(false);
-  const [upiId, setUpiId] = useState("");
+  const [upiId, setUpiId] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
 
   // Get checkout data
   const checkoutData = getCheckoutData();
   const selectedCartItems = getSelectedItems();
-  const selectedAddress = addresses.find(
-    (addr) => addr._id === checkoutData?.selectedAddressId
-  );
+  const selectedAddress = addresses.find((addr) => addr._id === checkoutData?.selectedAddressId);
 
   // Payment methods configuration
   const paymentMethods: PaymentMethod[] = useMemo(
     () => [
       {
-        id: "upi",
-        name: "UPI",
+        id: 'upi',
+        name: 'UPI',
         icon: <Smartphone className="w-5 h-5" />,
-        description: "Pay using your UPI ID",
+        description: 'Pay using your UPI ID',
         popular: true,
-        offers: ["Get 5% cashback", "Instant payment"],
+        offers: ['Get 5% cashback', 'Instant payment'],
         available: false, // Disabled for now
       },
       {
-        id: "cards",
-        name: "Credit/Debit Cards",
+        id: 'cards',
+        name: 'Credit/Debit Cards',
         icon: <CreditCard className="w-5 h-5" />,
-        description: "Visa, Mastercard, Rupay & more",
-        offers: ["EMI available", "2% cashback on select cards"],
+        description: 'Visa, Mastercard, Rupay & more',
+        offers: ['EMI available', '2% cashback on select cards'],
         available: false, // Disabled for now
       },
       {
-        id: "netbanking",
-        name: "Net Banking",
+        id: 'netbanking',
+        name: 'Net Banking',
         icon: <Building2 className="w-5 h-5" />,
-        description: "All major banks supported",
+        description: 'All major banks supported',
         available: false, // Disabled for now
       },
       {
-        id: "cod",
-        name: "Cash on Delivery",
+        id: 'cod',
+        name: 'Cash on Delivery',
         icon: <Banknote className="w-5 h-5" />,
-        description: "Pay when your order is delivered",
+        description: 'Pay when your order is delivered',
         popular: true,
-        offers: ["No advance payment", "Pay after receiving product"],
+        offers: ['No advance payment', 'Pay after receiving product'],
         available: true, // Only COD is available
       },
     ],
-    []
+    [],
   );
 
   // Intersection Observer for checkout button visibility
@@ -118,8 +116,8 @@ const PaymentPage = () => {
       },
       {
         threshold: 0.1,
-        rootMargin: "-50px",
-      }
+        rootMargin: '-50px',
+      },
     );
 
     if (priceCardRef.current) {
@@ -136,20 +134,18 @@ const PaymentPage = () => {
   // FIXED: Improved redirect checks with better error handling
   useEffect(() => {
     if (!user?._id) {
-      router.push("/auth/signin?returnUrl=/checkout/payment");
+      router.push('/auth/signin?returnUrl=/checkout/payment');
       return;
     }
 
     // Only redirect if we have no valid checkout data
     if (!hasValidCheckout()) {
-      
       return;
     }
 
     // Only redirect if we have checkout data but no address selected
     if (checkoutData && !checkoutData.selectedAddressId) {
-      
-      toast.error("Please select a delivery address");
+      toast.error('Please select a delivery address');
       return;
     }
   }, [user?._id, hasValidCheckout, checkoutData?.selectedAddressId, router]);
@@ -159,90 +155,92 @@ const PaymentPage = () => {
     (methodId: string) => {
       const method = paymentMethods.find((m) => m.id === methodId);
       if (!method?.available) {
-        toast.error(`${method?.name || "This payment method"} is coming soon!`);
+        toast.error(`${method?.name || 'This payment method'} is coming soon!`);
         return;
       }
 
       updateSelectedPaymentMethod(methodId);
-      setShowUPIForm(methodId === "upi");
-      if (methodId !== "upi") setUpiId("");
+      setShowUPIForm(methodId === 'upi');
+      if (methodId !== 'upi') setUpiId('');
     },
-    [updateSelectedPaymentMethod, paymentMethods]
+    [updateSelectedPaymentMethod, paymentMethods],
   );
 
   // FIXED: Remove only ordered items from cart
-  const removeOrderedItemsFromCart = useCallback(async (orderedItems: any[]) => {
-    if (!orderedItems || orderedItems.length === 0) {
-      
-      return;
-    }
+  const removeOrderedItemsFromCart = useCallback(
+    async (orderedItems: any[]) => {
+      if (!orderedItems || orderedItems.length === 0) {
+        return;
+      }
 
-    console.log(`Removing ${orderedItems.length} ordered items from cart:`, 
-      orderedItems.map(item => ({ 
-        productId: item.productId, 
-        quantity: item.quantity 
-      }))
-    );
+      console.log(
+        `Removing ${orderedItems.length} ordered items from cart:`,
+        orderedItems.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+      );
 
-    const removePromises = orderedItems.map(async (item) => {
-      try {
-        
-        const success = await removeFromCart(item.productId);
-        if (success) {
-          
-        } else {
-          console.warn(`Failed to remove ${item.productId} from cart`);
+      const removePromises = orderedItems.map(async (item) => {
+        try {
+          const success = await removeFromCart(item.productId);
+          if (success) {
+          } else {
+            console.warn(`Failed to remove ${item.productId} from cart`);
+          }
+          return success;
+        } catch (error) {
+          console.error(`Error removing ${item.productId} from cart:`, error);
+          return false;
         }
-        return success;
+      });
+
+      try {
+        const results = await Promise.allSettled(removePromises);
+        const successful = results.filter(
+          (result) => result.status === 'fulfilled' && result.value,
+        ).length;
+        const failed = results.length - successful;
+
+        if (successful > 0) {
+        }
+        if (failed > 0) {
+          console.warn(`Failed to remove ${failed} items from cart`);
+        }
       } catch (error) {
-        console.error(`Error removing ${item.productId} from cart:`, error);
-        return false;
+        console.error('Error in bulk cart item removal:', error);
+        throw error;
       }
-    });
-
-    try {
-      const results = await Promise.allSettled(removePromises);
-      const successful = results.filter(result => result.status === 'fulfilled' && result.value).length;
-      const failed = results.length - successful;
-
-      if (successful > 0) {
-        
-      }
-      if (failed > 0) {
-        console.warn(`Failed to remove ${failed} items from cart`);
-      }
-    } catch (error) {
-      console.error("Error in bulk cart item removal:", error);
-      throw error;
-    }
-  }, [removeFromCart]);
+    },
+    [removeFromCart],
+  );
 
   // FIXED: Improved order placement with proper cart item removal
   const handlePlaceOrder = useCallback(async () => {
     if (!checkoutData || !selectedCartItems.length) {
-      toast.error("No items selected for checkout");
+      toast.error('No items selected for checkout');
       return;
     }
 
     if (!checkoutData.selectedAddressId) {
-      toast.error("Please select a delivery address");
+      toast.error('Please select a delivery address');
       return;
     }
 
     if (!checkoutData.selectedPaymentMethod) {
-      toast.error("Please select a payment method");
+      toast.error('Please select a payment method');
       return;
     }
 
     // Validate UPI ID if UPI is selected
-    if (checkoutData.selectedPaymentMethod === "upi") {
+    if (checkoutData.selectedPaymentMethod === 'upi') {
       if (!upiId.trim()) {
-        toast.error("Please enter your UPI ID");
+        toast.error('Please enter your UPI ID');
         return;
       }
       const upiRegex = /^[\w.-]+@[\w.-]+$/;
       if (!upiRegex.test(upiId)) {
-        toast.error("Please enter a valid UPI ID");
+        toast.error('Please enter a valid UPI ID');
         return;
       }
     }
@@ -258,84 +256,72 @@ const PaymentPage = () => {
         insuranceEnabled: checkoutData.insuranceEnabled,
         totals: checkoutData.totals,
         cartData: selectedCartItems,
-        upiId: checkoutData.selectedPaymentMethod === "upi" ? upiId : undefined,
+        upiId: checkoutData.selectedPaymentMethod === 'upi' ? upiId : undefined,
       };
 
-      console.log("Placing order with payload:", {
+      console.log('Placing order with payload:', {
         ...orderPayload,
         cartData: `${orderPayload.cartData.length} items`,
       });
 
       // Create order
-      const orderResponse = await fetchWithCredentials("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const orderResponse = await fetchWithCredentials('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
       });
 
       if (!orderResponse.ok) {
         const errorData = await orderResponse.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || `Order creation failed: ${orderResponse.status}`
-        );
+        throw new Error(errorData.error || `Order creation failed: ${orderResponse.status}`);
       }
 
       const orderData = await orderResponse.json();
       const orderNumber = orderData.order?.orderNumber;
 
       if (!orderNumber) {
-        throw new Error("Order created but no order number received");
+        throw new Error('Order created but no order number received');
       }
 
-      
-
       // Handle Cash on Delivery vs Other Payment Methods
-      if (checkoutData.selectedPaymentMethod === "cod") {
+      if (checkoutData.selectedPaymentMethod === 'cod') {
         // For COD, order is complete - no payment processing needed
-        
+
         try {
           // FIXED: Remove only the items that were ordered from cart
           await removeOrderedItemsFromCart(selectedCartItems);
-          
         } catch (cartError) {
-          console.error("Error removing ordered items from cart:", cartError);
+          console.error('Error removing ordered items from cart:', cartError);
           // Don't block order success if cart update fails
-          toast.error("Order placed but failed to update cart. Please refresh your cart.");
+          toast.error('Order placed but failed to update cart. Please refresh your cart.');
         }
-        
+
         // Clear checkout data
-        
+
         clearCheckout();
-        
 
         // Show success message
-        toast.success("Order placed successfully!");
-        
+        toast.success('Order placed successfully!');
+
         // Navigate to success page
-        
+
         router.push(`/order-success?orderNumber=${orderNumber}`);
         return;
-        
       } else {
         // For other payment methods, initiate payment processing
         try {
-          
-
-          const paymentResponse = await fetchWithCredentials("/api/payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          const paymentResponse = await fetchWithCredentials('/api/payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               orderId: orderData.order._id,
               paymentMethod: checkoutData.selectedPaymentMethod,
-              upiId:
-                checkoutData.selectedPaymentMethod === "upi"
-                  ? upiId
-                  : undefined,
+              upiId: checkoutData.selectedPaymentMethod === 'upi' ? upiId : undefined,
             }),
           });
 
           if (paymentResponse.ok) {
-            toast.success("Processing payment...");
+            toast.success('Processing payment...');
 
             // Simulate payment processing time
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -343,32 +329,30 @@ const PaymentPage = () => {
             // FIXED: Remove only ordered items from cart
             try {
               await removeOrderedItemsFromCart(selectedCartItems);
-              
             } catch (cartError) {
-              console.error("Error removing ordered items from cart after payment:", cartError);
-              toast.error("Payment successful but failed to update cart. Please refresh your cart.");
+              console.error('Error removing ordered items from cart after payment:', cartError);
+              toast.error(
+                'Payment successful but failed to update cart. Please refresh your cart.',
+              );
             }
-            
+
             // Clear checkout data
             clearCheckout();
 
-            toast.success("Payment successful! Order placed.");
+            toast.success('Payment successful! Order placed.');
             router.push(`/order-success?orderNumber=${orderNumber}`);
           } else {
             const errorData = await paymentResponse.json().catch(() => ({}));
-            throw new Error(
-              errorData.error || `Payment failed: ${paymentResponse.status}`
-            );
+            throw new Error(errorData.error || `Payment failed: ${paymentResponse.status}`);
           }
         } catch (paymentError) {
-          console.error("Payment error:", paymentError);
+          console.error('Payment error:', paymentError);
           throw paymentError;
         }
       }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to place order";
-      console.error("Order placement error:", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
+      console.error('Order placement error:', errorMessage);
       toast.error(errorMessage);
     } finally {
       setPlacingOrder(false);
@@ -380,14 +364,10 @@ const PaymentPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
-          <h1 className="text-xl font-semibold mb-4 text-gray-900">
-            Authentication Required
-          </h1>
-          <p className="text-gray-600 mb-4 text-sm">
-            Please sign in to continue with payment.
-          </p>
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">Authentication Required</h1>
+          <p className="text-gray-600 mb-4 text-sm">Please sign in to continue with payment.</p>
           <button
-            onClick={() => router.push("/auth/signin?returnUrl=/checkout/payment")}
+            onClick={() => router.push('/auth/signin?returnUrl=/checkout/payment')}
             className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Sign In
@@ -421,7 +401,7 @@ const PaymentPage = () => {
             Please go back to your cart and select items to checkout.
           </p>
           <button
-            onClick={() => router.push("/cart")}
+            onClick={() => router.push('/cart')}
             className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Go to Cart
@@ -436,14 +416,12 @@ const PaymentPage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
-          <h1 className="text-xl font-semibold mb-4 text-gray-900">
-            No delivery address selected
-          </h1>
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">No delivery address selected</h1>
           <p className="text-gray-600 mb-4 text-sm">
             Please go back and select a delivery address.
           </p>
           <button
-            onClick={() => router.push("/checkout")}
+            onClick={() => router.push('/checkout')}
             className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Go to Checkout
@@ -466,9 +444,7 @@ const PaymentPage = () => {
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">
-                Payment
-              </h1>
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Payment</h1>
             </div>
           </div>
         </div>
@@ -489,9 +465,7 @@ const PaymentPage = () => {
                       <MapPin className="w-4 h-4 text-gray-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 mb-1">
-                        Deliver to
-                      </h4>
+                      <h4 className="font-medium text-gray-900 mb-1">Deliver to</h4>
                       <div className="text-sm text-gray-700 space-y-0.5">
                         <p className="font-medium">{selectedAddress.fullName}</p>
                         <p className="break-words">{selectedAddress.addressLine1}</p>
@@ -499,17 +473,15 @@ const PaymentPage = () => {
                           <p className="break-words">{selectedAddress.addressLine2}</p>
                         )}
                         <p className="text-gray-600">
-                          {selectedAddress.city}, {selectedAddress.state} -{" "}
+                          {selectedAddress.city}, {selectedAddress.state} -{' '}
                           {selectedAddress.postalCode}
                         </p>
-                        <p className="text-gray-600">
-                          Phone: {selectedAddress.phone}
-                        </p>
+                        <p className="text-gray-600">Phone: {selectedAddress.phone}</p>
                       </div>
                     </div>
                   </div>
                   <button
-                    onClick={() => router.push("/checkout")}
+                    onClick={() => router.push('/checkout')}
                     className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium flex-shrink-0 p-2 hover:bg-blue-50 rounded-xs transition-colors"
                   >
                     <Edit3 className="w-4 h-4" />
@@ -527,12 +499,9 @@ const PaymentPage = () => {
               className="bg-white rounded-xs shadow-sm border border-gray-200"
             >
               <div className="p-4 sm:p-6 border-b border-gray-200">
-                <h3 className="font-medium text-gray-900">
-                  Choose Payment Method
-                </h3>
+                <h3 className="font-medium text-gray-900">Choose Payment Method</h3>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                  Currently, only Cash on Delivery is available. Online payments
-                  coming soon!
+                  Currently, only Cash on Delivery is available. Online payments coming soon!
                 </p>
               </div>
 
@@ -544,22 +513,19 @@ const PaymentPage = () => {
                       className={`flex items-center p-2 sm:p-4 transition-colors ${
                         method.available
                           ? `cursor-pointer hover:bg-gray-50 ${
-                              checkoutData.selectedPaymentMethod === method.id
-                                ? "bg-blue-50"
-                                : ""
+                              checkoutData.selectedPaymentMethod === method.id ? 'bg-blue-50' : ''
                             }`
-                          : "cursor-not-allowed opacity-60"
+                          : 'cursor-not-allowed opacity-60'
                       }`}
                     >
                       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <div
                           className={`p-2 sm:p-3 rounded-xs ${
-                            checkoutData.selectedPaymentMethod === method.id &&
-                            method.available
-                              ? "bg-blue-600 text-white"
+                            checkoutData.selectedPaymentMethod === method.id && method.available
+                              ? 'bg-blue-600 text-white'
                               : method.available
-                              ? "bg-gray-100 text-gray-600"
-                              : "bg-gray-100 text-gray-400"
+                              ? 'bg-gray-100 text-gray-600'
+                              : 'bg-gray-100 text-gray-400'
                           }`}
                         >
                           {method.icon}
@@ -568,9 +534,7 @@ const PaymentPage = () => {
                           <div className="flex items-center flex-wrap gap-2 mb-1">
                             <h4
                               className={`font-medium text-sm sm:text-base ${
-                                method.available
-                                  ? "text-gray-900"
-                                  : "text-gray-500"
+                                method.available ? 'text-gray-900' : 'text-gray-500'
                               }`}
                             >
                               {method.name}
@@ -588,9 +552,7 @@ const PaymentPage = () => {
                           </div>
                           <p
                             className={`text-xs sm:text-sm ${
-                              method.available
-                                ? "text-gray-600"
-                                : "text-gray-500"
+                              method.available ? 'text-gray-600' : 'text-gray-500'
                             }`}
                           >
                             {method.description}
@@ -610,24 +572,21 @@ const PaymentPage = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        {checkoutData.selectedPaymentMethod === method.id &&
-                          method.available && (
-                            <Check className="w-5 h-5 text-blue-600" />
-                          )}
-                        {method.available && (
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        {checkoutData.selectedPaymentMethod === method.id && method.available && (
+                          <Check className="w-5 h-5 text-blue-600" />
                         )}
+                        {method.available && <ChevronRight className="w-4 h-4 text-gray-400" />}
                       </div>
                     </div>
 
                     {/* UPI Form - Only show if UPI is selected and available */}
                     <AnimatePresence>
-                      {method.id === "upi" &&
-                        checkoutData.selectedPaymentMethod === "upi" &&
+                      {method.id === 'upi' &&
+                        checkoutData.selectedPaymentMethod === 'upi' &&
                         method.available && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
+                            animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden border-t border-gray-200 bg-gray-50"
                           >
@@ -644,8 +603,7 @@ const PaymentPage = () => {
                                   className="w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 rounded-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                                 />
                                 <p className="text-xs text-gray-600 mt-1">
-                                  Enter your UPI ID (e.g., name@paytm,
-                                  name@googlepay)
+                                  Enter your UPI ID (e.g., name@paytm, name@googlepay)
                                 </p>
                               </div>
                             </div>
@@ -684,8 +642,8 @@ const PaymentPage = () => {
           <div
             className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
               showFixedCheckout
-                ? "translate-y-0 opacity-100"
-                : "translate-y-full opacity-0 pointer-events-none"
+                ? 'translate-y-0 opacity-100'
+                : 'translate-y-full opacity-0 pointer-events-none'
             }`}
           >
             <button
@@ -701,7 +659,7 @@ const PaymentPage = () => {
                       Placing Order...
                     </div>
                   ) : (
-                    "Place Order"
+                    'Place Order'
                   )}
                 </span>
                 {!placingOrder && (

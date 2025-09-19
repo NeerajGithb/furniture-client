@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, X, SlidersHorizontal } from "lucide-react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useProductStore } from "@/stores/productStore";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, X, SlidersHorizontal } from 'lucide-react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useProductStore } from '@/stores/productStore';
 
 interface Category {
   _id: string;
@@ -55,7 +55,7 @@ const FilterSection = ({
       </span>
       <ChevronDown
         className={`w-3.5 h-3.5 transform transition-all duration-200 ${
-          isExpanded ? "rotate-180" : ""
+          isExpanded ? 'rotate-180' : ''
         } group-hover:scale-110`}
       />
     </button>
@@ -63,9 +63,9 @@ const FilterSection = ({
       {isExpanded && (
         <motion.div
           initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
+          animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
           className="overflow-hidden"
         >
           {children}
@@ -99,24 +99,18 @@ const DualRangeSlider = ({
 
   const handleMinChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newMin = Math.max(
-        min,
-        Math.min(Number(e.target.value), localValue[1] - step)
-      );
+      const newMin = Math.max(min, Math.min(Number(e.target.value), localValue[1] - step));
       setLocalValue([newMin, localValue[1]]);
     },
-    [min, localValue, step]
+    [min, localValue, step],
   );
 
   const handleMaxChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newMax = Math.max(
-        localValue[0] + step,
-        Math.min(Number(e.target.value), max)
-      );
+      const newMax = Math.max(localValue[0] + step, Math.min(Number(e.target.value), max));
       setLocalValue([localValue[0], newMax]);
     },
-    [max, localValue, step]
+    [max, localValue, step],
   );
 
   // Mouse events
@@ -146,11 +140,11 @@ const DualRangeSlider = ({
       if (max === min) return 0;
       return ((val - min) / (max - min)) * 100;
     },
-    [min, max]
+    [min, max],
   );
 
   const formatPriceDisplay = useCallback((price: number) => {
-    return price.toLocaleString("en-IN");
+    return price.toLocaleString('en-IN');
   }, []);
 
   return (
@@ -164,9 +158,7 @@ const DualRangeSlider = ({
           className="absolute h-1 bg-lime-500 rounded-full transition-all duration-75 ease-out"
           style={{
             left: `${getPercentage(localValue[0])}%`,
-            width: `${
-              getPercentage(localValue[1]) - getPercentage(localValue[0])
-            }%`,
+            width: `${getPercentage(localValue[1]) - getPercentage(localValue[0])}%`,
           }}
         />
 
@@ -249,25 +241,17 @@ const DualRangeSlider = ({
       <div className="flex justify-between items-center text-sm">
         <div className="flex flex-col items-start">
           <span className="text-xs text-gray-500 mb-1">Min. Price</span>
-          <span className="font-bold text-gray-900">
-            ₹ {formatPriceDisplay(localValue[0])}
-          </span>
+          <span className="font-bold text-gray-900">₹ {formatPriceDisplay(localValue[0])}</span>
         </div>
         <div className="flex flex-col items-end">
           <span className="text-xs text-gray-500 mb-1">Max. Price</span>
-          <span className="font-bold text-gray-900">
-            ₹ {formatPriceDisplay(localValue[1])}
-          </span>
+          <span className="font-bold text-gray-900">₹ {formatPriceDisplay(localValue[1])}</span>
         </div>
       </div>
     </div>
   );
 };
-const FilterSidebar = ({
-  filters,
-  isMobile = false,
-  onClose,
-}: FilterSidebarProps) => {
+const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -286,8 +270,8 @@ const FilterSidebar = ({
           if (scrolled !== lastScrolled) {
             lastScrolled = scrolled;
             if (sidebarRef.current) {
-              sidebarRef.current.classList.toggle("top-[50px]", scrolled);
-              sidebarRef.current.classList.toggle("top-0", !scrolled);
+              sidebarRef.current.classList.toggle('top-[50px]', scrolled);
+              sidebarRef.current.classList.toggle('top-0', !scrolled);
             }
           }
           ticking = false;
@@ -296,12 +280,11 @@ const FilterSidebar = ({
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const { categories, subcategories, materials, priceRange } =
-    useProductStore();
+  const { categories, subcategories, materials, priceRange } = useProductStore();
 
   const [expandedSections, setExpandedSections] = useState(() => {
     const defaultExpanded = isMobile;
@@ -319,20 +302,17 @@ const FilterSidebar = ({
   });
 
   const isValidCategory = (c: any): c is Category =>
-    c &&
-    typeof c === "object" &&
-    typeof c._id === "string" &&
-    typeof c.slug === "string";
+    c && typeof c === 'object' && typeof c._id === 'string' && typeof c.slug === 'string';
 
   const isValidSubcategory = (s: any): s is Subcategory =>
     s &&
-    typeof s === "object" &&
-    typeof s._id === "string" &&
-    typeof s.slug === "string" &&
-    (typeof s.categoryId === "string" ||
-      (typeof s.categoryId === "object" &&
+    typeof s === 'object' &&
+    typeof s._id === 'string' &&
+    typeof s.slug === 'string' &&
+    (typeof s.categoryId === 'string' ||
+      (typeof s.categoryId === 'object' &&
         s.categoryId !== null &&
-        typeof s.categoryId._id === "string"));
+        typeof s.categoryId._id === 'string'));
 
   const safeFilters = useMemo(
     () => ({
@@ -346,41 +326,37 @@ const FilterSidebar = ({
           : filters?.subcategories.filter(isValidSubcategory) || [],
       materials:
         Array.isArray(materials) && materials.length > 0
-          ? materials.filter((m) => typeof m === "string")
-          : filters?.materials.filter((m) => typeof m === "string") || [],
+          ? materials.filter((m) => typeof m === 'string')
+          : filters?.materials.filter((m) => typeof m === 'string') || [],
       priceRange:
         priceRange && priceRange.maxPrice > 0
           ? priceRange
           : filters?.priceRange || { minPrice: 0, maxPrice: 100000 },
     }),
-    [categories, subcategories, materials, priceRange, filters]
+    [categories, subcategories, materials, priceRange, filters],
   );
 
   const slugAnalysis = useMemo(() => {
-    if (!currentSlug || currentSlug === "products") {
+    if (!currentSlug || currentSlug === 'products') {
       return { type: null, data: null, parentCategory: null };
     }
 
-    const matchedCategory = safeFilters.categories.find(
-      (cat) => cat.slug === currentSlug
-    );
+    const matchedCategory = safeFilters.categories.find((cat) => cat.slug === currentSlug);
     if (matchedCategory) {
-      return { type: "category", data: matchedCategory, parentCategory: null };
+      return { type: 'category', data: matchedCategory, parentCategory: null };
     }
 
-    const matchedSubcategory = safeFilters.subcategories.find(
-      (sub) => sub.slug === currentSlug
-    );
+    const matchedSubcategory = safeFilters.subcategories.find((sub) => sub.slug === currentSlug);
     if (matchedSubcategory) {
       const parentCategory = safeFilters.categories.find((cat) => {
         const categoryId =
-          typeof matchedSubcategory.categoryId === "object"
+          typeof matchedSubcategory.categoryId === 'object'
             ? matchedSubcategory.categoryId._id
             : matchedSubcategory.categoryId;
         return cat._id === categoryId;
       });
       return {
-        type: "subcategory",
+        type: 'subcategory',
         data: matchedSubcategory,
         parentCategory,
       };
@@ -401,62 +377,49 @@ const FilterSidebar = ({
   };
 
   const urlParams = useMemo(() => {
-    let selectedCategory = "";
-    let selectedSubcategory = "";
+    let selectedCategory = '';
+    let selectedSubcategory = '';
 
-    if (slugAnalysis.type === "category") {
+    if (slugAnalysis.type === 'category') {
       selectedCategory = currentSlug;
-      selectedSubcategory = searchParams.get("subcategory") || "";
-    } else if (slugAnalysis.type === "subcategory") {
-      selectedCategory = slugAnalysis.parentCategory?.slug || "";
+      selectedSubcategory = searchParams.get('subcategory') || '';
+    } else if (slugAnalysis.type === 'subcategory') {
+      selectedCategory = slugAnalysis.parentCategory?.slug || '';
       selectedSubcategory = currentSlug;
     }
 
     return {
       selectedCategory,
       selectedSubcategory,
-      selectedMaterial: searchParams.get("material") || "",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      inStockOnly: searchParams.get("inStock") === "true",
-      onSaleOnly: searchParams.get("onSale") === "true",
-      sortBy: searchParams.get("sort") || "newest",
-      discountRange: searchParams.get("discount") || "",
+      selectedMaterial: searchParams.get('material') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      inStockOnly: searchParams.get('inStock') === 'true',
+      onSaleOnly: searchParams.get('onSale') === 'true',
+      sortBy: searchParams.get('sort') || 'newest',
+      discountRange: searchParams.get('discount') || '',
     };
   }, [searchParams, currentSlug, slugAnalysis]);
 
-  const currentMinPrice = urlParams.minPrice
-    ? parseInt(urlParams.minPrice)
-    : DEFAULT_MIN_PRICE;
-  const currentMaxPrice = urlParams.maxPrice
-    ? parseInt(urlParams.maxPrice)
-    : DEFAULT_MAX_PRICE;
+  const currentMinPrice = urlParams.minPrice ? parseInt(urlParams.minPrice) : DEFAULT_MIN_PRICE;
+  const currentMaxPrice = urlParams.maxPrice ? parseInt(urlParams.maxPrice) : DEFAULT_MAX_PRICE;
 
   const validatedPriceRange: [number, number] = useMemo(() => {
     const min = Math.max(
       DEFAULT_MIN_PRICE,
-      Math.min(currentMinPrice, DEFAULT_MAX_PRICE - PRICE_STEP)
+      Math.min(currentMinPrice, DEFAULT_MAX_PRICE - PRICE_STEP),
     );
-    const max = Math.max(
-      min + PRICE_STEP,
-      Math.min(currentMaxPrice, DEFAULT_MAX_PRICE)
-    );
+    const max = Math.max(min + PRICE_STEP, Math.min(currentMaxPrice, DEFAULT_MAX_PRICE));
     return [min, max];
   }, [currentMinPrice, currentMaxPrice, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]);
 
   const validatePriceRange = useCallback(
     (min: number, max: number): [number, number] => {
-      const validMin = Math.max(
-        DEFAULT_MIN_PRICE,
-        Math.min(min, DEFAULT_MAX_PRICE - PRICE_STEP)
-      );
-      const validMax = Math.max(
-        validMin + PRICE_STEP,
-        Math.min(max, DEFAULT_MAX_PRICE)
-      );
+      const validMin = Math.max(DEFAULT_MIN_PRICE, Math.min(min, DEFAULT_MAX_PRICE - PRICE_STEP));
+      const validMax = Math.max(validMin + PRICE_STEP, Math.min(max, DEFAULT_MAX_PRICE));
       return [validMin, validMax];
     },
-    [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE]
+    [DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE],
   );
 
   const updateFilters = useCallback(
@@ -465,11 +428,11 @@ const FilterSidebar = ({
         const params = new URLSearchParams(searchParams.toString());
 
         Object.entries(newFilters).forEach(([key, value]) => {
-          if (key === "category" || key === "subcategory") {
+          if (key === 'category' || key === 'subcategory') {
             return;
           }
 
-          if (value && value !== "" && value !== "false") {
+          if (value && value !== '' && value !== 'false') {
             params.set(key, value);
           } else {
             params.delete(key);
@@ -479,16 +442,14 @@ const FilterSidebar = ({
         const newUrl = `/${currentSlug}?${params.toString()}`;
         router.push(newUrl);
       } catch (error) {
-        console.error("Error updating filters:", error);
+        console.error('Error updating filters:', error);
       }
     },
-    [router, searchParams, currentSlug]
+    [router, searchParams, currentSlug],
   );
 
   const selectedCategory = useMemo(() => {
-    return safeFilters.categories.find(
-      (cat) => cat.slug === urlParams.selectedCategory
-    );
+    return safeFilters.categories.find((cat) => cat.slug === urlParams.selectedCategory);
   }, [safeFilters.categories, urlParams.selectedCategory]);
 
   // Fix: Improved subcategory filtering logic
@@ -500,7 +461,7 @@ const FilterSidebar = ({
 
     // Find the selected category
     const currentCategory = safeFilters.categories.find(
-      (cat) => cat.slug === urlParams.selectedCategory
+      (cat) => cat.slug === urlParams.selectedCategory,
     );
 
     if (!currentCategory) {
@@ -509,17 +470,10 @@ const FilterSidebar = ({
 
     // Filter subcategories that belong to the selected category
     return safeFilters.subcategories.filter((sub) => {
-      const categoryId =
-        typeof sub.categoryId === "object"
-          ? sub.categoryId._id
-          : sub.categoryId;
+      const categoryId = typeof sub.categoryId === 'object' ? sub.categoryId._id : sub.categoryId;
       return categoryId === currentCategory._id;
     });
-  }, [
-    safeFilters.subcategories,
-    safeFilters.categories,
-    urlParams.selectedCategory,
-  ]);
+  }, [safeFilters.subcategories, safeFilters.categories, urlParams.selectedCategory]);
 
   const handleCategoryChange = useCallback(
     (categorySlug: string) => {
@@ -529,7 +483,7 @@ const FilterSidebar = ({
         router.push(`/${categorySlug}`);
       }
     },
-    [router]
+    [router],
   );
   const handleSubcategoryChange = useCallback(
     (subcategorySlug: string) => {
@@ -540,7 +494,7 @@ const FilterSidebar = ({
         router.push(`/${subcategorySlug}`);
       }
     },
-    [router]
+    [router],
   );
 
   const handleMaterialChange = useCallback(
@@ -553,7 +507,7 @@ const FilterSidebar = ({
         setTimeout(() => onClose(), 150);
       }
     },
-    [updateFilters, isMobile, onClose]
+    [updateFilters, isMobile, onClose],
   );
 
   const handlePriceRangeChange = useCallback(
@@ -572,40 +526,33 @@ const FilterSidebar = ({
         setTimeout(() => onClose(), 500);
       }
     },
-    [
-      updateFilters,
-      validatePriceRange,
-      DEFAULT_MIN_PRICE,
-      DEFAULT_MAX_PRICE,
-      isMobile,
-      onClose,
-    ]
+    [updateFilters, validatePriceRange, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE, isMobile, onClose],
   );
 
   const handleCheckboxChange = useCallback(
     (key: string, value: boolean) => {
       updateFilters({
-        [key]: value ? "true" : null,
+        [key]: value ? 'true' : null,
       });
       // Close mobile sidebar when checkbox filter is applied
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
     },
-    [updateFilters, isMobile, onClose]
+    [updateFilters, isMobile, onClose],
   );
 
   const handleSortChange = useCallback(
     (value: string) => {
       updateFilters({
-        sort: value === "newest" ? null : value,
+        sort: value === 'newest' ? null : value,
       });
       // Close mobile sidebar when sort is applied
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
     },
-    [updateFilters, isMobile, onClose]
+    [updateFilters, isMobile, onClose],
   );
 
   const handleQuickPriceRangeChange = useCallback(
@@ -616,7 +563,7 @@ const FilterSidebar = ({
           maxPrice: null,
         });
       } else {
-        const [min, max] = range.split("-").map(Number);
+        const [min, max] = range.split('-').map(Number);
         updateFilters({
           minPrice: min !== DEFAULT_MIN_PRICE ? min.toString() : null,
           maxPrice: max !== DEFAULT_MAX_PRICE ? max.toString() : null,
@@ -627,7 +574,7 @@ const FilterSidebar = ({
         setTimeout(() => onClose(), 150);
       }
     },
-    [updateFilters, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE, isMobile, onClose]
+    [updateFilters, DEFAULT_MIN_PRICE, DEFAULT_MAX_PRICE, isMobile, onClose],
   );
 
   const handleDiscountChange = useCallback(
@@ -640,73 +587,70 @@ const FilterSidebar = ({
         setTimeout(() => onClose(), 150);
       }
     },
-    [updateFilters, isMobile, onClose]
+    [updateFilters, isMobile, onClose],
   );
 
   const clearAllFilters = useCallback(() => {
     try {
-      router.push(`/${currentSlug || "products"}`);
+      router.push(`/${currentSlug || 'products'}`);
       onClose?.();
     } catch (error) {
-      console.error("Error clearing filters:", error);
+      console.error('Error clearing filters:', error);
     }
   }, [router, currentSlug, onClose]);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
-      (urlParams.selectedSubcategory && slugAnalysis.type === "category") ||
+      (urlParams.selectedSubcategory && slugAnalysis.type === 'category') ||
       urlParams.selectedMaterial ||
       urlParams.minPrice ||
       urlParams.maxPrice || // Treat as single filter
       urlParams.inStockOnly ||
       urlParams.onSaleOnly ||
       urlParams.discountRange ||
-      (urlParams.sortBy && urlParams.sortBy !== "newest")
+      (urlParams.sortBy && urlParams.sortBy !== 'newest')
     );
   }, [urlParams, slugAnalysis.type]);
 
   const sortOptions = [
-    { value: "newest", label: "Latest" },
-    { value: "price-low", label: "Price: Low to High" },
-    { value: "price-high", label: "Price: High to Low" },
+    { value: 'newest', label: 'Latest' },
+    { value: 'price-low', label: 'Price: Low to High' },
+    { value: 'price-high', label: 'Price: High to Low' },
   ];
 
   const quickPriceRanges = [
-    { value: "", label: "All Prices" },
-    { value: `${DEFAULT_MIN_PRICE}-9000`, label: "Under ₹9,000" },
-    { value: "10000-19999", label: "₹10,000 - ₹19,999" },
-    { value: "20000-39999", label: "₹20,000 - ₹39,999" },
-    { value: "40000-59999", label: "₹40,000 - ₹59,999" },
-    { value: `60000-${DEFAULT_MAX_PRICE}`, label: "Above ₹60,000" },
+    { value: '', label: 'All Prices' },
+    { value: `${DEFAULT_MIN_PRICE}-9000`, label: 'Under ₹9,000' },
+    { value: '10000-19999', label: '₹10,000 - ₹19,999' },
+    { value: '20000-39999', label: '₹20,000 - ₹39,999' },
+    { value: '40000-59999', label: '₹40,000 - ₹59,999' },
+    { value: `60000-${DEFAULT_MAX_PRICE}`, label: 'Above ₹60,000' },
   ];
 
   const discountOptions = [
-    { value: "", label: "All Products" },
-    { value: "10", label: "10% or more" },
-    { value: "25", label: "25% or more" },
-    { value: "50", label: "50% or more" },
-    { value: "70", label: "70% or more" },
+    { value: '', label: 'All Products' },
+    { value: '10', label: '10% or more' },
+    { value: '25', label: '25% or more' },
+    { value: '50', label: '50% or more' },
+    { value: '70', label: '70% or more' },
   ];
 
   const getSelectedQuickPriceRange = () => {
-    if (!urlParams.minPrice && !urlParams.maxPrice) return "";
+    if (!urlParams.minPrice && !urlParams.maxPrice) return '';
 
     const currentRange = `${currentMinPrice}-${currentMaxPrice}`;
-    return (
-      quickPriceRanges.find((range) => range.value === currentRange)?.value ||
-      ""
-    );
+    return quickPriceRanges.find((range) => range.value === currentRange)?.value || '';
   };
 
   const activeFiltersCount = useMemo(() => {
     const filters = [
-      urlParams.selectedSubcategory && slugAnalysis.type === "category",
+      urlParams.selectedSubcategory && slugAnalysis.type === 'category',
       urlParams.selectedMaterial,
       urlParams.minPrice || urlParams.maxPrice, // Single price filter
       urlParams.inStockOnly,
       urlParams.onSaleOnly,
       urlParams.discountRange,
-      urlParams.sortBy !== "newest" ? urlParams.sortBy : null,
+      urlParams.sortBy !== 'newest' ? urlParams.sortBy : null,
     ];
 
     return filters.filter(Boolean).length;
@@ -741,12 +685,12 @@ const FilterSidebar = ({
 
       <div
         className="space-y-0 overflow-y-auto p-4 scrollbar-thin"
-        style={{ maxHeight: "calc(100vh - 120px)" }}
+        style={{ maxHeight: 'calc(100vh - 120px)' }}
       >
         <FilterSection
           title="Sort By Price"
           isExpanded={expandedSections.priceSort}
-          onToggle={() => toggleSection("priceSort")}
+          onToggle={() => toggleSection('priceSort')}
         >
           <div className="space-y-1.5">
             {sortOptions.map((option) => (
@@ -756,7 +700,7 @@ const FilterSidebar = ({
               >
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}sort`}
+                  name={`${isMobile ? 'mobile-' : ''}sort`}
                   checked={urlParams.sortBy === option.value}
                   onChange={() => handleSortChange(option.value)}
                   className="mr-2.5 accent-black scale-90"
@@ -772,7 +716,7 @@ const FilterSidebar = ({
         <FilterSection
           title="Price Range"
           isExpanded={expandedSections.priceRange}
-          onToggle={() => toggleSection("priceRange")}
+          onToggle={() => toggleSection('priceRange')}
         >
           <div className="py-2">
             <DualRangeSlider
@@ -792,7 +736,7 @@ const FilterSidebar = ({
         <FilterSection
           title="Quick Price Ranges"
           isExpanded={expandedSections.quickPriceRanges}
-          onToggle={() => toggleSection("quickPriceRanges")}
+          onToggle={() => toggleSection('quickPriceRanges')}
         >
           <div className="space-y-1.5">
             {quickPriceRanges.map((range) => (
@@ -802,7 +746,7 @@ const FilterSidebar = ({
               >
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}quickPrice`}
+                  name={`${isMobile ? 'mobile-' : ''}quickPrice`}
                   checked={getSelectedQuickPriceRange() === range.value}
                   onChange={() => handleQuickPriceRangeChange(range.value)}
                   className="mr-2.5 accent-black scale-90"
@@ -819,15 +763,15 @@ const FilterSidebar = ({
           <FilterSection
             title="Material"
             isExpanded={expandedSections.material}
-            onToggle={() => toggleSection("material")}
+            onToggle={() => toggleSection('material')}
           >
             <div className="space-y-1.5">
               <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}material`}
-                  checked={urlParams.selectedMaterial === ""}
-                  onChange={() => handleMaterialChange("")}
+                  name={`${isMobile ? 'mobile-' : ''}material`}
+                  checked={urlParams.selectedMaterial === ''}
+                  onChange={() => handleMaterialChange('')}
                   className="mr-2.5 accent-black scale-90"
                 />
                 <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
@@ -841,7 +785,7 @@ const FilterSidebar = ({
                 >
                   <input
                     type="radio"
-                    name={`${isMobile ? "mobile-" : ""}material`}
+                    name={`${isMobile ? 'mobile-' : ''}material`}
                     checked={urlParams.selectedMaterial === material}
                     onChange={() => handleMaterialChange(material)}
                     className="mr-2.5 accent-black scale-90"
@@ -858,7 +802,7 @@ const FilterSidebar = ({
         <FilterSection
           title="Discount"
           isExpanded={expandedSections.discount}
-          onToggle={() => toggleSection("discount")}
+          onToggle={() => toggleSection('discount')}
         >
           <div className="space-y-1.5">
             {discountOptions.map((option) => (
@@ -868,7 +812,7 @@ const FilterSidebar = ({
               >
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}discount`}
+                  name={`${isMobile ? 'mobile-' : ''}discount`}
                   checked={urlParams.discountRange === option.value}
                   onChange={() => handleDiscountChange(option.value)}
                   className="mr-2.5 accent-black scale-90"
@@ -884,15 +828,15 @@ const FilterSidebar = ({
         <FilterSection
           title="Category"
           isExpanded={expandedSections.category}
-          onToggle={() => toggleSection("category")}
+          onToggle={() => toggleSection('category')}
         >
           <div className="space-y-1.5">
             <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
               <input
                 type="radio"
-                name={`${isMobile ? "mobile-" : ""}category`}
+                name={`${isMobile ? 'mobile-' : ''}category`}
                 checked={!urlParams.selectedCategory}
-                onChange={() => handleCategoryChange("")}
+                onChange={() => handleCategoryChange('')}
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
@@ -906,7 +850,7 @@ const FilterSidebar = ({
               >
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}category`}
+                  name={`${isMobile ? 'mobile-' : ''}category`}
                   checked={urlParams.selectedCategory === category.slug}
                   onChange={() => handleCategoryChange(category.slug)}
                   className="mr-2.5 accent-black scale-90"
@@ -923,15 +867,15 @@ const FilterSidebar = ({
           <FilterSection
             title="Subcategory"
             isExpanded={expandedSections.subcategory}
-            onToggle={() => toggleSection("subcategory")}
+            onToggle={() => toggleSection('subcategory')}
           >
             <div className="space-y-1.5">
               <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
                 <input
                   type="radio"
-                  name={`${isMobile ? "mobile-" : ""}subcategory`}
+                  name={`${isMobile ? 'mobile-' : ''}subcategory`}
                   checked={!urlParams.selectedSubcategory}
-                  onChange={() => handleSubcategoryChange("")}
+                  onChange={() => handleSubcategoryChange('')}
                   className="mr-2.5 accent-black scale-90"
                 />
                 <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
@@ -945,7 +889,7 @@ const FilterSidebar = ({
                 >
                   <input
                     type="radio"
-                    name={`${isMobile ? "mobile-" : ""}subcategory`}
+                    name={`${isMobile ? 'mobile-' : ''}subcategory`}
                     checked={urlParams.selectedSubcategory === subcategory.slug}
                     onChange={() => handleSubcategoryChange(subcategory.slug)}
                     className="mr-2.5 accent-black scale-90"
@@ -962,16 +906,14 @@ const FilterSidebar = ({
         <FilterSection
           title="Availability"
           isExpanded={expandedSections.availability}
-          onToggle={() => toggleSection("availability")}
+          onToggle={() => toggleSection('availability')}
         >
           <div className="space-y-1.5">
             <label className="flex items-center cursor-pointer group py-1.5 px-2 rounded-sm hover:bg-gray-50 transition-colors">
               <input
                 type="checkbox"
                 checked={urlParams.inStockOnly}
-                onChange={(e) =>
-                  handleCheckboxChange("inStock", e.target.checked)
-                }
+                onChange={(e) => handleCheckboxChange('inStock', e.target.checked)}
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
@@ -982,9 +924,7 @@ const FilterSidebar = ({
               <input
                 type="checkbox"
                 checked={urlParams.onSaleOnly}
-                onChange={(e) =>
-                  handleCheckboxChange("onSale", e.target.checked)
-                }
+                onChange={(e) => handleCheckboxChange('onSale', e.target.checked)}
                 className="mr-2.5 accent-black scale-90"
               />
               <span className="text-xs text-gray-700 group-hover:text-black transition-colors font-medium">
@@ -1025,14 +965,14 @@ const FilterSidebar = ({
     <motion.aside
       initial={{ x: -250, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className="hidden lg:block w-60 bg-white shadow-right min-h-screen "
     >
       <div
         ref={sidebarRef}
         className="sticky max-h-screen overflow-y-auto scrollbar-thin transition-all duration-300 top-0"
         style={{
-          transition: "top 0.8s ease-in-out",
+          transition: 'top 0.8s ease-in-out',
         }}
       >
         {sidebarContent}

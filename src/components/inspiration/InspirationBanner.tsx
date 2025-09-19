@@ -1,23 +1,32 @@
-"use client";
+'use client';
 
-import { IInspiration } from "@/types/Product";
-import { motion } from "framer-motion";
-import Image from "next/image";
+import { IInspiration } from '@/types/Product';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface InspirationBannerProps {
   inspiration: IInspiration;
 }
 
 const fallbackImages: Record<string, string> = {
-  "living-room": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  bedroom: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  "dining-room": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  office: "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  kitchen: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  bathroom: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  outdoor: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  "kids-room": "https://images.unsplash.com/photo-1586227740560-8cf2732c1531?w=1600&h=900&fit=crop&auto=format&sharp=80",
-  default: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&h=900&fit=crop&auto=format&sharp=80",
+  'living-room':
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  bedroom:
+    'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  'dining-room':
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  office:
+    'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  kitchen:
+    'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  bathroom:
+    'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  outdoor:
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  'kids-room':
+    'https://images.unsplash.com/photo-1586227740560-8cf2732c1531?w=1600&h=900&fit=crop&auto=format&sharp=80',
+  default:
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1600&h=900&fit=crop&auto=format&sharp=80',
 };
 
 const InspirationBanner = ({ inspiration }: InspirationBannerProps) => {

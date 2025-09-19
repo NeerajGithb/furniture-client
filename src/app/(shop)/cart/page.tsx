@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import {
   ShoppingBag,
   Plus,
@@ -15,14 +15,14 @@ import {
   Shield,
   ShieldCheck,
   Info,
-} from "lucide-react";
-import Link from "next/link";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useCartStore } from "@/stores/cartStore";
-import { useCheckoutStore } from "@/stores/checkoutStore";
-import { useWishlistStore } from "@/stores/wishlistStore";
-import PriceSummaryCard from "@/components/ui/PriceSummaryCard";
-import toast from "react-hot-toast";
+} from 'lucide-react';
+import Link from 'next/link';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCartStore } from '@/stores/cartStore';
+import { useCheckoutStore } from '@/stores/checkoutStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import PriceSummaryCard from '@/components/ui/PriceSummaryCard';
+import toast from 'react-hot-toast';
 
 const CartPage = () => {
   const { user } = useCurrentUser();
@@ -66,8 +66,8 @@ const CartPage = () => {
       },
       {
         threshold: 0.1,
-        rootMargin: "-50px",
-      }
+        rootMargin: '-50px',
+      },
     );
 
     if (priceCardRef.current) {
@@ -84,13 +84,13 @@ const CartPage = () => {
   const handleCheckout = () => {
     const selectedItems = getSelectedCartItems();
     if (selectedItems.length === 0) {
-      toast.error("Please select items to checkout");
+      toast.error('Please select items to checkout');
       return;
     }
 
     const checkoutData = getCheckoutData();
     if (!checkoutData) {
-      toast.error("Unable to prepare checkout data");
+      toast.error('Unable to prepare checkout data');
       return;
     }
 
@@ -99,8 +99,8 @@ const CartPage = () => {
       quantity: item.quantity,
       itemTotal: item.itemTotal,
       product: {
-        _id: item.product?._id || "",
-        name: item.product?.name || "",
+        _id: item.product?._id || '',
+        name: item.product?.name || '',
         finalPrice: item.product?.finalPrice || 0,
         originalPrice: item.product?.originalPrice,
         discountPercent: item.product?.discountPercent,
@@ -112,23 +112,23 @@ const CartPage = () => {
     setCheckoutData({
       selectedItems: checkoutData.selectedItems,
       insuranceEnabled: checkoutData.insuranceEnabled,
-      selectedAddressId: "",
-      selectedPaymentMethod: "",
+      selectedAddressId: '',
+      selectedPaymentMethod: '',
       totals: checkoutData.totals,
       cartItems: checkoutItems,
     });
 
-    router.push("/checkout");
+    router.push('/checkout');
   };
 
   const handleMoveToWishlist = async (productId: any) => {
     try {
       await addToWishlist(productId);
       await removeFromCart(productId);
-      toast.success("Item moved to wishlist");
+      toast.success('Item moved to wishlist');
     } catch (error) {
-      console.error("Error moving to wishlist:", error);
-      toast.error("Failed to move item to wishlist");
+      console.error('Error moving to wishlist:', error);
+      toast.error('Failed to move item to wishlist');
     }
   };
 
@@ -139,15 +139,12 @@ const CartPage = () => {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">
-            Welcome Back!
-          </h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3">Welcome Back!</h1>
           <p className="text-gray-600 mb-6 text-sm">
-            Sign in to your account to view your saved items and continue
-            shopping.
+            Sign in to your account to view your saved items and continue shopping.
           </p>
           <button
-            onClick={() => router.push("/auth/signin?returnUrl=/cart")}
+            onClick={() => router.push('/auth/signin?returnUrl=/cart')}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 rounded-xs shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             Sign In to Continue
@@ -166,10 +163,7 @@ const CartPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               <div className="lg:col-span-2 space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white p-4 sm:p-6 rounded-xs shadow-sm"
-                  >
+                  <div key={i} className="bg-white p-4 sm:p-6 rounded-xs shadow-sm">
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="w-full h-48 sm:w-20 sm:h-20 bg-gray-300 rounded"></div>
                       <div className="flex-1 space-y-2">
@@ -231,9 +225,7 @@ const CartPage = () => {
                 }
                 className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium transition-colors px-2 sm:px-3 py-1 rounded-xs hover:bg-blue-50 whitespace-nowrap"
               >
-                {checkout.selectedItems.size === cart.items.length
-                  ? "Deselect All"
-                  : "Select All"}
+                {checkout.selectedItems.size === cart.items.length ? 'Deselect All' : 'Select All'}
               </button>
               <button
                 onClick={clearCart}
@@ -256,8 +248,7 @@ const CartPage = () => {
               Your cart is empty
             </h2>
             <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm">
-              Discover amazing products and start building your perfect
-              collection.
+              Discover amazing products and start building your perfect collection.
             </p>
             <Link
               href="/products"
@@ -273,18 +264,14 @@ const CartPage = () => {
               {cart.items?.map((item) => {
                 const isSelected = isItemSelected(item.productId);
                 const hasProtection = hasInsurance(item.productId);
-                const itemInsuranceCost = hasProtection
-                  ? Math.round(item.itemTotal * 0.02)
-                  : 0;
+                const itemInsuranceCost = hasProtection ? Math.round(item.itemTotal * 0.02) : 0;
 
                 return (
                   <div
                     key={item._id}
                     className={`bg-white rounded-xs shadow-sm border transition-all duration-200 hover:shadow-md ${
-                      isSelected
-                        ? "border-blue-200 ring-1 ring-blue-100"
-                        : "border-gray-200"
-                    } ${updatingItems.has(item.productId) ? "opacity-50" : ""}`}
+                      isSelected ? 'border-blue-200 ring-1 ring-blue-100' : 'border-gray-200'
+                    } ${updatingItems.has(item.productId) ? 'opacity-50' : ''}`}
                   >
                     <div className="p-4 sm:p-6">
                       {/* Mobile Layout */}
@@ -295,17 +282,14 @@ const CartPage = () => {
                             {item.product?.mainImage?.url ? (
                               <img
                                 src={item.product.mainImage.url}
-                                alt={
-                                  item.product.mainImage.alt ||
-                                  item.product.name
-                                }
+                                alt={item.product.mainImage.alt || item.product.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.style.display = 'none';
                                   const nextElement = e.currentTarget
                                     .nextElementSibling as HTMLElement;
                                   if (nextElement) {
-                                    nextElement.style.display = "flex";
+                                    nextElement.style.display = 'flex';
                                   }
                                 }}
                               />
@@ -321,8 +305,8 @@ const CartPage = () => {
                             disabled={updatingItems.has(item.productId)}
                             className={`absolute top-3 right-3 w-6 h-6 rounded border-2 flex items-center justify-center transition-all duration-200 disabled:opacity-50 ${
                               isSelected
-                                ? "bg-blue-600 border-blue-600 text-white"
-                                : "border-white bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50"
+                                ? 'bg-blue-600 border-blue-600 text-white'
+                                : 'border-white bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50'
                             }`}
                           >
                             {isSelected && <Check className="w-4 h-4" />}
@@ -333,7 +317,7 @@ const CartPage = () => {
                         <div className="space-y-4">
                           <div>
                             <h3 className="font-semibold text-gray-900 text-lg mb-2">
-                              {item.product?.name || "Product"}
+                              {item.product?.name || 'Product'}
                             </h3>
                             {item.selectedVariant && (
                               <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
@@ -354,8 +338,7 @@ const CartPage = () => {
                               <div className="mb-3">
                                 {item.product.isInStock ? (
                                   <span className="text-xs text-green-600 font-medium">
-                                    ✓ In stock ({item.product.inStockQuantity}{" "}
-                                    available)
+                                    ✓ In stock ({item.product.inStockQuantity} available)
                                   </span>
                                 ) : (
                                   <span className="text-xs text-red-600 font-medium">
@@ -369,53 +352,43 @@ const CartPage = () => {
                           {/* Price */}
                           <div className="flex items-center flex-wrap gap-2">
                             {item.product?.originalPrice &&
-                              item.product.originalPrice >
-                                item.product.finalPrice && (
+                              item.product.originalPrice > item.product.finalPrice && (
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm text-gray-500 line-through">
-                                    ₹
-                                    {item.product.originalPrice.toLocaleString()}
+                                    ₹{item.product.originalPrice.toLocaleString()}
                                   </span>
-                                  <span className="text-xs text-gray-400">
-                                    (MRP)
-                                  </span>
+                                  <span className="text-xs text-gray-400">(MRP)</span>
                                 </div>
                               )}
                             <span className="font-bold text-xl text-gray-900">
                               ₹{item.product?.finalPrice?.toLocaleString() || 0}
                             </span>
-                            {item.product?.discountPercent &&
-                              item.product.discountPercent > 0 && (
-                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
-                                  {Math.round(item.product.discountPercent)}%
-                                  OFF
-                                </span>
-                              )}
+                            {item.product?.discountPercent && item.product.discountPercent > 0 && (
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold">
+                                {Math.round(item.product.discountPercent)}% OFF
+                              </span>
+                            )}
                           </div>
 
                           {/* Protection Plan */}
                           <div
                             className={`border rounded-xs p-3 transition-all duration-200 ${
                               hasProtection
-                                ? "border-blue-200 bg-blue-50"
-                                : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                                ? 'border-blue-200 bg-blue-50'
+                                : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex items-start gap-3 flex-1 min-w-0">
                                 <button
-                                  onClick={() =>
-                                    toggleInsurance(item.productId)
-                                  }
+                                  onClick={() => toggleInsurance(item.productId)}
                                   className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 mt-0.5 ${
                                     hasProtection
-                                      ? "bg-blue-600 border-blue-600 text-white"
-                                      : "border-gray-300 hover:border-blue-400"
+                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                      : 'border-gray-300 hover:border-blue-400'
                                   }`}
                                 >
-                                  {hasProtection && (
-                                    <Check className="w-3 h-3" />
-                                  )}
+                                  {hasProtection && <Check className="w-3 h-3" />}
                                 </button>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
@@ -435,8 +408,8 @@ const CartPage = () => {
                                     <div className="flex items-center gap-1 text-xs text-blue-700">
                                       <Info className="w-3 h-3 flex-shrink-0" />
                                       <span>
-                                        Coverage includes accidental damage,
-                                        liquid spills & theft protection
+                                        Coverage includes accidental damage, liquid spills & theft
+                                        protection
                                       </span>
                                     </div>
                                   )}
@@ -445,9 +418,7 @@ const CartPage = () => {
                               <div className="text-right flex-shrink-0">
                                 <div className="font-semibold text-sm text-gray-900">
                                   +₹
-                                  {Math.round(
-                                    item.itemTotal * 0.02
-                                  ).toLocaleString()}
+                                  {Math.round(item.itemTotal * 0.02).toLocaleString()}
                                 </div>
                                 <div className="text-xs text-gray-500 whitespace-nowrap">
                                   (2% of item value)
@@ -461,10 +432,7 @@ const CartPage = () => {
                             <div className="flex items-center border-2 border-gray-200 rounded-xs overflow-hidden">
                               <button
                                 onClick={() =>
-                                  updateQuantity(
-                                    item.productId,
-                                    Math.max(1, item.quantity - 1)
-                                  )
+                                  updateQuantity(item.productId, Math.max(1, item.quantity - 1))
                                 }
                                 disabled={
                                   item.quantity <= 1 ||
@@ -483,15 +451,9 @@ const CartPage = () => {
                                 )}
                               </div>
                               <button
-                                onClick={() =>
-                                  updateQuantity(
-                                    item.productId,
-                                    item.quantity + 1
-                                  )
-                                }
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                                 disabled={
-                                  item.quantity >=
-                                    (item.product?.inStockQuantity || 0) ||
+                                  item.quantity >= (item.product?.inStockQuantity || 0) ||
                                   updatingItems.has(item.productId) ||
                                   !item.product?.isInStock
                                 }
@@ -503,10 +465,7 @@ const CartPage = () => {
 
                             <div className="text-right">
                               <div className="font-bold text-lg text-gray-900">
-                                ₹
-                                {(
-                                  item.itemTotal + itemInsuranceCost
-                                ).toLocaleString()}
+                                ₹{(item.itemTotal + itemInsuranceCost).toLocaleString()}
                               </div>
                               {hasProtection && (
                                 <div className="text-xs text-blue-600">
@@ -519,9 +478,7 @@ const CartPage = () => {
                           {/* Action Buttons */}
                           <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                             <button
-                              onClick={() =>
-                                handleMoveToWishlist(item.productId)
-                              }
+                              onClick={() => handleMoveToWishlist(item.productId)}
                               disabled={updatingItems.has(item.productId)}
                               className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 hover:text-red-600 transition-colors px-3 py-2 hover:bg-red-50 rounded-xs disabled:opacity-50"
                             >
@@ -551,14 +508,12 @@ const CartPage = () => {
                           {/* Selection Checkbox */}
                           <div className="flex flex-col items-center gap-2 pt-1">
                             <button
-                              onClick={() =>
-                                toggleItemSelection(item.productId)
-                              }
+                              onClick={() => toggleItemSelection(item.productId)}
                               disabled={updatingItems.has(item.productId)}
                               className={`w-4 h-4 rounded-sm border-2 flex items-center justify-center transition-all duration-200 disabled:opacity-50 ${
                                 isSelected
-                                  ? "bg-blue-600 border-blue-600 text-white"
-                                  : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                                  ? 'bg-blue-600 border-blue-600 text-white'
+                                  : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                               }`}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
@@ -570,17 +525,14 @@ const CartPage = () => {
                             {item.product?.mainImage?.url ? (
                               <img
                                 src={item.product.mainImage.url}
-                                alt={
-                                  item.product.mainImage.alt ||
-                                  item.product.name
-                                }
+                                alt={item.product.mainImage.alt || item.product.name}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
-                                  e.currentTarget.style.display = "none";
+                                  e.currentTarget.style.display = 'none';
                                   const nextElement = e.currentTarget
                                     .nextElementSibling as HTMLElement;
                                   if (nextElement) {
-                                    nextElement.style.display = "flex";
+                                    nextElement.style.display = 'flex';
                                   }
                                 }}
                               />
@@ -595,7 +547,7 @@ const CartPage = () => {
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold text-gray-900 mb-1 text-base truncate">
-                                  {item.product?.name || "Product"}
+                                  {item.product?.name || 'Product'}
                                 </h3>
                                 {item.selectedVariant && (
                                   <div className="flex gap-1 text-xs text-gray-600 mb-1">
@@ -616,9 +568,7 @@ const CartPage = () => {
                                   <div className="mb-1">
                                     {item.product.isInStock ? (
                                       <span className="text-xs text-green-600 font-medium">
-                                        ✓ In stock (
-                                        {item.product.inStockQuantity}{" "}
-                                        available)
+                                        ✓ In stock ({item.product.inStockQuantity} available)
                                       </span>
                                     ) : (
                                       <span className="text-xs text-red-600 font-medium">
@@ -633,23 +583,18 @@ const CartPage = () => {
                             {/* Price - More compact */}
                             <div className="flex items-center gap-2 mb-2 flex-wrap">
                               {item.product?.originalPrice &&
-                                item.product.originalPrice >
-                                  item.product.finalPrice && (
+                                item.product.originalPrice > item.product.finalPrice && (
                                   <span className="text-sm text-gray-500 line-through">
-                                    ₹
-                                    {item.product.originalPrice.toLocaleString()}
+                                    ₹{item.product.originalPrice.toLocaleString()}
                                   </span>
                                 )}
                               <span className="font-bold text-lg text-gray-900">
-                                ₹
-                                {item.product?.finalPrice?.toLocaleString() ||
-                                  0}
+                                ₹{item.product?.finalPrice?.toLocaleString() || 0}
                               </span>
                               {item.product?.discountPercent &&
                                 item.product.discountPercent > 0 && (
                                   <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-semibold">
-                                    {Math.round(item.product.discountPercent)}%
-                                    OFF
+                                    {Math.round(item.product.discountPercent)}% OFF
                                   </span>
                                 )}
                             </div>
@@ -658,25 +603,21 @@ const CartPage = () => {
                             <div
                               className={`border mb-2 rounded-xs p-3 transition-all duration-200 ${
                                 hasProtection
-                                  ? "border-blue-200 bg-blue-50"
-                                  : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                                  ? 'border-blue-200 bg-blue-50'
+                                  : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                               }`}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-start gap-3 flex-1 min-w-0">
                                   <button
-                                    onClick={() =>
-                                      toggleInsurance(item.productId)
-                                    }
+                                    onClick={() => toggleInsurance(item.productId)}
                                     className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0 mt-0.5 ${
                                       hasProtection
-                                        ? "bg-blue-600 border-blue-600 text-white"
-                                        : "border-gray-300 hover:border-blue-400"
+                                        ? 'bg-blue-600 border-blue-600 text-white'
+                                        : 'border-gray-300 hover:border-blue-400'
                                     }`}
                                   >
-                                    {hasProtection && (
-                                      <Check className="w-3 h-3" />
-                                    )}
+                                    {hasProtection && <Check className="w-3 h-3" />}
                                   </button>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
@@ -696,8 +637,8 @@ const CartPage = () => {
                                       <div className="flex items-center gap-1 text-xs text-blue-700">
                                         <Info className="w-3 h-3 flex-shrink-0" />
                                         <span>
-                                          Coverage includes accidental damage,
-                                          liquid spills & theft protection
+                                          Coverage includes accidental damage, liquid spills & theft
+                                          protection
                                         </span>
                                       </div>
                                     )}
@@ -706,9 +647,7 @@ const CartPage = () => {
                                 <div className="text-right flex-shrink-0">
                                   <div className="font-semibold text-sm text-gray-900">
                                     +₹
-                                    {Math.round(
-                                      item.itemTotal * 0.02
-                                    ).toLocaleString()}
+                                    {Math.round(item.itemTotal * 0.02).toLocaleString()}
                                   </div>
                                   <div className="text-xs text-gray-500 whitespace-nowrap">
                                     (2% of item value)
@@ -722,10 +661,7 @@ const CartPage = () => {
                               <div className="flex items-center border-2 border-gray-200 rounded-xs overflow-hidden">
                                 <button
                                   onClick={() =>
-                                    updateQuantity(
-                                      item.productId,
-                                      Math.max(1, item.quantity - 1)
-                                    )
+                                    updateQuantity(item.productId, Math.max(1, item.quantity - 1))
                                   }
                                   disabled={
                                     item.quantity <= 1 ||
@@ -744,15 +680,9 @@ const CartPage = () => {
                                   )}
                                 </div>
                                 <button
-                                  onClick={() =>
-                                    updateQuantity(
-                                      item.productId,
-                                      item.quantity + 1
-                                    )
-                                  }
+                                  onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                                   disabled={
-                                    item.quantity >=
-                                      (item.product?.inStockQuantity || 0) ||
+                                    item.quantity >= (item.product?.inStockQuantity || 0) ||
                                     updatingItems.has(item.productId) ||
                                     !item.product?.isInStock
                                   }
@@ -764,10 +694,7 @@ const CartPage = () => {
 
                               <div className="text-right">
                                 <div className="font-bold text-base text-gray-900">
-                                  ₹
-                                  {(
-                                    item.itemTotal + itemInsuranceCost
-                                  ).toLocaleString()}
+                                  ₹{(item.itemTotal + itemInsuranceCost).toLocaleString()}
                                 </div>
                                 {hasProtection && (
                                   <div className="text-xs text-blue-600">
@@ -779,9 +706,7 @@ const CartPage = () => {
                               {/* Action Buttons - Inline */}
                               <div className="flex items-center gap-1 ml-2">
                                 <button
-                                  onClick={() =>
-                                    handleMoveToWishlist(item.productId)
-                                  }
+                                  onClick={() => handleMoveToWishlist(item.productId)}
                                   disabled={updatingItems.has(item.productId)}
                                   className="flex items-center gap-1 text-xs font-medium text-gray-700 hover:text-red-600 transition-colors px-2 py-1 hover:bg-red-50 rounded-xs disabled:opacity-50"
                                 >
@@ -832,8 +757,8 @@ const CartPage = () => {
           <div
             className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
               showFixedCheckout
-                ? "translate-y-0 opacity-100"
-                : "translate-y-full opacity-0 pointer-events-none"
+                ? 'translate-y-0 opacity-100'
+                : 'translate-y-full opacity-0 pointer-events-none'
             }`}
           >
             <button
@@ -842,15 +767,13 @@ const CartPage = () => {
               className="w-full h-[60px] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 rounded-2xl font-semibold shadow-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-2 border-emerald-400/30"
             >
               <div className="flex items-center justify-between h-full">
-                <span className="font-bold text-lg tracking-wide">
-                  Proceed to Checkout
-                </span>
+                <span className="font-bold text-lg tracking-wide">Proceed to Checkout</span>
                 <div className="flex items-center gap-3">
                   <span className="bg-white/20 px-2 py-1 rounded-full text-sm font-medium">
                     {checkout.selectedItems.size}
                   </span>
                   <span className="font-bold text-lg tracking-wide">
-                    ₹{checkout?.totals?.totalAmount?.toLocaleString() || "0"}
+                    ₹{checkout?.totals?.totalAmount?.toLocaleString() || '0'}
                   </span>
                 </div>
               </div>

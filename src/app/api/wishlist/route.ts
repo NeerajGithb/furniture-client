@@ -15,11 +15,11 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
 
     await connectDB();
 
-    let wishlist = await Wishlist.findOne({ userId: user.userId })
-      .populate({
-        path: 'items.productId',
-        select: 'name finalPrice originalPrice discountPercent mainImage inStockQuantity ratings reviews isNewArrival isBestSeller material dimensions',
-      });
+    let wishlist = await Wishlist.findOne({ userId: user.userId }).populate({
+      path: 'items.productId',
+      select:
+        'name finalPrice originalPrice discountPercent mainImage inStockQuantity ratings reviews isNewArrival isBestSeller material dimensions',
+    });
 
     if (!wishlist) {
       wishlist = await Wishlist.create({ userId: user.userId, items: [] });
@@ -27,31 +27,29 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
 
     // Filter out invalid products and format response
     const allValidItems = wishlist.items.filter((item: any) => item.productId);
-    
+
     // Apply pagination
-    const paginatedItems = allValidItems
-      .slice(skip, skip + limit)
-      .map((item: any) => ({
-        _id: item._id,
-        productId: (item.productId as any)._id,
-        product: {
-          _id: (item.productId as any)._id,
-          name: (item.productId as any).name,
-          finalPrice: (item.productId as any).finalPrice,
-          originalPrice: (item.productId as any).originalPrice,
-          discountPercent: (item.productId as any).discountPercent,
-          mainImage: (item.productId as any).mainImage,
-          inStockQuantity: (item.productId as any).inStockQuantity,
-          isInStock: (item.productId as any).inStockQuantity > 0,
-          ratings: (item.productId as any).ratings,
-          reviews: (item.productId as any).reviews,
-          isNewArrival: (item.productId as any).isNewArrival,
-          isBestSeller: (item.productId as any).isBestSeller,
-          material: (item.productId as any).material,
-          dimensions: (item.productId as any).dimensions
-        },
-        addedAt: item.addedAt
-      }));
+    const paginatedItems = allValidItems.slice(skip, skip + limit).map((item: any) => ({
+      _id: item._id,
+      productId: (item.productId as any)._id,
+      product: {
+        _id: (item.productId as any)._id,
+        name: (item.productId as any).name,
+        finalPrice: (item.productId as any).finalPrice,
+        originalPrice: (item.productId as any).originalPrice,
+        discountPercent: (item.productId as any).discountPercent,
+        mainImage: (item.productId as any).mainImage,
+        inStockQuantity: (item.productId as any).inStockQuantity,
+        isInStock: (item.productId as any).inStockQuantity > 0,
+        ratings: (item.productId as any).ratings,
+        reviews: (item.productId as any).reviews,
+        isNewArrival: (item.productId as any).isNewArrival,
+        isBestSeller: (item.productId as any).isBestSeller,
+        material: (item.productId as any).material,
+        dimensions: (item.productId as any).dimensions,
+      },
+      addedAt: item.addedAt,
+    }));
 
     // Clean up invalid items if any found
     if (allValidItems.length !== wishlist.items.length) {
@@ -68,16 +66,12 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         currentPage: page,
         totalPages,
         totalItems,
-        hasMore: page < totalPages
-      }
+        hasMore: page < totalPages,
+      },
     });
-
   } catch (error) {
     console.error('Wishlist GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch wishlist' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch wishlist' }, { status: 500 });
   }
 });
 
@@ -88,10 +82,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { productId } = body;
 
     if (!productId) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
     }
 
     await connectDB();
@@ -99,10 +90,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     // Verify product exists
     const product = await Product.findById(productId);
     if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     // Find or create wishlist
@@ -113,20 +101,17 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     // Check if item already exists
     const existingItem = wishlist.items.find(
-      (item: any) => item.productId.toString() === productId
+      (item: any) => item.productId.toString() === productId,
     );
 
     if (existingItem) {
-      return NextResponse.json(
-        { error: 'Product already in wishlist' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product already in wishlist' }, { status: 400 });
     }
 
     // Add item to wishlist
     wishlist.items.unshift({
       productId,
-      addedAt: new Date()
+      addedAt: new Date(),
     });
 
     await wishlist.save();
@@ -134,25 +119,24 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     // Update product's wishlist count (optional analytics)
     try {
       await Product.findByIdAndUpdate(productId, {
-        $inc: { wishlistCount: 1 }
+        $inc: { wishlistCount: 1 },
       });
     } catch (updateError) {
       // Don't fail the request if this update fails
       console.warn('Failed to update wishlist count:', updateError);
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Product added to wishlist successfully',
-      wishlistCount: wishlist.items.length
-    }, { status: 200 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Product added to wishlist successfully',
+        wishlistCount: wishlist.items.length,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error('Wishlist POST error:', error);
-    return NextResponse.json(
-      { error: 'Failed to add product to wishlist' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to add product to wishlist' }, { status: 500 });
   }
 });
 
@@ -166,7 +150,7 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
     if (!productId && !clearAll) {
       return NextResponse.json(
         { error: 'Product ID or clearAll parameter is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -174,46 +158,40 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
 
     const wishlist = await Wishlist.findOne({ userId: user.userId });
     if (!wishlist) {
-      return NextResponse.json(
-        { error: 'Wishlist not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Wishlist not found' }, { status: 404 });
     }
 
     if (clearAll) {
       // Get all product IDs before clearing for analytics
       const productIds = wishlist.items.map((item: any) => item.productId);
-      
+
       // Clear wishlist
       wishlist.items = [];
       await wishlist.save();
 
       // Update wishlist count for all products (optional analytics)
       try {
-        await Product.updateMany(
-          { _id: { $in: productIds } },
-          { $inc: { wishlistCount: -1 } }
-        );
+        await Product.updateMany({ _id: { $in: productIds } }, { $inc: { wishlistCount: -1 } });
       } catch (updateError) {
         console.warn('Failed to update wishlist counts:', updateError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: 'Wishlist cleared successfully'
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Wishlist cleared successfully',
+        },
+        { status: 200 },
+      );
     } else {
       // Remove specific item
       const initialLength = wishlist.items.length;
       wishlist.items = wishlist.items.filter(
-        (item: any) => item.productId.toString() !== productId
+        (item: any) => item.productId.toString() !== productId,
       );
 
       if (wishlist.items.length === initialLength) {
-        return NextResponse.json(
-          { error: 'Product not found in wishlist' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Product not found in wishlist' }, { status: 404 });
       }
 
       await wishlist.save();
@@ -221,24 +199,23 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
       // Update product's wishlist count (optional analytics)
       try {
         await Product.findByIdAndUpdate(productId, {
-          $inc: { wishlistCount: -1 }
+          $inc: { wishlistCount: -1 },
         });
       } catch (updateError) {
         console.warn('Failed to update wishlist count:', updateError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: 'Product removed from wishlist successfully',
-        wishlistCount: wishlist.items.length
-      }, { status: 200 });
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Product removed from wishlist successfully',
+          wishlistCount: wishlist.items.length,
+        },
+        { status: 200 },
+      );
     }
-
   } catch (error) {
     console.error('Wishlist DELETE error:', error);
-    return NextResponse.json(
-      { error: 'Failed to remove from wishlist' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to remove from wishlist' }, { status: 500 });
   }
 });

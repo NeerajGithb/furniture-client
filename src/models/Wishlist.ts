@@ -1,4 +1,3 @@
-// models/Wishlist.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IWishlistItem {
@@ -17,59 +16,56 @@ const WishlistItemSchema = new Schema<IWishlistItem>({
   productId: {
     type: Schema.Types.ObjectId,
     ref: 'Product',
-    required: true
+    required: true,
   },
   addedAt: {
     type: Date,
-    default: Date.now
-  }
-});
-
-const WishlistSchema = new Schema<IWishlist>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
+    default: Date.now,
   },
-  items: [WishlistItemSchema]
-}, {
-  timestamps: true
 });
 
-// Indexes for performance
+const WishlistSchema = new Schema<IWishlist>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+    },
+    items: [WishlistItemSchema],
+  },
+  {
+    timestamps: true,
+  },
+);
+
 WishlistSchema.index({ userId: 1 });
 WishlistSchema.index({ 'items.productId': 1 });
 
-// Methods
-WishlistSchema.methods.addItem = function(productId: string) {
+WishlistSchema.methods.addItem = function (productId: string) {
   const existingItem = this.items.find(
-    (item: IWishlistItem) => item.productId.toString() === productId
+    (item: IWishlistItem) => item.productId.toString() === productId,
   );
 
   if (!existingItem) {
     this.items.push({
       productId: new mongoose.Types.ObjectId(productId),
-      addedAt: new Date()
+      addedAt: new Date(),
     });
   }
   return this.save();
 };
 
-WishlistSchema.methods.removeItem = function(productId: string) {
-  this.items = this.items.filter(
-    (item: IWishlistItem) => item.productId.toString() !== productId
-  );
+WishlistSchema.methods.removeItem = function (productId: string) {
+  this.items = this.items.filter((item: IWishlistItem) => item.productId.toString() !== productId);
   return this.save();
 };
 
-WishlistSchema.methods.isItemInWishlist = function(productId: string) {
-  return this.items.some(
-    (item: IWishlistItem) => item.productId.toString() === productId
-  );
+WishlistSchema.methods.isItemInWishlist = function (productId: string) {
+  return this.items.some((item: IWishlistItem) => item.productId.toString() === productId);
 };
 
-WishlistSchema.methods.clearWishlist = function() {
+WishlistSchema.methods.clearWishlist = function () {
   this.items = [];
   return this.save();
 };

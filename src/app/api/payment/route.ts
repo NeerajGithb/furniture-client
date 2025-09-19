@@ -17,10 +17,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { orderId, paymentMethod } = body;
 
     if (!orderId) {
-      return NextResponse.json(
-        { error: 'Order ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
     }
 
     await connectDB();
@@ -28,21 +25,15 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     // Find the order
     const order = await Order.findOne({
       _id: orderId,
-      userId: user.userId
+      userId: user.userId,
     });
 
     if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
     if (order.paymentStatus === 'paid') {
-      return NextResponse.json(
-        { error: 'Order is already paid' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Order is already paid' }, { status: 400 });
     }
 
     // Handle COD
@@ -56,13 +47,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({
         success: true,
         paymentMethod: 'cod',
-        message: 'Order confirmed with Cash on Delivery'
+        message: 'Order confirmed with Cash on Delivery',
       });
     }
 
     // Find existing payment or create new one
     let payment = await Payment.findOne({ orderId: order._id });
-    
+
     if (!payment) {
       payment = await Payment.create({
         orderId: order._id,
@@ -70,7 +61,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         amount: order.totalAmount,
         method: paymentMethod,
         gateway: 'razorpay',
-        status: 'pending'
+        status: 'pending',
       });
     }
 
@@ -79,7 +70,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       id: `order_${Date.now()}`,
       amount: order.totalAmount * 100, // Razorpay expects amount in paise
       currency: 'INR',
-      receipt: order.orderNumber
+      receipt: order.orderNumber,
     };
 
     // In production, use actual Razorpay SDK:
@@ -111,20 +102,16 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       order: {
         _id: order._id,
         orderNumber: order.orderNumber,
-        totalAmount: order.totalAmount
+        totalAmount: order.totalAmount,
       },
       customer: {
         name: user.email.split('@')[0], // Extract name from email
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
     console.error('Payment initiation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to initiate payment' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to initiate payment' }, { status: 500 });
   }
 });
 
@@ -132,42 +119,30 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
-    const { 
-      paymentId, 
-      orderId, 
-      signature, 
-      razorpayPaymentId,
-      razorpayOrderId,
-      razorpaySignature 
-    } = body;
+    const { paymentId, orderId, signature, razorpayPaymentId, razorpayOrderId, razorpaySignature } =
+      body;
 
     if (!paymentId) {
-      return NextResponse.json(
-        { error: 'Payment ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Payment ID is required' }, { status: 400 });
     }
 
     await connectDB();
 
     // Find the payment
-    const payment = await Payment.findOne({ 
+    const payment = await Payment.findOne({
       paymentId,
-      userId: user.userId 
+      userId: user.userId,
     }).populate('orderId');
 
     if (!payment) {
-      return NextResponse.json(
-        { error: 'Payment not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
     }
 
     const order = payment.orderId as any;
 
     // Mock signature verification (replace with actual Razorpay verification)
     let isSignatureValid = true;
-    
+
     // In production, verify signature:
     /*
     const generatedSignature = crypto
@@ -183,7 +158,7 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
       await payment.markAsSuccess({
         transactionId: razorpayPaymentId,
         orderId: razorpayOrderId,
-        signature: razorpaySignature
+        signature: razorpaySignature,
       });
 
       // Update order
@@ -198,25 +173,18 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
           _id: order._id,
           orderNumber: order.orderNumber,
           orderStatus: order.orderStatus,
-          paymentStatus: order.paymentStatus
-        }
+          paymentStatus: order.paymentStatus,
+        },
       });
     } else {
       // Payment failed
       await payment.markAsFailed('Invalid signature');
 
-      return NextResponse.json(
-        { error: 'Payment verification failed' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
     }
-
   } catch (error) {
     console.error('Payment verification error:', error);
-    return NextResponse.json(
-      { error: 'Failed to verify payment' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to verify payment' }, { status: 500 });
   }
 });
 
@@ -228,30 +196,26 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const orderId = searchParams.get('orderId');
 
     if (!paymentId && !orderId) {
-      return NextResponse.json(
-        { error: 'Payment ID or Order ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Payment ID or Order ID is required' }, { status: 400 });
     }
 
     await connectDB();
 
     let query: any = { userId: user.userId };
-    
+
     if (paymentId) {
       query.paymentId = paymentId;
     } else if (orderId) {
       query.orderId = orderId;
     }
 
-    const payment = await Payment.findOne(query)
-      .populate('orderId', 'orderNumber totalAmount orderStatus');
+    const payment = await Payment.findOne(query).populate(
+      'orderId',
+      'orderNumber totalAmount orderStatus',
+    );
 
     if (!payment) {
-      return NextResponse.json(
-        { error: 'Payment not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -264,19 +228,17 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       gateway: payment.gateway,
       gatewayTransactionId: payment.gatewayTransactionId,
       createdAt: payment.createdAt,
-      order: payment.orderId ? {
-        _id: payment.orderId._id,
-        orderNumber: payment.orderId.orderNumber,
-        totalAmount: payment.orderId.totalAmount,
-        orderStatus: payment.orderId.orderStatus
-      } : null
+      order: payment.orderId
+        ? {
+            _id: payment.orderId._id,
+            orderNumber: payment.orderId.orderNumber,
+            totalAmount: payment.orderId.totalAmount,
+            orderStatus: payment.orderId.orderStatus,
+          }
+        : null,
     });
-
   } catch (error) {
     console.error('Payment status error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get payment status' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get payment status' }, { status: 500 });
   }
 });

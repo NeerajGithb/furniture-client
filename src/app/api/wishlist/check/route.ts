@@ -11,10 +11,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { productIds } = body;
 
     if (!productIds || !Array.isArray(productIds)) {
-      return NextResponse.json(
-        { error: 'Product IDs array is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product IDs array is required' }, { status: 400 });
     }
 
     await connectDB();
@@ -22,23 +19,19 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const wishlist = await Wishlist.findOne({ userId: user.userId });
     if (!wishlist) {
       return NextResponse.json({
-        wishlistedProducts: []
+        wishlistedProducts: [],
       });
     }
 
-    const wishlistedProducts = productIds.filter(productId =>
-      wishlist.items.some((item : any) => item.productId.toString() === productId)
+    const wishlistedProducts = productIds.filter((productId) =>
+      wishlist.items.some((item: any) => item.productId.toString() === productId),
     );
 
     return NextResponse.json({
-      wishlistedProducts
+      wishlistedProducts,
     });
-
   } catch (error) {
     console.error('Wishlist check error:', error);
-    return NextResponse.json(
-      { error: 'Failed to check wishlist status' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to check wishlist status' }, { status: 500 });
   }
 });

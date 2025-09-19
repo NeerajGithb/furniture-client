@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Category } from "@/types/Product";
-import Image from "next/image";
-import Link from "next/link";
+import { Category } from '@/types/Product';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface CategoryGridProps {
   inspiration: any;
@@ -10,46 +10,39 @@ interface CategoryGridProps {
 }
 
 const categoryImages: Record<string, string> = {
-  "living-room":
-    "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-  bedroom:
-    "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop",
-  "dining-room":
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop",
-  office:
-    "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop",
-  kitchen:
-    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
-  bathroom:
-    "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop",
-  outdoor:
-    "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
-  "kids-room":
-    "https://images.unsplash.com/photo-1586227740560-8cf2732c1531?w=400&h=300&fit=crop",
-  default:
-    "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop",
+  'living-room':
+    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+  bedroom: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=400&h=300&fit=crop',
+  'dining-room':
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop',
+  office: 'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop',
+  kitchen: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop',
+  bathroom: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop',
+  outdoor: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+  'kids-room': 'https://images.unsplash.com/photo-1586227740560-8cf2732c1531?w=400&h=300&fit=crop',
+  default: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
 };
 
 const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
   const categories: Category[] = (inspiration?.categories || []).map((c: any) =>
-    typeof c === "string"
+    typeof c === 'string'
       ? {
           _id: c,
-          name: "Unknown",
+          name: 'Unknown',
           slug: c,
-          description: "",
-          mainImage: { url: categoryImages["default"], alt: "Category" },
+          description: '',
+          mainImage: { url: categoryImages['default'], alt: 'Category' },
         }
       : {
           _id: c._id,
           name: c.name,
           slug: c.slug,
-          description: c.description || "",
+          description: c.description || '',
           mainImage: {
-            url: c.mainImage?.url || categoryImages[c.slug] || categoryImages["default"],
+            url: c.mainImage?.url || categoryImages[c.slug] || categoryImages['default'],
             alt: c.mainImage?.alt || c.name,
           },
-        }
+        },
   );
 
   const shouldShowEmpty = !loading && (!categories || categories.length === 0);
@@ -95,23 +88,19 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
     xl: 5,
     '2xl': 6,
   };
-  const showViewAllButton = categories.length > (itemsPerRow.md * 2);
+  const showViewAllButton = categories.length > itemsPerRow.md * 2;
 
   return (
     <section className="px-4 py-8 max-w-7xl mx-auto">
       <div className="text-center mb-8">
-        <h2 className="text-xl md:text-3xl font-semibold text-black">
-          Shop by Category
-        </h2>
+        <h2 className="text-xl md:text-3xl font-semibold text-black">Shop by Category</h2>
       </div>
 
       <div className="flex justify-center">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 max-w-fit">
           {categories.map((category) => {
             const imageUrl =
-              category.mainImage?.url ||
-              categoryImages[category.slug] ||
-              categoryImages["default"];
+              category.mainImage?.url || categoryImages[category.slug] || categoryImages['default'];
 
             return (
               <div key={category._id} className="w-full max-w-[260px]">

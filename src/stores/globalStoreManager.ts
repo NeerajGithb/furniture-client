@@ -31,8 +31,6 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
     set({ isInitializing: true });
 
     try {
-      
-      
       // Initialize all stores in parallel
       await Promise.all([
         useProductStore.getState().initializeProducts(),
@@ -42,7 +40,6 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
         useWishlistStore.getState().initializeWishlists(),
         useProfileStore.getState().initializeProfile(),
         useHomeStore.getState().fetchInspirations(),
-        
       ]);
     } catch (error) {
       console.error('Global initialization error:', error);
@@ -70,20 +67,20 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
       // Reset all stores
       useAddressStore.setState({
         addresses: [],
-        selectedAddressId: "",
+        selectedAddressId: '',
         loading: false,
         error: null,
         showAddressForm: false,
         addressForm: {
-          type: "home",
-          fullName: "",
-          phone: "",
-          addressLine1: "",
-          addressLine2: "",
-          city: "",
-          state: "",
-          postalCode: "",
-          country: "India",
+          type: 'home',
+          fullName: '',
+          phone: '',
+          addressLine1: '',
+          addressLine2: '',
+          city: '',
+          state: '',
+          postalCode: '',
+          country: 'India',
           isDefault: false,
         },
         editingAddressId: null,

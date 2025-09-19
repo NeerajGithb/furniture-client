@@ -1,16 +1,16 @@
-export const runtime = "nodejs";
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/dbConnect";
-import User from "@/models/User";
-import { createAccessToken, createRefreshToken, setAuthCookies } from "@/lib/auth";
-import crypto from "crypto";
+export const runtime = 'nodejs';
+import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/dbConnect';
+import User from '@/models/User';
+import { createAccessToken, createRefreshToken, setAuthCookies } from '@/lib/auth';
+import crypto from 'crypto';
 
 export async function POST(req) {
   try {
     const { name, email, photoURL, uid } = await req.json();
 
     if (!name || !email || !uid) {
-      return NextResponse.json({ error: "Missing required user data" }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required user data' }, { status: 400 });
     }
 
     await connectDB();
@@ -23,8 +23,8 @@ export async function POST(req) {
       user = await User.create({
         name,
         email,
-        photoURL: photoURL || "",
-        password: crypto.randomBytes(16).toString("hex"),
+        photoURL: photoURL || '',
+        password: crypto.randomBytes(16).toString('hex'),
         hasOAuth: true,
       });
     } else {
@@ -59,12 +59,12 @@ export async function POST(req) {
         hasOAuth: user.hasOAuth,
         firstTime: isFirstTime,
       },
-      { status: 200 }
+      { status: 200 },
     );
 
     setAuthCookies(res, accessToken, refreshToken);
     return res;
   } catch (err) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

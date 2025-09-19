@@ -1,16 +1,16 @@
 // 1. Main InspirationDetailPage Component
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useHomeStore } from "@/stores/homeStore";
-import InspirationBanner from "@/components/inspiration/InspirationBanner";
-import CategoryGrid from "@/components/inspiration/CategoryGrid";
-import RelatedProducts from "@/components/inspiration/RelatedProducts";
-import NewArrivals from "@/components/inspiration/NewArrivals";
-import MoreInspirationIdeas from "@/components/inspiration/MoreInspirationIdeas";
-import Link from "next/link";
-import { motion } from "framer-motion";
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useHomeStore } from '@/stores/homeStore';
+import InspirationBanner from '@/components/inspiration/InspirationBanner';
+import CategoryGrid from '@/components/inspiration/CategoryGrid';
+import RelatedProducts from '@/components/inspiration/RelatedProducts';
+import NewArrivals from '@/components/inspiration/NewArrivals';
+import MoreInspirationIdeas from '@/components/inspiration/MoreInspirationIdeas';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 const InspirationDetailPage = () => {
   const params = useParams();
@@ -22,7 +22,7 @@ const InspirationDetailPage = () => {
     fetchInspirationBySlug,
     fetchInspirations,
     inspirationLoading,
-    inspirationError, 
+    inspirationError,
     clearInspirationError,
     initialized,
   } = useHomeStore();
@@ -43,7 +43,7 @@ const InspirationDetailPage = () => {
 
         await fetchInspirationBySlug(inspirationSlug);
       } catch (error) {
-        console.error("Error initializing inspiration page:", error);
+        console.error('Error initializing inspiration page:', error);
       }
     };
 
@@ -62,18 +62,10 @@ const InspirationDetailPage = () => {
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-screen flex items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900 mx-auto mb-6"></div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Loading Inspiration
-              </h2>
-              <p className="text-gray-600">
-                Discovering beautiful design ideas for you...
-              </p>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Inspiration</h2>
+              <p className="text-gray-600">Discovering beautiful design ideas for you...</p>
             </motion.div>
           </div>
         </div>
@@ -109,15 +101,15 @@ const InspirationDetailPage = () => {
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-                  {inspirationError === "Inspiration not found"
-                    ? "Inspiration Not Found"
-                    : "Something Went Wrong"}
+                  {inspirationError === 'Inspiration not found'
+                    ? 'Inspiration Not Found'
+                    : 'Something Went Wrong'}
                 </h1>
 
                 <p className="text-gray-600 mb-8">
-                  {inspirationError === "Inspiration not found"
+                  {inspirationError === 'Inspiration not found'
                     ? "The inspiration you're looking for doesn't exist or has been moved."
-                    : "We encountered an error while loading this inspiration. Please try again."}
+                    : 'We encountered an error while loading this inspiration. Please try again.'}
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -164,12 +156,7 @@ const InspirationDetailPage = () => {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium"
                 >
                   Browse All Inspirations
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -203,10 +190,7 @@ const InspirationDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <CategoryGrid
-              inspiration={currentInspiration}
-              loading={false}
-            />
+            <CategoryGrid inspiration={currentInspiration} loading={false} />
           </motion.div>
 
           <motion.div
@@ -214,10 +198,7 @@ const InspirationDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <RelatedProducts
-              inspirationSlug={currentInspiration.slug}
-              limit={20}
-            />
+            <RelatedProducts inspirationSlug={currentInspiration.slug} limit={20} />
           </motion.div>
 
           <motion.div
@@ -225,11 +206,7 @@ const InspirationDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <NewArrivals
-              inspirationSlug={currentInspiration.slug}
-              limit={20}
-              sort="newest"
-            />
+            <NewArrivals inspirationSlug={currentInspiration.slug} limit={20} sort="newest" />
           </motion.div>
 
           <motion.div
@@ -237,9 +214,7 @@ const InspirationDetailPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            <MoreInspirationIdeas
-              currentInspirationId={currentInspiration._id}
-            />
+            <MoreInspirationIdeas currentInspirationId={currentInspiration._id} />
           </motion.div>
         </>
       )}

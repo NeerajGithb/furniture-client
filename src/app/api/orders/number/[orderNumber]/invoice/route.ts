@@ -1,44 +1,44 @@
 // src/app/api/orders/number/[orderNumber]/invoice/route.ts
-import { NextRequest } from "next/server";
-import { connectDB } from "@/lib/dbConnect";
-import Order from "@/models/Order";
+import { NextRequest } from 'next/server';
+import { connectDB } from '@/lib/dbConnect';
+import Order from '@/models/Order';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ orderNumber: string }> }
+  { params }: { params: Promise<{ orderNumber: string }> },
 ) {
   try {
     await connectDB();
     const { orderNumber } = await params;
     const order = await Order.findOne({ orderNumber });
-    
+
     if (!order) {
-      return new Response(JSON.stringify({ error: "Order not found" }), {
+      return new Response(JSON.stringify({ error: 'Order not found' }), {
         status: 404,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
     // Create PDF document with dynamic height
     const pdfDoc = await PDFDocument.create();
-    
+
     // Calculate required height based on content
     const itemsCount = order.items.length;
     const baseHeight = 600;
     const itemHeight = 45; // Height per item including spacing
-    const dynamicHeight = baseHeight + (itemsCount * itemHeight);
-    
+    const dynamicHeight = baseHeight + itemsCount * itemHeight;
+
     const page = pdfDoc.addPage([800, Math.max(dynamicHeight, 800)]); // Wider page, dynamic height
     const { width, height } = page.getSize();
 
     // Load fonts
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
+
     // Helper functions
     const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
-    const safeText = (text: string, maxLength: number = 50) => 
+    const safeText = (text: string, maxLength: number = 50) =>
       text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
 
     // Colors
@@ -49,7 +49,7 @@ export async function GET(
 
     // Better margins
     const margin = 50;
-    const contentWidth = width - (margin * 2);
+    const contentWidth = width - margin * 2;
     let yPosition = height - margin;
 
     // Header Section
@@ -110,9 +110,14 @@ export async function GET(
     // Order details in two columns
     const leftColumn = [
       [`Order Number:`, order.orderNumber],
-      [`Order Date:`, new Date(order.createdAt).toLocaleDateString('en-IN', { 
-        day: '2-digit', month: 'long', year: 'numeric' 
-      })],
+      [
+        `Order Date:`,
+        new Date(order.createdAt).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        }),
+      ],
       [`Status:`, order.orderStatus.toUpperCase()],
     ];
 
@@ -187,11 +192,11 @@ export async function GET(
       order.shippingAddress.addressLine2 || '',
       `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`,
       order.shippingAddress.country,
-      `Phone: ${order.shippingAddress.phone}`
-    ].filter(line => line && line.trim());
+      `Phone: ${order.shippingAddress.phone}`,
+    ].filter((line) => line && line.trim());
 
     let addressY = yPosition - 25;
-    addressLines.forEach(line => {
+    addressLines.forEach((line) => {
       page.drawText(safeText(line, 80), {
         x: margin + 20,
         y: addressY,
@@ -246,7 +251,7 @@ export async function GET(
     order.items.forEach((item: any, index: number) => {
       // Use prices directly from schema without recalculation
       const itemTotal = item.price * item.quantity;
-      
+
       // Alternating row background
       if (index % 2 === 0) {
         page.drawRectangle({
@@ -259,24 +264,24 @@ export async function GET(
       }
 
       xPosition = margin;
-      
+
       const itemData = [
         String(index + 1),
         safeText(item.name, 45),
         String(item.quantity),
         formatCurrency(item.price),
-        formatCurrency(itemTotal)
+        formatCurrency(itemTotal),
       ];
 
       itemData.forEach((data, colIndex) => {
         let textX = xPosition;
-        
+
         // Right align for numeric columns
         if (colIndex >= 2) {
           const textWidth = font.widthOfTextAtSize(data, 11);
           textX = xPosition + columnWidths[colIndex] - textWidth - 10;
         }
-        
+
         page.drawText(data, {
           x: textX,
           y: yPosition,
@@ -289,7 +294,9 @@ export async function GET(
 
       // Show discount information if applicable
       if (item.originalPrice && item.originalPrice > item.price) {
-        const discountPercent = Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100);
+        const discountPercent = Math.round(
+          ((item.originalPrice - item.price) / item.originalPrice) * 100,
+        );
         page.drawText(`Original: ${formatCurrency(item.originalPrice)} (${discountPercent}% off)`, {
           x: margin + 50,
           y: yPosition - 18,
@@ -308,21 +315,21 @@ export async function GET(
     // Price Details Section
     const totalsX = width - margin - 300;
     const totalsWidth = 280;
-    
+
     // Calculate original price total
     const originalPriceTotal = order.items.reduce((total: number, item: any) => {
       const originalPrice = item.originalPrice || item.price;
-      return total + (originalPrice * item.quantity);
+      return total + originalPrice * item.quantity;
     }, 0);
-    
+
     // Calculate total discount
     const totalDiscount = originalPriceTotal - order.subtotal;
-    
+
     // Determine section height based on number of items
     const hasDiscount = totalDiscount > 0;
     const hasInsurance = order.insuranceCost && order.insuranceCost > 0;
     const sectionHeight = 140 + (hasDiscount ? 22 : 0) + (hasInsurance ? 22 : 0);
-    
+
     page.drawRectangle({
       x: totalsX,
       y: yPosition - sectionHeight,
@@ -343,7 +350,10 @@ export async function GET(
 
     // Price breakdown similar to PriceSummaryCard
     const priceDetails = [
-      [`Price (${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`, formatCurrency(originalPriceTotal)]
+      [
+        `Price (${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`,
+        formatCurrency(originalPriceTotal),
+      ],
     ];
 
     // Add discount if applicable
@@ -360,14 +370,14 @@ export async function GET(
     const isFreeShipping = order.shippingCost === 0;
     priceDetails.push([
       `Delivery Charges`,
-      isFreeShipping ? 'FREE' : formatCurrency(order.shippingCost)
+      isFreeShipping ? 'FREE' : formatCurrency(order.shippingCost),
     ]);
 
     priceDetails.forEach(([label, amount]) => {
       const isDiscount = label.includes('Discount');
       const isFree = amount === 'FREE';
-      const textColor = isDiscount ? rgb(0.2, 0.7, 0.2) : (isFree ? rgb(0.2, 0.7, 0.2) : darkColor);
-      
+      const textColor = isDiscount ? rgb(0.2, 0.7, 0.2) : isFree ? rgb(0.2, 0.7, 0.2) : darkColor;
+
       page.drawText(label, {
         x: totalsX + 20,
         y: totalY,
@@ -375,7 +385,7 @@ export async function GET(
         font: font,
         color: grayColor,
       });
-      
+
       const amountWidth = font.widthOfTextAtSize(amount, 11);
       page.drawText(amount, {
         x: totalsX + totalsWidth - 20 - amountWidth,
@@ -462,18 +472,17 @@ export async function GET(
         'Cache-Control': 'private, no-cache',
       },
     });
-
   } catch (error) {
-    console.error("Order details generation failed:", error);
+    console.error('Order details generation failed:', error);
     return new Response(
-      JSON.stringify({ 
-        error: "Failed to generate order details",
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
-      }), 
+      JSON.stringify({
+        error: 'Failed to generate order details',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
+      }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+        headers: { 'Content-Type': 'application/json' },
+      },
     );
   }
 }

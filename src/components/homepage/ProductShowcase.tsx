@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
-import ProductCard from "../product/ProductCard";
-import { Product } from "@/types/Product";
-import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import ProductCard from '../product/ProductCard';
+import { Product } from '@/types/Product';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 
 interface ProductShowcaseProps {
   productsData?: Product[];
@@ -21,7 +21,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const getItemsPerView = () => {
-    if (typeof window === "undefined") return 4;
+    if (typeof window === 'undefined') return 4;
     if (window.innerWidth < 640) return 2;
     if (window.innerWidth < 768) return 2;
     if (window.innerWidth < 1024) return 3;
@@ -46,8 +46,8 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Auto-scroll for mobile
@@ -78,7 +78,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
       const fetchShowcaseProducts = async () => {
         try {
           setError(null);
-          const res = await fetchWithCredentials("/api/products/showcase");
+          const res = await fetchWithCredentials('/api/products/showcase');
 
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -87,10 +87,8 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
           const data = await handleApiResponse(res);
           setProducts(data.products || []);
         } catch (err) {
-          console.error("Failed to fetch showcase products:", err);
-          setError(
-            err instanceof Error ? err.message : "Failed to load products"
-          );
+          console.error('Failed to fetch showcase products:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load products');
           setProducts([]);
         } finally {
           setLoading(false);
@@ -118,7 +116,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
 
   const onTouchEnd = (
     setIndex: React.Dispatch<React.SetStateAction<number>>,
-    products: Product[]
+    products: Product[],
   ) => {
     if (!touchStart || !touchEnd) return;
 
@@ -144,21 +142,16 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     </div>
   );
 
-
   const renderSkeletonRow = () => (
     <div className="max-w-6xl mx-auto">
-      {" "}
+      {' '}
       {/* Add max-width and center container */}
       <div className="relative mb-8 overflow-hidden p-2">
-        {" "}
+        {' '}
         {/* Add padding like product rows */}
         <div
           className={`grid gap-2 sm:gap-3 md:gap-4 ${
-            itemsPerView === 2
-              ? "grid-cols-2"
-              : itemsPerView === 3
-              ? "grid-cols-3"
-              : "grid-cols-4" // Change from grid-cols-5 to grid-cols-4 to match product rows
+            itemsPerView === 2 ? 'grid-cols-2' : itemsPerView === 3 ? 'grid-cols-3' : 'grid-cols-4' // Change from grid-cols-5 to grid-cols-4 to match product rows
           }`}
         >
           {Array.from({ length: itemsPerView }).map((_, i) => (
@@ -173,7 +166,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     products: Product[],
     currentIndex: number,
     setIndex: React.Dispatch<React.SetStateAction<number>>,
-    rowLabel: string
+    rowLabel: string,
   ) => {
     const maxIndex = Math.max(0, products.length - itemsPerView);
     const isAtStart = currentIndex === 0;
@@ -192,17 +185,17 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     };
 
     const showViewMoreButton = products.length > itemsPerView;
-    let itemsToShow: (Product | "view-more")[] = [];
+    let itemsToShow: (Product | 'view-more')[] = [];
 
     if (showViewMoreButton) {
       if (isAtEnd && !isMobile) {
         const slotsForProducts = itemsPerView - 1;
         const lastProducts = products.slice(-slotsForProducts);
-        itemsToShow = [...lastProducts, "view-more"];
+        itemsToShow = [...lastProducts, 'view-more'];
       } else {
         itemsToShow = products.slice(currentIndex, currentIndex + itemsPerView);
         if (isMobile && itemsToShow.length < itemsPerView) {
-          itemsToShow.push("view-more");
+          itemsToShow.push('view-more');
         }
       }
     } else {
@@ -210,11 +203,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     }
 
     const gridClass = `grid gap-2 sm:gap-3 md:gap-4 ${
-      itemsPerView === 2
-        ? "grid-cols-2"
-        : itemsPerView === 3
-        ? "grid-cols-3"
-        : "grid-cols-4"
+      itemsPerView === 2 ? 'grid-cols-2' : itemsPerView === 3 ? 'grid-cols-3' : 'grid-cols-4'
     }`;
 
     return (
@@ -223,13 +212,11 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
           className="relative overflow-hidden p-2"
           onTouchStart={isMobile ? onTouchStart : undefined}
           onTouchMove={isMobile ? onTouchMove : undefined}
-          onTouchEnd={
-            isMobile ? () => onTouchEnd(setIndex, products) : undefined
-          }
+          onTouchEnd={isMobile ? () => onTouchEnd(setIndex, products) : undefined}
         >
           <div className={gridClass}>
             {itemsToShow.map((item, index) => {
-              if (item === "view-more") {
+              if (item === 'view-more') {
                 return (
                   <div
                     key="view-more"
@@ -253,9 +240,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                           />
                         </svg>
-                        <span className="text-gray-700 text-center">
-                          View More
-                        </span>
+                        <span className="text-gray-700 text-center">View More</span>
                       </Link>
                       <button
                         onClick={(e) => {
@@ -274,10 +259,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
               }
 
               return (
-                <div
-                  key={(item as Product)._id}
-                  className=" max-md:max-h-[270px]"
-                >
+                <div key={(item as Product)._id} className=" max-md:max-h-[270px]">
                   <ProductCard product={item as Product} />
                 </div>
               );
@@ -296,7 +278,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             <button
               onClick={prevSlide}
               className={`rounded-full absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur border border-gray-300 flex items-center justify-center hover:bg-white transition-all shadow-lg ${
-                isMobile ? "touch-manipulation" : ""
+                isMobile ? 'touch-manipulation' : ''
               }`}
             >
               <svg
@@ -319,7 +301,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             <button
               onClick={nextSlide}
               className={`rounded-full absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur border border-gray-300 flex items-center justify-center hover:bg-white transition-all shadow-lg ${
-                isMobile ? "touch-manipulation" : ""
+                isMobile ? 'touch-manipulation' : ''
               }`}
             >
               <svg
@@ -346,20 +328,14 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">
-            Featured Products
-          </h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
           <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
             Handpicked pieces for discerning taste
           </p>
         </div>
         <div className="space-y-4 px-4 mx-auto">
-          <div>
-            {renderSkeletonRow()}
-          </div>
-          <div>
-            {renderSkeletonRow()}
-          </div>
+          <div>{renderSkeletonRow()}</div>
+          <div>{renderSkeletonRow()}</div>
         </div>
       </section>
     );
@@ -369,9 +345,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">
-            Featured Products
-          </h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
           <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
             Handpicked pieces for discerning taste
           </p>
@@ -409,9 +383,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">
-            Featured Products
-          </h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
           <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
             Handpicked pieces for discerning taste
           </p>
@@ -441,9 +413,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
   return (
     <section className="px-4 mx-auto">
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">
-          Our Top Picks
-        </h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Our Top Picks</h2>
         <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
           Showcasing our finest designs, crafted to perfection
         </p>
@@ -451,19 +421,9 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
 
       <div className="md:space-y-4">
         {row1Products.length > 0 &&
-          renderProductRow(
-            row1Products,
-            row1Index,
-            setRow1Index,
-            "Featured Collection"
-          )}
+          renderProductRow(row1Products, row1Index, setRow1Index, 'Featured Collection')}
         {row2Products.length > 0 &&
-          renderProductRow(
-            row2Products,
-            row2Index,
-            setRow2Index,
-            "Trending Now"
-          )}
+          renderProductRow(row2Products, row2Index, setRow2Index, 'Trending Now')}
         <div className="text-center mt-4">
           <Link
             href="/products"

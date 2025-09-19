@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo } from "react";
-import { motion } from "framer-motion";
-import ProductCard from "./ProductCard";
-import { Product } from "@/types/Product";
-import { usePathname } from "next/navigation";
+import React, { memo, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import ProductCard from './ProductCard';
+import { Product } from '@/types/Product';
+import { usePathname } from 'next/navigation';
 
 interface ProductGridProps {
   products: Product[];
@@ -24,23 +24,23 @@ const ProductCardWrapper = memo(({ product }: { product: Product }) => (
     <ProductCard product={product} />
   </motion.div>
 ));
-ProductCardWrapper.displayName = "ProductCardWrapper";
+ProductCardWrapper.displayName = 'ProductCardWrapper';
 
 const SkeletonCard = memo(() => (
   <div
     className="bg-white border border-gray-200 overflow-hidden shadow-sm w-full mx-auto p-[6px]"
     style={{
-      aspectRatio: "3/4",
-      minWidth: "200px",
-      maxWidth: "370px",
-      width: "100%",
-      height: "auto",
+      aspectRatio: '3/4',
+      minWidth: '200px',
+      maxWidth: '370px',
+      width: '100%',
+      height: 'auto',
     }}
   >
     {/* Image shimmer */}
     <div
       className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 relative overflow-hidden"
-      style={{ height: "65%" }}
+      style={{ height: '65%' }}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer transform -skew-x-12"></div>
     </div>
@@ -56,7 +56,7 @@ const SkeletonCard = memo(() => (
     </div>
   </div>
 ));
-SkeletonCard.displayName = "SkeletonCard";
+SkeletonCard.displayName = 'SkeletonCard';
 
 const ProductGrid: React.FC<ProductGridProps> = ({
   products,
@@ -66,10 +66,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 }) => {
   const pathname = usePathname();
   const home =
-    pathname === "/products" ||
-    pathname.startsWith("/categories/") ||
-    pathname.startsWith("/collections/") ||
-    pathname === "/search";
+    pathname === '/products' ||
+    pathname.startsWith('/categories/') ||
+    pathname.startsWith('/collections/') ||
+    pathname === '/search';
 
   // Fully responsive grid with proper column sizing
   const gridClasses = useMemo(
@@ -77,8 +77,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       `grid w-full gap-[2px] lg:gap-5 xl:gap-6 
        grid-cols-2 md:grid-cols-3 
        lg:grid-cols-3 xl:grid-cols-4 
-       ${home ? "2xl:grid-cols-4" : "2xl:grid-cols-5"}`,
-    [home]
+       ${home ? '2xl:grid-cols-4' : '2xl:grid-cols-5'}`,
+    [home],
   );
 
   // Remove duplicate products
@@ -104,18 +104,14 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       <div className={gridClasses}>
         {/* Show skeletons while loading and no data */}
         {loading && uniqueProducts.length === 0
-          ? Array.from({ length: 12 }).map((_, i) => (
-              <SkeletonCard key={`skeleton-${i}`} />
-            ))
+          ? Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={`skeleton-${i}`} />)
           : uniqueProducts.map((product) => (
               <ProductCardWrapper key={product._id} product={product} />
             ))}
 
         {/* Show skeletons when loading more */}
         {loadingMore &&
-          Array.from({ length: 8 }).map((_, i) => (
-            <SkeletonCard key={`loadmore-${i}`} />
-          ))}
+          Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={`loadmore-${i}`} />)}
       </div>
     </div>
   );

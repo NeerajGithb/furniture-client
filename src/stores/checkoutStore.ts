@@ -42,14 +42,14 @@ interface CheckoutState {
 interface CheckoutStore {
   // State
   checkoutData: CheckoutState | null;
-  
+
   // Actions
   setCheckoutData: (data: Omit<CheckoutState, 'timestamp'>) => void;
   updateSelectedAddress: (addressId: string) => void;
   updateSelectedPaymentMethod: (method: string) => void;
   toggleInsurance: (productId: string) => void;
   clearCheckout: () => void;
-  
+
   // Getters
   getCheckoutData: () => CheckoutState | null;
   hasValidCheckout: () => boolean;
@@ -73,11 +73,9 @@ const initialTotals: CheckoutTotals = {
 function calculateTotals(
   cartItems: CheckoutItem[],
   selectedItems: string[],
-  insuranceEnabled: string[]
+  insuranceEnabled: string[],
 ): CheckoutTotals {
-  const selectedCartItems = cartItems.filter(item =>
-    selectedItems.includes(item.productId)
-  );
+  const selectedCartItems = cartItems.filter((item) => selectedItems.includes(item.productId));
 
   if (selectedCartItems.length === 0) {
     return { ...initialTotals };
@@ -129,14 +127,14 @@ export const useCheckoutStore = create<CheckoutStore>()(
           selectedItems: data.selectedItems.length,
           totalAmount: data.totals.totalAmount,
           cartItems: data.cartItems.length,
-          insuranceEnabled: data.insuranceEnabled.length
+          insuranceEnabled: data.insuranceEnabled.length,
         });
 
         // Recalculate totals to ensure consistency
         const recalculatedTotals = calculateTotals(
           data.cartItems,
           data.selectedItems,
-          data.insuranceEnabled
+          data.insuranceEnabled,
         );
 
         const checkoutState: CheckoutState = {
@@ -238,7 +236,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
         const updatedTotals = calculateTotals(
           checkoutData.cartItems,
           checkoutData.selectedItems,
-          newInsuranceEnabled
+          newInsuranceEnabled,
         );
 
         const updatedData = {
@@ -252,7 +250,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
           productId,
           hasInsurance: newInsuranceEnabled.includes(productId),
           newInsuranceCost: updatedTotals.insuranceCost,
-          newTotalAmount: updatedTotals.totalAmount
+          newTotalAmount: updatedTotals.totalAmount,
         });
 
         set({ checkoutData: updatedData });
@@ -269,8 +267,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       // Clear all checkout data
       clearCheckout: () => {
-        
-
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.removeItem('checkoutData');
@@ -297,7 +293,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
             const savedData = sessionStorage.getItem('checkoutData');
             if (savedData) {
               const parsedData: CheckoutState = JSON.parse(savedData);
-              
+
               // Validate the data structure
               if (
                 parsedData.selectedItems &&
@@ -311,12 +307,12 @@ export const useCheckoutStore = create<CheckoutStore>()(
                 const recalculatedTotals = calculateTotals(
                   parsedData.cartItems,
                   parsedData.selectedItems,
-                  parsedData.insuranceEnabled || []
+                  parsedData.insuranceEnabled || [],
                 );
-                
+
                 const validatedData = {
                   ...parsedData,
-                  totals: recalculatedTotals
+                  totals: recalculatedTotals,
                 };
 
                 set({ checkoutData: validatedData });
@@ -350,9 +346,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
         const data = get().getCheckoutData();
         if (!data) return [];
 
-        return data.cartItems.filter(item =>
-          data.selectedItems.includes(item.productId)
-        );
+        return data.cartItems.filter((item) => data.selectedItems.includes(item.productId));
       },
 
       // Check if payment method is selected
@@ -374,10 +368,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       // Check if can place order (for payment page)
       canPlaceOrder: () => {
-        return (
-          get().canProceedToPayment() && 
-          get().isPaymentMethodSelected()
-        );
+        return get().canProceedToPayment() && get().isPaymentMethodSelected();
       },
     }),
     {
@@ -393,19 +384,19 @@ export const useCheckoutStore = create<CheckoutStore>()(
             totalAmount: state.checkoutData.totals?.totalAmount || 0,
             insuranceEnabled: state.checkoutData.insuranceEnabled?.length || 0,
           });
-          
+
           // FIXED: Recalculate totals on rehydration
           if (state.checkoutData.cartItems && state.checkoutData.selectedItems) {
             const recalculatedTotals = calculateTotals(
               state.checkoutData.cartItems,
               state.checkoutData.selectedItems,
-              state.checkoutData.insuranceEnabled || []
+              state.checkoutData.insuranceEnabled || [],
             );
-            
+
             state.checkoutData.totals = recalculatedTotals;
           }
         }
       },
-    }
-  )
+    },
+  ),
 );

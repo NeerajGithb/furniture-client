@@ -3,8 +3,6 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { Category, Product, SubCategory } from '@/types/Product';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 
-
-
 interface ProductFilters {
   category?: string;
   subcategory?: string;
@@ -200,10 +198,7 @@ export const useProductStore = create<ProductStore>()(
       set({ initialized: true });
 
       try {
-        await Promise.all([
-          get().fetchCategories(),
-          get().fetchSubcategories()
-        ]);
+        await Promise.all([get().fetchCategories(), get().fetchSubcategories()]);
       } catch (error) {
         console.error('Error during initialization:', error);
         set({ error: 'Failed to initialize store' });
@@ -227,10 +222,12 @@ export const useProductStore = create<ProductStore>()(
           get().fetchRelatedProducts(productData.categoryId.name, productId);
         }
         get().fetchAllProducts(productId);
-
       } catch (err) {
-        console.error("Error fetching product:", err);
-        set({ error: err instanceof Error ? err.message : "Failed to load product", loading: false });
+        console.error('Error fetching product:', err);
+        set({
+          error: err instanceof Error ? err.message : 'Failed to load product',
+          loading: false,
+        });
       }
     },
 
@@ -242,7 +239,7 @@ export const useProductStore = create<ProductStore>()(
       set({
         loadingProducts: reset ? true : false,
         loadingMore: !reset ? true : false,
-        error: null
+        error: null,
       });
 
       try {
@@ -252,8 +249,8 @@ export const useProductStore = create<ProductStore>()(
         if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
         const data: ProductResponse = await handleApiResponse(response);
-        
-        set(state => {
+
+        set((state) => {
           // For filtered results, use the pagination total as the source of truth
           const filteredTotal = data.pagination?.total || 0;
           const currentPage = data.pagination?.page || 1;
@@ -272,11 +269,10 @@ export const useProductStore = create<ProductStore>()(
             loadingMore: false,
           };
         });
-
       } catch (err) {
-        console.error("Failed to fetch products:", err);
+        console.error('Failed to fetch products:', err);
         set({
-          error: err instanceof Error ? err.message : "Failed to load products",
+          error: err instanceof Error ? err.message : 'Failed to load products',
           loadingProducts: false,
           loadingMore: false,
           products: reset ? [] : get().products,
@@ -304,9 +300,8 @@ export const useProductStore = create<ProductStore>()(
         });
 
         await get().fetchProducts(params.toString(), false);
-
       } catch (err) {
-        console.error("Failed to load more products:", err);
+        console.error('Failed to load more products:', err);
       } finally {
         set({ loadingMore: false });
       }
@@ -317,8 +312,8 @@ export const useProductStore = create<ProductStore>()(
       set({ loadingMore: true });
 
       try {
-        const params = new URLSearchParams({ page: "1", limit: "8", sort: "newest" });
-        if (categoryName) params.append("category", categoryName.toLowerCase());
+        const params = new URLSearchParams({ page: '1', limit: '8', sort: 'newest' });
+        if (categoryName) params.append('category', categoryName.toLowerCase());
 
         const response = await fetchWithCredentials(`/api/products?${params}`);
         if (!response.ok) throw new Error(`Failed to fetch related products: ${response.status}`);
@@ -328,14 +323,13 @@ export const useProductStore = create<ProductStore>()(
 
         set({
           relatedProducts: productsArray
-            .filter(p => p._id !== excludeId)
+            .filter((p) => p._id !== excludeId)
             .sort(() => Math.random() - 0.5)
             .slice(0, 8),
           loadingMore: false,
         });
-
       } catch (err) {
-        console.error("Failed to fetch related products:", err);
+        console.error('Failed to fetch related products:', err);
         set({ relatedProducts: [], loadingMore: false });
       }
     },
@@ -345,7 +339,7 @@ export const useProductStore = create<ProductStore>()(
       set({ loadingAll: true });
 
       try {
-        const params = new URLSearchParams({ page: "1", limit: "12", sort: "newest" });
+        const params = new URLSearchParams({ page: '1', limit: '12', sort: 'newest' });
         const response = await fetchWithCredentials(`/api/products?${params}`);
         if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
@@ -354,14 +348,13 @@ export const useProductStore = create<ProductStore>()(
 
         set({
           allProducts: productsArray
-            .filter(p => p._id !== excludeId)
+            .filter((p) => p._id !== excludeId)
             .sort(() => Math.random() - 0.5)
             .slice(0, 12),
           loadingAll: false,
         });
-
       } catch (err) {
-        console.error("Failed to fetch all products:", err);
+        console.error('Failed to fetch all products:', err);
         set({ allProducts: [], loadingAll: false });
       }
     },
@@ -379,13 +372,12 @@ export const useProductStore = create<ProductStore>()(
 
         const categories = await handleApiResponse(response);
         set({ categories, loadingCategories: false, categoriesInitialized: true });
-
       } catch (err) {
-        console.error("Failed to fetch categories:", err);
+        console.error('Failed to fetch categories:', err);
         set({
-          error: err instanceof Error ? err.message : "Failed to load categories",
+          error: err instanceof Error ? err.message : 'Failed to load categories',
           loadingCategories: false,
-          categories: []
+          categories: [],
         });
       }
     },
@@ -406,12 +398,11 @@ export const useProductStore = create<ProductStore>()(
         const categoryData = await handleApiResponse(response);
         set({ loadingCategory: false });
         return categoryData;
-
       } catch (err) {
-        console.error("Failed to fetch category:", err);
+        console.error('Failed to fetch category:', err);
         set({
-          error: err instanceof Error ? err.message : "Failed to load category",
-          loadingCategory: false
+          error: err instanceof Error ? err.message : 'Failed to load category',
+          loadingCategory: false,
         });
         return null;
       }
@@ -430,13 +421,12 @@ export const useProductStore = create<ProductStore>()(
 
         const subcategories = await handleApiResponse(response);
         set({ subcategories, loadingSubcategories: false, subcategoriesInitialized: true });
-
       } catch (err) {
-        console.error("Failed to fetch subcategories:", err);
+        console.error('Failed to fetch subcategories:', err);
         set({
-          error: err instanceof Error ? err.message : "Failed to load subcategories",
+          error: err instanceof Error ? err.message : 'Failed to load subcategories',
           loadingSubcategories: false,
-          subcategories: []
+          subcategories: [],
         });
       }
     },
@@ -467,8 +457,8 @@ export const useProductStore = create<ProductStore>()(
     },
 
     setCurrentPage: (page: number) => {
-      set(state => ({
-        pagination: { ...state.pagination, page }
+      set((state) => ({
+        pagination: { ...state.pagination, page },
       }));
     },
 
@@ -482,31 +472,32 @@ export const useProductStore = create<ProductStore>()(
     setAddingToWishlist: (isAdding) => set({ addingToWishlist: isAdding }),
 
     // Reset functions - FIXED: Clear products state properly
-    resetProductState: () => set({
-      products: [],
-      product: null,
-      relatedProducts: [],
-      allProducts: [],
-      selectedImageIndex: 0,
-      quantity: 1,
-      isZooming: false,
-      zoomPosition: { x: 0, y: 0 },
-      addingToCart: false,
-      buyingNow: false,
-      addingToWishlist: false,
-      error: null,
-      loadingProducts: false,
-      loadingMore: false,
-      currentPage: 1,
-      hasMore: false,
-      totalProducts: 0,
-      pagination: {
-        page: 1,
-        limit: 24,
-        total: 0,
-        pages: 0,
-      },
-    }),
+    resetProductState: () =>
+      set({
+        products: [],
+        product: null,
+        relatedProducts: [],
+        allProducts: [],
+        selectedImageIndex: 0,
+        quantity: 1,
+        isZooming: false,
+        zoomPosition: { x: 0, y: 0 },
+        addingToCart: false,
+        buyingNow: false,
+        addingToWishlist: false,
+        error: null,
+        loadingProducts: false,
+        loadingMore: false,
+        currentPage: 1,
+        hasMore: false,
+        totalProducts: 0,
+        pagination: {
+          page: 1,
+          limit: 24,
+          total: 0,
+          pages: 0,
+        },
+      }),
 
     resetFilters: () => {
       const defaultFilters = {
@@ -528,5 +519,5 @@ export const useProductStore = create<ProductStore>()(
         hasMore: false,
       });
     },
-  }))
+  })),
 );

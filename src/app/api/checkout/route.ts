@@ -14,46 +14,37 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { selectedItems, insuranceEnabled } = body;
 
     if (!selectedItems || !Array.isArray(selectedItems) || selectedItems.length === 0) {
-      return NextResponse.json(
-        { error: 'Selected items are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Selected items are required' }, { status: 400 });
     }
 
     await connectDB();
 
     // Validate that the selected items exist in user's cart
     const cart = await Cart.findOne({ userId: user.userId }).populate('items.productId');
-    
+
     if (!cart || cart.items.length === 0) {
-      return NextResponse.json(
-        { error: 'Cart is empty' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
     // Validate selected items
-    const validSelectedItems = selectedItems.filter(productId => 
-      cart.items.some((item : any) => item.productId._id.toString() === productId)
+    const validSelectedItems = selectedItems.filter((productId) =>
+      cart.items.some((item: any) => item.productId._id.toString() === productId),
     );
 
     if (validSelectedItems.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid items selected' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No valid items selected' }, { status: 400 });
     }
 
     // Generate unique session ID
     const sessionId = nanoid(16);
 
     // Create checkout items with insurance info
-    const checkoutItems = validSelectedItems.map(productId => {
-      const cartItem = cart.items.find((item : any) => item.productId._id.toString() === productId);
+    const checkoutItems = validSelectedItems.map((productId) => {
+      const cartItem = cart.items.find((item: any) => item.productId._id.toString() === productId);
       return {
         productId: productId,
         quantity: cartItem.quantity,
-        hasInsurance: insuranceEnabled?.includes(productId) || false
+        hasInsurance: insuranceEnabled?.includes(productId) || false,
       };
     });
 
@@ -65,7 +56,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       userId: user.userId,
       items: checkoutItems,
       sessionId: sessionId,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour from now
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
     });
 
     await checkout.save();
@@ -73,21 +64,17 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     console.log('Checkout session created:', {
       sessionId,
       userId: user.userId,
-      itemCount: checkoutItems.length
+      itemCount: checkoutItems.length,
     });
 
     return NextResponse.json({
       success: true,
       sessionId: sessionId,
-      message: 'Checkout session created successfully'
+      message: 'Checkout session created successfully',
     });
-
   } catch (error) {
     console.error('Create checkout session error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
   }
 });
 
@@ -100,53 +87,62 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     await connectDB();
 
     let checkout;
-    
+
     if (sessionId) {
       // Get specific session by ID
-      checkout = await Checkout.findOne({ 
+      checkout = await Checkout.findOne({
         sessionId: sessionId,
         userId: user.userId,
-        expiresAt: { $gt: new Date() } // Only get non-expired sessions
+        expiresAt: { $gt: new Date() }, // Only get non-expired sessions
       }).populate({
         path: 'items.productId',
-        select: 'name mainImage finalPrice originalPrice discountPercent isInStock inStockQuantity'
+        select: 'name mainImage finalPrice originalPrice discountPercent isInStock inStockQuantity',
       });
     } else {
       // Get latest non-expired checkout session for user
-      checkout = await Checkout.findOne({ 
+      checkout = await Checkout.findOne({
         userId: user.userId,
-        expiresAt: { $gt: new Date() }
+        expiresAt: { $gt: new Date() },
       })
-      .sort({ createdAt: -1 })
-      .populate({
-        path: 'items.productId',
-        select: 'name mainImage finalPrice originalPrice discountPercent isInStock inStockQuantity'
-      });
+        .sort({ createdAt: -1 })
+        .populate({
+          path: 'items.productId',
+          select:
+            'name mainImage finalPrice originalPrice discountPercent isInStock inStockQuantity',
+        });
     }
 
     if (!checkout) {
       // Clean up expired sessions
-      await Checkout.deleteMany({ 
+      await Checkout.deleteMany({
         userId: user.userId,
-        expiresAt: { $lte: new Date() }
+        expiresAt: { $lte: new Date() },
       });
 
-      return NextResponse.json({
-        success: false,
-        error: 'No active checkout session found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'No active checkout session found',
+        },
+        { status: 404 },
+      );
     }
 
     // Validate that all products still exist and are available
-    const validItems = checkout.items.filter((item: any) => item.productId && item.productId.isInStock);
-    
+    const validItems = checkout.items.filter(
+      (item: any) => item.productId && item.productId.isInStock,
+    );
+
     if (validItems.length === 0) {
       // All items are no longer available, delete the session
       await Checkout.deleteOne({ _id: checkout._id });
-      return NextResponse.json({
-        success: false,
-        error: 'All items in checkout are no longer available'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'All items in checkout are no longer available',
+        },
+        { status: 400 },
+      );
     }
 
     // If some items are no longer available, update the session
@@ -164,11 +160,11 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       const product = item.productId;
       const itemTotal = product.finalPrice * item.quantity;
       const itemInsuranceCost = item.hasInsurance ? Math.round(itemTotal * 0.02) : 0;
-      
+
       subtotal += itemTotal;
       insuranceCost += itemInsuranceCost;
       selectedQuantity += item.quantity;
-      
+
       return {
         _id: item._id,
         productId: product._id.toString(),
@@ -184,8 +180,8 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
           originalPrice: product.originalPrice,
           discountPercent: product.discountPercent,
           isInStock: product.isInStock,
-          inStockQuantity: product.inStockQuantity
-        }
+          inStockQuantity: product.inStockQuantity,
+        },
       };
     });
 
@@ -198,7 +194,9 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       sessionId: checkout.sessionId,
       items: formattedItems,
       selectedItems: formattedItems.map((item: any) => item.productId),
-      insuranceEnabled: formattedItems.filter((item: any) => item.hasInsurance).map((item: any) => item.productId),
+      insuranceEnabled: formattedItems
+        .filter((item: any) => item.hasInsurance)
+        .map((item: any) => item.productId),
       selectedAddressId: checkout.selectedAddressId,
       selectedPaymentMethod: checkout.selectedPaymentMethod,
       totals: {
@@ -207,10 +205,10 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         shippingCost,
         tax,
         totalAmount,
-        selectedQuantity
+        selectedQuantity,
       },
       expiresAt: checkout.expiresAt,
-      createdAt: checkout.createdAt
+      createdAt: checkout.createdAt,
     };
 
     console.log('Checkout session retrieved:', {
@@ -218,20 +216,16 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       itemCount: formattedItems.length,
       totalAmount,
       validItemsCount: validItems.length,
-      originalItemsCount: checkout.items.length
+      originalItemsCount: checkout.items.length,
     });
 
     return NextResponse.json({
       success: true,
-      checkout: checkoutData
+      checkout: checkoutData,
     });
-
   } catch (error) {
     console.error('Get checkout session error:', error);
-    return NextResponse.json(
-      { error: 'Failed to get checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to get checkout session' }, { status: 500 });
   }
 });
 
@@ -242,10 +236,7 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const { sessionId, selectedAddressId, selectedPaymentMethod } = body;
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Session ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Session ID is required' }, { status: 400 });
     }
 
     await connectDB();
@@ -257,27 +248,20 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const checkout = await Checkout.findOneAndUpdate(
       { sessionId: sessionId, userId: user.userId },
       updateData,
-      { new: true }
+      { new: true },
     );
 
     if (!checkout) {
-      return NextResponse.json(
-        { error: 'Checkout session not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Checkout session not found' }, { status: 404 });
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Checkout session updated successfully'
+      message: 'Checkout session updated successfully',
     });
-
   } catch (error) {
     console.error('Update checkout session error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update checkout session' }, { status: 500 });
   }
 });
 
@@ -291,9 +275,9 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
 
     if (sessionId) {
       // Delete specific session
-      await Checkout.deleteOne({ 
+      await Checkout.deleteOne({
         sessionId: sessionId,
-        userId: user.userId 
+        userId: user.userId,
       });
     } else {
       // Delete all user's checkout sessions
@@ -302,14 +286,10 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
 
     return NextResponse.json({
       success: true,
-      message: 'Checkout session cleared successfully'
+      message: 'Checkout session cleared successfully',
     });
-
   } catch (error) {
     console.error('Clear checkout session error:', error);
-    return NextResponse.json(
-      { error: 'Failed to clear checkout session' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to clear checkout session' }, { status: 500 });
   }
 });

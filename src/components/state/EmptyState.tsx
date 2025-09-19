@@ -1,12 +1,12 @@
-import { EmptyStateProps } from "@/types/props";
-import { motion } from "framer-motion";
-import { RefreshCw } from "lucide-react";
-import { AlertCircle, Search, ShoppingBag } from "lucide-react";
+import { EmptyStateProps } from '@/types/props';
+import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
+import { AlertCircle, Search, ShoppingBag } from 'lucide-react';
 const EmptyState = ({
   hasFilters,
   onClearFilters,
   isError = false,
-  errorMessage = "",
+  errorMessage = '',
 }: EmptyStateProps) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -19,11 +19,9 @@ const EmptyState = ({
           <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-6 h-6 text-red-500" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Something went wrong
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Something went wrong</h3>
           <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-            {errorMessage || "We encountered an error while loading products."}
+            {errorMessage || 'We encountered an error while loading products.'}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -40,12 +38,10 @@ const EmptyState = ({
           </div>
           {hasFilters ? (
             <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products found
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We couldn't find any products matching your filters. Try
-                adjusting your search criteria.
+                We couldn't find any products matching your filters. Try adjusting your search
+                criteria.
               </p>
               <button
                 onClick={onClearFilters}
@@ -57,12 +53,9 @@ const EmptyState = ({
             </>
           ) : (
             <>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No products available
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No products available</h3>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                We don't have any products available at the moment. Please check
-                back later.
+                We don't have any products available at the moment. Please check back later.
               </p>
               <button
                 onClick={() => window.location.reload()}

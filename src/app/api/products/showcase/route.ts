@@ -1,10 +1,9 @@
-
-// pages/api/products/showcase/index.ts  
+// pages/api/products/showcase/index.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import ProductModel from '@/models/product';
 import '@/models/category';
-import '@/models/subcategory';  // Add this import
+import '@/models/subcategory'; // Add this import
 import { Product } from '@/types/Product';
 
 export async function GET(request: NextRequest) {
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const allProductsRaw = await ProductModel.find({
       isPublished: { $ne: false },
-      inStockQuantity: { $gt: 0 }
+      inStockQuantity: { $gt: 0 },
     })
       .populate('categoryId', 'name slug')
       .populate('subCategoryId', 'name slug')
@@ -26,9 +25,7 @@ export async function GET(request: NextRequest) {
     const allProducts: Product[] = allProductsRaw.map((p: any) => ({
       ...p,
       _id: p._id.toString(),
-      categoryId: p.categoryId
-        ? { ...p.categoryId, _id: p.categoryId._id.toString() }
-        : undefined,
+      categoryId: p.categoryId ? { ...p.categoryId, _id: p.categoryId._id.toString() } : undefined,
       subCategoryId: p.subCategoryId
         ? { ...p.subCategoryId, _id: p.subCategoryId._id.toString() }
         : undefined,
@@ -41,21 +38,23 @@ export async function GET(request: NextRequest) {
       total: showcaseProducts.length,
       meta: {
         fetchTime: Date.now() - startTime,
-        diversityApplied: true
-      }
+        diversityApplied: true,
+      },
     });
 
     response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return response;
-
   } catch (error) {
     console.error('[SHOWCASE API ERROR]', error);
 
-    return NextResponse.json({
-      error: 'Internal server error',
-      products: [],
-      total: 0
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        products: [],
+        total: 0,
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -89,11 +88,13 @@ function selectDiverseProducts(products: Product[], maxCount = 50): Product[] {
 
   const remainingSlots = maxCount - selected.length;
   if (remainingSlots > 0) {
-    const remaining = products.filter(
-      (p) => !selected.find((s) => s._id === p._id)
-    );
+    const remaining = products.filter((p) => !selected.find((s) => s._id === p._id));
 
-    for (let i = 0; i < remaining.length && selected.length < maxCount; i += Math.ceil(remaining.length / remainingSlots)) {
+    for (
+      let i = 0;
+      i < remaining.length && selected.length < maxCount;
+      i += Math.ceil(remaining.length / remainingSlots)
+    ) {
       selected.push(remaining[i]);
     }
   }

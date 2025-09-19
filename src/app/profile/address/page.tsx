@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useRouter } from "next/navigation";
-import { useAddressStore } from "@/stores/addressStore";
-import type { Address, AddressForm, AddressType } from "@/stores/addressStore";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from 'react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useRouter } from 'next/navigation';
+import { useAddressStore } from '@/stores/addressStore';
+import type { Address, AddressForm, AddressType } from '@/stores/addressStore';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
   Plus,
@@ -19,30 +19,30 @@ import {
   X,
   Star,
   Phone,
-} from "lucide-react";
-import Link from "next/link";
+} from 'lucide-react';
+import Link from 'next/link';
 
 const addressTypeConfig = {
   home: {
-    label: "Home",
+    label: 'Home',
     icon: Home,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
   },
   work: {
-    label: "Work",
+    label: 'Work',
     icon: Building2,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-    border: "border-purple-200",
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    border: 'border-purple-200',
   },
   other: {
-    label: "Other",
+    label: 'Other',
     icon: MapPin,
-    color: "text-gray-600",
-    bg: "bg-gray-50",
-    border: "border-gray-200",
+    color: 'text-gray-600',
+    bg: 'bg-gray-50',
+    border: 'border-gray-200',
   },
 } as const;
 
@@ -85,7 +85,7 @@ export default function AddressesPage() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!userLoading && !user) {
-      router.push("/login");
+      router.push('/login');
     }
   }, [user, userLoading, router]);
 
@@ -120,7 +120,7 @@ export default function AddressesPage() {
     onSelect: (type: AddressType) => void;
   }) => (
     <div className="flex flex-wrap gap-2 sm:gap-3">
-      {(["home", "work", "other"] as AddressType[]).map((type) => {
+      {(['home', 'work', 'other'] as AddressType[]).map((type) => {
         const config = addressTypeConfig[type];
         const Icon = config.icon;
         return (
@@ -133,7 +133,7 @@ export default function AddressesPage() {
             className={`flex items-center gap-1.5 px-3 py-2 border rounded-sm text-xs font-medium transition-all ${
               selected === type
                 ? `${config.border} ${config.bg} ${config.color}`
-                : "border-gray-300 hover:border-gray-400 text-gray-600 hover:bg-gray-50"
+                : 'border-gray-300 hover:border-gray-400 text-gray-600 hover:bg-gray-50'
             }`}
           >
             <Icon className="w-3 h-3" />
@@ -147,11 +147,7 @@ export default function AddressesPage() {
   if (userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader2 className="w-6 h-6 animate-spin text-gray-600 mx-auto mb-2" />
           <p className="text-sm text-gray-600">Loading...</p>
         </motion.div>
@@ -162,7 +158,7 @@ export default function AddressesPage() {
   if (!user) return null;
 
   const isEditing = !!editingAddressId;
-  const formTitle = isEditing ? "Edit Address" : "Add New Address";
+  const formTitle = isEditing ? 'Edit Address' : 'Add New Address';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -230,9 +226,7 @@ export default function AddressesPage() {
               className="bg-white rounded-sm shadow-sm border border-gray-300 mb-4 sm:mb-6"
             >
               <div className="px-4 py-3 border-b border-gray-300 bg-gray-50 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  {formTitle}
-                </h3>
+                <h3 className="font-semibold text-gray-900 text-sm">{formTitle}</h3>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -246,9 +240,7 @@ export default function AddressesPage() {
               <form onSubmit={handleSubmit} className="p-4 space-y-4">
                 {/* Type Selector */}
                 <div className="space-y-2">
-                  <label className="block text-xs font-medium text-gray-700">
-                    Type
-                  </label>
+                  <label className="block text-xs font-medium text-gray-700">Type</label>
                   <AddressTypeSelector
                     selected={addressForm.type}
                     onSelect={(type) => updateAddressForm({ type })}
@@ -258,28 +250,20 @@ export default function AddressesPage() {
                 {/* Contact Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-xs font-medium text-gray-700">
-                      Full Name *
-                    </label>
+                    <label className="block text-xs font-medium text-gray-700">Full Name *</label>
                     <input
                       value={addressForm.fullName}
-                      onChange={(e) =>
-                        updateAddressForm({ fullName: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ fullName: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Enter name"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-xs font-medium text-gray-700">
-                      Phone *
-                    </label>
+                    <label className="block text-xs font-medium text-gray-700">Phone *</label>
                     <input
                       value={addressForm.phone}
-                      onChange={(e) =>
-                        updateAddressForm({ phone: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ phone: e.target.value })}
                       required
                       type="tel"
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
@@ -296,9 +280,7 @@ export default function AddressesPage() {
                     </label>
                     <input
                       value={addressForm.addressLine1}
-                      onChange={(e) =>
-                        updateAddressForm({ addressLine1: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ addressLine1: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Street address"
@@ -310,9 +292,7 @@ export default function AddressesPage() {
                     </label>
                     <input
                       value={addressForm.addressLine2}
-                      onChange={(e) =>
-                        updateAddressForm({ addressLine2: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ addressLine2: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="Apartment, suite (optional)"
                     />
@@ -322,42 +302,30 @@ export default function AddressesPage() {
                 {/* Location */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="block text-xs font-medium text-gray-700">
-                      City *
-                    </label>
+                    <label className="block text-xs font-medium text-gray-700">City *</label>
                     <input
                       value={addressForm.city}
-                      onChange={(e) =>
-                        updateAddressForm({ city: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ city: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="City"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-xs font-medium text-gray-700">
-                      State *
-                    </label>
+                    <label className="block text-xs font-medium text-gray-700">State *</label>
                     <input
                       value={addressForm.state}
-                      onChange={(e) =>
-                        updateAddressForm({ state: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ state: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="State"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="block text-xs font-medium text-gray-700">
-                      PIN *
-                    </label>
+                    <label className="block text-xs font-medium text-gray-700">PIN *</label>
                     <input
                       value={addressForm.postalCode}
-                      onChange={(e) =>
-                        updateAddressForm({ postalCode: e.target.value })
-                      }
+                      onChange={(e) => updateAddressForm({ postalCode: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-sm focus:ring-1 focus:ring-gray-900 focus:border-gray-900 outline-none text-sm"
                       placeholder="PIN"
@@ -370,14 +338,10 @@ export default function AddressesPage() {
                   <input
                     type="checkbox"
                     checked={addressForm.isDefault}
-                    onChange={(e) =>
-                      updateAddressForm({ isDefault: e.target.checked })
-                    }
+                    onChange={(e) => updateAddressForm({ isDefault: e.target.checked })}
                     className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
                   />
-                  <span className="text-xs font-medium text-gray-700">
-                    Set as default
-                  </span>
+                  <span className="text-xs font-medium text-gray-700">Set as default</span>
                 </label>
 
                 {/* Action Buttons */}
@@ -394,7 +358,7 @@ export default function AddressesPage() {
                     ) : (
                       <Check className="w-4 h-4" />
                     )}
-                    {loading ? "Saving..." : isEditing ? "Update" : "Save"}
+                    {loading ? 'Saving...' : isEditing ? 'Update' : 'Save'}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -432,9 +396,7 @@ export default function AddressesPage() {
             className="text-center py-8 sm:py-12 bg-white rounded-sm border-2 border-dashed border-gray-300"
           >
             <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No addresses
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No addresses</h3>
             <p className="text-sm text-gray-600 mb-4 px-4">
               Add your first address for faster checkout
             </p>
@@ -458,8 +420,7 @@ export default function AddressesPage() {
               className="grid gap-4 grid-cols-1 lg:grid-cols-2"
             >
               {addresses.map((addr) => {
-                const config =
-                  addressTypeConfig[addr.type] || addressTypeConfig.other;
+                const config = addressTypeConfig[addr.type] || addressTypeConfig.other;
                 const Icon = config.icon;
 
                 return (
@@ -491,9 +452,7 @@ export default function AddressesPage() {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-600 truncate">
-                              {addr.fullName}
-                            </p>
+                            <p className="text-xs text-gray-600 truncate">{addr.fullName}</p>
                           </div>
                         </div>
                       </div>

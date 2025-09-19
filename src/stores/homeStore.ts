@@ -50,8 +50,14 @@ interface HomeStore {
   // Actions
   fetchInspirations: () => Promise<void>;
   fetchInspirationBySlug: (slug: string) => Promise<IInspiration | null>;
-  fetchCategoryProducts: (categoryId: string) => Promise<{ products: Product[]; slug: string | null }>;
-  fetchRelatedProducts: (inspirationSlug: string, limit?: number, sort?: "newest" | "oldest" | "popular") => Promise<Product[]>;
+  fetchCategoryProducts: (
+    categoryId: string,
+  ) => Promise<{ products: Product[]; slug: string | null }>;
+  fetchRelatedProducts: (
+    inspirationSlug: string,
+    limit?: number,
+    sort?: 'newest' | 'oldest' | 'popular',
+  ) => Promise<Product[]>;
   getCategoryProducts: (categoryId: string) => CategoryProducts | null;
   getRelatedProducts: (inspirationSlug: string) => Product[];
   getRemainingInspirations: (currentInspirationId: string) => IInspiration[];
@@ -89,9 +95,8 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
     try {
       await get().fetchInspirations();
-      await get().fetchRelatedProducts("default", 20, "newest");
-      await get().fetchCategoryProducts("default");
-      
+      await get().fetchRelatedProducts('default', 20, 'newest');
+      await get().fetchCategoryProducts('default');
     } catch (error) {
       console.error('Home store initialization error:', error);
     }
@@ -107,7 +112,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await fetch("/api/inspirations", { credentials: "include" });
+      const res = await fetch('/api/inspirations', { credentials: 'include' });
       const data = await handleApiResponse(res);
 
       let inspirations: IInspiration[] = [];
@@ -122,14 +127,14 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
         inspirations,
         loading: false,
         initialized: true,
-        error: null
+        error: null,
       });
     } catch (error) {
       set({
         inspirations: [],
         loading: false,
         error: error instanceof Error ? error.message : 'Failed to fetch inspirations',
-        initialized: true
+        initialized: true,
       });
     }
   },
@@ -159,18 +164,18 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       }
 
       const inspiration: IInspiration = await handleApiResponse(res);
-      
-      set(state => ({
+
+      set((state) => ({
         currentInspiration: inspiration,
         inspirationCache: {
           ...state.inspirationCache,
           [slug]: {
             inspiration,
-            fetchedAt: Date.now()
-          }
+            fetchedAt: Date.now(),
+          },
         },
         inspirationLoading: false,
-        inspirationError: null
+        inspirationError: null,
       }));
 
       return inspiration;
@@ -180,7 +185,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       set({
         inspirationLoading: false,
         inspirationError: errorMessage,
-        currentInspiration: null
+        currentInspiration: null,
       });
 
       return null;
@@ -200,9 +205,9 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       return { products: cached?.products || [], slug: cached?.slug || null };
     }
 
-    set(state => ({
+    set((state) => ({
       categoryLoading: { ...state.categoryLoading, [categoryId]: true },
-      categoryErrors: { ...state.categoryErrors, [categoryId]: null }
+      categoryErrors: { ...state.categoryErrors, [categoryId]: null },
     }));
 
     try {
@@ -213,32 +218,32 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       const products = data.products || [];
       const slug = data.slug || null;
 
-      set(state => ({
+      set((state) => ({
         categoryProducts: {
           ...state.categoryProducts,
           [categoryId]: {
             products,
             slug,
-            fetchedAt: Date.now()
-          }
+            fetchedAt: Date.now(),
+          },
         },
-        categoryLoading: { ...state.categoryLoading, [categoryId]: false }
+        categoryLoading: { ...state.categoryLoading, [categoryId]: false },
       }));
 
       return { products, slug };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load products';
 
-      set(state => ({
+      set((state) => ({
         categoryLoading: { ...state.categoryLoading, [categoryId]: false },
-        categoryErrors: { ...state.categoryErrors, [categoryId]: errorMessage }
+        categoryErrors: { ...state.categoryErrors, [categoryId]: errorMessage },
       }));
 
       return { products: [], slug: null };
     }
   },
 
-  fetchRelatedProducts: async (inspirationSlug: string, limit = 20, sort = "newest") => {
+  fetchRelatedProducts: async (inspirationSlug: string, limit = 20, sort = 'newest') => {
     const state = get();
     const cached = state.relatedProducts[inspirationSlug];
 
@@ -254,35 +259,36 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
     try {
       const params = new URLSearchParams();
-      params.append("slug", inspirationSlug);
-      params.append("limit", limit.toString());
-      params.append("sort", sort);
+      params.append('slug', inspirationSlug);
+      params.append('limit', limit.toString());
+      params.append('sort', sort);
       const res = await fetch(`/api/inspirations/relatedProduct?${params.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
 
       const data = await handleApiResponse(res);
-      
+
       const products = data.products || [];
 
-      set(state => ({
+      set((state) => ({
         relatedProducts: {
           ...state.relatedProducts,
           [inspirationSlug]: {
             products,
-            fetchedAt: Date.now()
-          }
+            fetchedAt: Date.now(),
+          },
         },
         relatedProductsLoading: false,
-        relatedProductsError: null
+        relatedProductsError: null,
       }));
 
       return products;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load related products';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to load related products';
 
       set({
         relatedProductsLoading: false,
-        relatedProductsError: errorMessage
+        relatedProductsError: errorMessage,
       });
 
       return [];
@@ -298,7 +304,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   },
 
   getRemainingInspirations: (currentInspirationId: string) => {
-    return get().inspirations.filter(inspiration => inspiration._id !== currentInspirationId);
+    return get().inspirations.filter((inspiration) => inspiration._id !== currentInspirationId);
   },
 
   setInspirations: (inspirations) => set({ inspirations }),
@@ -312,8 +318,8 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   clearRelatedProductsError: () => set({ relatedProductsError: null }),
 
   clearCategoryError: (categoryId: string) => {
-    set(state => ({
-      categoryErrors: { ...state.categoryErrors, [categoryId]: null }
+    set((state) => ({
+      categoryErrors: { ...state.categoryErrors, [categoryId]: null },
     }));
-  }
+  },
 }));

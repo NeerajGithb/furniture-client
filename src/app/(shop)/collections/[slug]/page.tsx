@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useHomeStore } from "@/stores/homeStore";
-import CategoryGrid from "@/components/collections/CategoryGrid";
-import RelatedProducts from "@/components/inspiration/RelatedProducts";
-import NewArrivals from "@/components/inspiration/NewArrivals";
-import MoreInspirationIdeas from "@/components/inspiration/MoreInspirationIdeas";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useHomeStore } from '@/stores/homeStore';
+import CategoryGrid from '@/components/collections/CategoryGrid';
+import RelatedProducts from '@/components/inspiration/RelatedProducts';
+import NewArrivals from '@/components/inspiration/NewArrivals';
+import MoreInspirationIdeas from '@/components/inspiration/MoreInspirationIdeas';
+import Link from 'next/link';
 
-import { ArrowLeft, Home, Search } from "lucide-react";
+import { ArrowLeft, Home, Search } from 'lucide-react';
 
 const Page = () => {
   const params = useParams();
   const router = useRouter();
-  const category = params?.slug as string; 
-  const inspirationSlug = category.replace("-collection", "-inspiration");
+  const category = params?.slug as string;
+  const inspirationSlug = category.replace('-collection', '-inspiration');
   const {
     currentInspiration,
     fetchInspirations,
@@ -44,7 +44,7 @@ const Page = () => {
         // Fetch by slug now
         await fetchInspirationBySlug(inspirationSlug);
       } catch (error) {
-        console.error("Error initializing inspiration page:", error);
+        console.error('Error initializing inspiration page:', error);
       }
     };
 
@@ -58,9 +58,6 @@ const Page = () => {
     initialized,
   ]);
 
-  
-  
-
   if (inspirationLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -68,12 +65,8 @@ const Page = () => {
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-black mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-black mb-2">
-                Loading Collection
-              </h2>
-              <p className="text-gray-600">
-                Please wait...
-              </p>
+              <h2 className="text-xl font-semibold text-black mb-2">Loading Collection</h2>
+              <p className="text-gray-600">Please wait...</p>
             </div>
           </div>
         </div>
@@ -88,9 +81,7 @@ const Page = () => {
           <div className="min-h-screen flex items-center justify-center py-12">
             <div className="text-center max-w-lg mx-auto">
               <div className="bg-white border border-gray-200 rounded-lg p-8 sm:p-12">
-                <h2 className="text-2xl font-bold text-black mb-4">
-                  Collection Not Found
-                </h2>
+                <h2 className="text-2xl font-bold text-black mb-4">Collection Not Found</h2>
                 <p className="text-gray-600 mb-8">
                   We couldn't find the collection you're looking for.
                 </p>
@@ -133,9 +124,7 @@ const Page = () => {
           <div className="min-h-screen flex items-center justify-center py-12">
             <div className="text-center max-w-lg mx-auto">
               <div className="bg-white border border-gray-200 rounded-lg p-8 sm:p-12">
-                <h2 className="text-2xl font-bold text-black mb-4">
-                  Collection Not Available
-                </h2>
+                <h2 className="text-2xl font-bold text-black mb-4">Collection Not Available</h2>
                 <p className="text-gray-600 mb-8">
                   The collection you're looking for is currently not available.
                 </p>
@@ -182,26 +171,17 @@ const Page = () => {
 
           {/* Related Products Section */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <RelatedProducts
-              inspirationSlug={currentInspiration.slug}
-              limit={20}
-            />
+            <RelatedProducts inspirationSlug={currentInspiration.slug} limit={20} />
           </div>
 
           {/* New Arrivals Section */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <NewArrivals
-              inspirationSlug={currentInspiration.slug}
-              limit={20}
-              sort="newest"
-            />
+            <NewArrivals inspirationSlug={currentInspiration.slug} limit={20} sort="newest" />
           </div>
 
           {/* More Inspiration Ideas Section */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-            <MoreInspirationIdeas
-              currentInspirationId={currentInspiration._id}
-            />
+            <MoreInspirationIdeas currentInspirationId={currentInspiration._id} />
           </div>
         </div>
       )}

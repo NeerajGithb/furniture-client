@@ -1,16 +1,16 @@
 // lib/auth.js
-export const runtime = "nodejs";
-import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+export const runtime = 'nodejs';
+import jwt from 'jsonwebtoken';
+import { cookies } from 'next/headers';
 
-const ACCESS_TOKEN_NAME = "vf_access";
-const REFRESH_TOKEN_NAME = "vf_refresh";
+const ACCESS_TOKEN_NAME = 'vf_access';
+const REFRESH_TOKEN_NAME = 'vf_refresh';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
 
 if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-  throw new Error("Missing JWT secret(s)");
+  throw new Error('Missing JWT secret(s)');
 }
 
 // =============================
@@ -23,7 +23,7 @@ export const createAccessToken = (user) =>
       email: user.email,
     },
     JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: '15m' },
   );
 
 export const createRefreshToken = (user) =>
@@ -33,7 +33,7 @@ export const createRefreshToken = (user) =>
       email: user.email,
     },
     JWT_REFRESH_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: '7d' },
   );
 
 // =============================
@@ -43,7 +43,7 @@ export const verifyAccessToken = (token) => {
   try {
     return jwt.verify(token, JWT_SECRET);
   } catch (error) {
-    console.error("Access token verification failed:", error.message);
+    console.error('Access token verification failed:', error.message);
     return null;
   }
 };
@@ -52,7 +52,7 @@ export const verifyRefreshToken = (token) => {
   try {
     return jwt.verify(token, JWT_REFRESH_SECRET);
   } catch (error) {
-    console.error("Refresh token verification failed:", error.message);
+    console.error('Refresh token verification failed:', error.message);
     return null;
   }
 };
@@ -71,7 +71,7 @@ export const getRefreshTokenFromCookie = async (req) => {
     const cookieStore = await cookies();
     return cookieStore.get(REFRESH_TOKEN_NAME)?.value || null;
   } catch (error) {
-    console.error("Error getting refresh token from cookie:", error);
+    console.error('Error getting refresh token from cookie:', error);
     return null;
   }
 };
@@ -86,9 +86,9 @@ export const setAuthCookies = (response, accessToken, refreshToken) => {
       name: ACCESS_TOKEN_NAME,
       value: accessToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 60 * 15, // 15 minutes
     });
 
@@ -97,15 +97,13 @@ export const setAuthCookies = (response, accessToken, refreshToken) => {
       name: REFRESH_TOKEN_NAME,
       value: refreshToken,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
-
-    
   } catch (error) {
-    console.error("Error setting auth cookies:", error);
+    console.error('Error setting auth cookies:', error);
   }
 };
 
@@ -117,28 +115,26 @@ export const clearAuthCookies = (response) => {
     // Clear access token cookie
     response.cookies.set({
       name: ACCESS_TOKEN_NAME,
-      value: "",
+      value: '',
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 0,
     });
 
     // Clear refresh token cookie
     response.cookies.set({
       name: REFRESH_TOKEN_NAME,
-      value: "",
+      value: '',
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 0,
     });
-
-    
   } catch (error) {
-    console.error("Error clearing auth cookies:", error);
+    console.error('Error clearing auth cookies:', error);
   }
 };
 
@@ -147,38 +143,38 @@ export const clearAuthCookies = (response) => {
 // =============================
 export const setAuthCookiesViaHeaders = (response, accessToken, refreshToken) => {
   try {
-    const isProduction = process.env.NODE_ENV === "production";
-    const secureFlag = isProduction ? "Secure; " : "";
-    
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? 'Secure; ' : '';
+
     response.headers.set(
-      "Set-Cookie",
+      'Set-Cookie',
       [
-        `${ACCESS_TOKEN_NAME}=${accessToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${60 * 15}`,
-        `${REFRESH_TOKEN_NAME}=${refreshToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${60 * 60 * 24 * 7}`
-      ].join(", ")
+        `${ACCESS_TOKEN_NAME}=${accessToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${
+          60 * 15
+        }`,
+        `${REFRESH_TOKEN_NAME}=${refreshToken}; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=${
+          60 * 60 * 24 * 7
+        }`,
+      ].join(', '),
     );
-    
-    
   } catch (error) {
-    console.error("Error setting auth cookies via headers:", error);
+    console.error('Error setting auth cookies via headers:', error);
   }
 };
 
 export const clearAuthCookiesViaHeaders = (response) => {
   try {
-    const isProduction = process.env.NODE_ENV === "production";
-    const secureFlag = isProduction ? "Secure; " : "";
-    
+    const isProduction = process.env.NODE_ENV === 'production';
+    const secureFlag = isProduction ? 'Secure; ' : '';
+
     response.headers.set(
-      "Set-Cookie",
+      'Set-Cookie',
       [
         `${ACCESS_TOKEN_NAME}=; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=0`,
-        `${REFRESH_TOKEN_NAME}=; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=0`
-      ].join(", ")
+        `${REFRESH_TOKEN_NAME}=; HttpOnly; ${secureFlag}SameSite=Lax; Path=/; Max-Age=0`,
+      ].join(', '),
     );
-    
-    
   } catch (error) {
-    console.error("Error clearing auth cookies via headers:", error);
+    console.error('Error clearing auth cookies via headers:', error);
   }
 };

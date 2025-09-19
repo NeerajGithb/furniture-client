@@ -1,14 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useCallback, useState } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useOrderStore } from "@/stores/orderStore";
-import type {
-  OrderStatus,
-  PaymentStatus,
-  PaymentMethod,
-} from "@/stores/orderStore";
+import { useEffect, useMemo, useCallback, useState } from 'react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useOrderStore } from '@/stores/orderStore';
+import type { OrderStatus, PaymentStatus, PaymentMethod } from '@/stores/orderStore';
 
 import {
   CheckCircle,
@@ -44,8 +40,8 @@ import {
   XCircle,
   AlertCircle,
   ThumbsUp,
-} from "lucide-react";
-import Link from "next/link";
+} from 'lucide-react';
+import Link from 'next/link';
 
 interface StatusStep {
   key: OrderStatus;
@@ -61,16 +57,15 @@ export default function OrderTrackingPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderNumber = searchParams?.get("orderNumber");
+  const orderNumber = searchParams?.get('orderNumber');
   const [copied, setCopied] = useState(false);
   const [fetchOrder, setFetchOrder] = useState(false);
-  const { order, fetchOrderByNumber, loading, error, clearError } =
-    useOrderStore();
+  const { order, fetchOrderByNumber, loading, error, clearError } = useOrderStore();
 
   // Fetch order when component mounts or orderNumber changes
   useEffect(() => {
     if (!orderNumber) {
-      console.error("No order number provided");
+      console.error('No order number provided');
       return;
     }
 
@@ -79,8 +74,6 @@ export default function OrderTrackingPage() {
       setFetchOrder(true);
     });
   }, [orderNumber, fetchOrderByNumber, clearError]);
-
-  
 
   // Redirect to login if user is not authenticated
   useEffect(() => {
@@ -92,33 +85,33 @@ export default function OrderTrackingPage() {
   // Copy order number function
   const copyOrderNumber = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(order?.orderNumber || "");
+      await navigator.clipboard.writeText(order?.orderNumber || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("Failed to copy:", error);
+      console.error('Failed to copy:', error);
     }
   }, [order?.orderNumber]);
 
   // Check if order is completed
   const isOrderCompleted = useMemo(() => {
-    return order?.orderStatus === "delivered";
+    return order?.orderStatus === 'delivered';
   }, [order?.orderStatus]);
 
   // Check if order is cancelled
   const isOrderCancelled = useMemo(() => {
-    return order?.orderStatus === "cancelled";
+    return order?.orderStatus === 'cancelled';
   }, [order?.orderStatus]);
 
   // Check if order is returned
   const isOrderReturned = useMemo(() => {
-    return order?.orderStatus === ("returned" as OrderStatus);
+    return order?.orderStatus === ('returned' as OrderStatus);
   }, [order?.orderStatus]);
 
   // Check if order is active (not in final state)
   const isOrderActive = useMemo(() => {
-    const finalStates = ["delivered", "cancelled", "returned"];
-    return !finalStates.includes(order?.orderStatus || "pending");
+    const finalStates = ['delivered', 'cancelled', 'returned'];
+    return !finalStates.includes(order?.orderStatus || 'pending');
   }, [order?.orderStatus]);
 
   // Memoized status steps calculation
@@ -130,42 +123,40 @@ export default function OrderTrackingPage() {
       description: string;
     }> = [
       {
-        key: "pending",
-        label: "Order Placed",
+        key: 'pending',
+        label: 'Order Placed',
         icon: CheckCircle,
-        description: "Order has been placed",
+        description: 'Order has been placed',
       },
       {
-        key: "confirmed",
-        label: "Confirmed",
+        key: 'confirmed',
+        label: 'Confirmed',
         icon: Package,
-        description: "Order confirmed by seller",
+        description: 'Order confirmed by seller',
       },
       {
-        key: "processing",
-        label: "Processing",
+        key: 'processing',
+        label: 'Processing',
         icon: Package,
-        description: "Item being prepared",
+        description: 'Item being prepared',
       },
       {
-        key: "shipped",
-        label: "Shipped",
+        key: 'shipped',
+        label: 'Shipped',
         icon: Truck,
-        description: "On the way to you",
+        description: 'On the way to you',
       },
       {
-        key: "delivered",
-        label: "Delivered",
+        key: 'delivered',
+        label: 'Delivered',
         icon: CheckCircle,
-        description: "Package delivered",
+        description: 'Package delivered',
       },
     ];
 
     // Handle cancelled orders
     if (isOrderCancelled) {
-      const cancelIndex = steps.findIndex(
-        (step) => step.key === order?.orderStatus
-      );
+      const cancelIndex = steps.findIndex((step) => step.key === order?.orderStatus);
       return steps.map((step, idx) => ({
         ...step,
         completed: idx < cancelIndex,
@@ -173,13 +164,13 @@ export default function OrderTrackingPage() {
       }));
     }
 
-    const orderStatus: OrderStatus = order?.orderStatus || "pending";
+    const orderStatus: OrderStatus = order?.orderStatus || 'pending';
     const statusOrder: OrderStatus[] = [
-      "pending",
-      "confirmed",
-      "processing",
-      "shipped",
-      "delivered",
+      'pending',
+      'confirmed',
+      'processing',
+      'shipped',
+      'delivered',
     ];
     const currentIndex = statusOrder.indexOf(orderStatus);
 
@@ -192,14 +183,14 @@ export default function OrderTrackingPage() {
 
   // Memoized payment method display
   const paymentMethodDisplay = useMemo((): string => {
-    if (!order?.paymentMethod) return "";
+    if (!order?.paymentMethod) return '';
 
     const methodMap: Record<PaymentMethod, string> = {
-      cod: "Cash on Delivery",
-      card: "Credit/Debit Card",
-      upi: "UPI Payment",
-      netbanking: "Net Banking",
-      wallet: "Digital Wallet",
+      cod: 'Cash on Delivery',
+      card: 'Credit/Debit Card',
+      upi: 'UPI Payment',
+      netbanking: 'Net Banking',
+      wallet: 'Digital Wallet',
     };
 
     return methodMap[order.paymentMethod] || order.paymentMethod;
@@ -207,109 +198,107 @@ export default function OrderTrackingPage() {
 
   // Memoized expected delivery date (only show for active orders)
   const expectedDeliveryDisplay = useMemo((): string => {
-    if (!isOrderActive) return "";
+    if (!isOrderActive) return '';
 
-    if (!order?.expectedDeliveryDate) return "5-7 Business Days";
+    if (!order?.expectedDeliveryDate) return '5-7 Business Days';
 
     try {
-      return new Date(order.expectedDeliveryDate).toLocaleDateString("en-IN", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
+      return new Date(order.expectedDeliveryDate).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
       });
     } catch {
-      return "5-7 Business Days";
+      return '5-7 Business Days';
     }
   }, [order?.expectedDeliveryDate, isOrderActive]);
 
   // Delivered date display
   const deliveredDateDisplay = useMemo((): string => {
-    if (!isOrderCompleted || !order?.deliveredAt) return "";
+    if (!isOrderCompleted || !order?.deliveredAt) return '';
 
     try {
-      return new Date(order.deliveredAt).toLocaleDateString("en-IN", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+      return new Date(order.deliveredAt).toLocaleDateString('en-IN', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       });
     } catch {
-      return "";
+      return '';
     }
   }, [order?.deliveredAt, isOrderCompleted]);
 
   // Payment status styling
   const paymentStatusStyle = useMemo((): string => {
-    const status: PaymentStatus = order?.paymentStatus || "pending";
+    const status: PaymentStatus = order?.paymentStatus || 'pending';
 
     const statusStyles: Record<PaymentStatus, string> = {
-      paid: "bg-gray-100 text-gray-700 border-gray-300",
-      pending: "bg-gray-50 text-gray-600 border-gray-200",
-      failed: "bg-gray-100 text-gray-800 border-gray-300",
-      refunded: "bg-gray-100 text-gray-700 border-gray-300",
+      paid: 'bg-gray-100 text-gray-700 border-gray-300',
+      pending: 'bg-gray-50 text-gray-600 border-gray-200',
+      failed: 'bg-gray-100 text-gray-800 border-gray-300',
+      refunded: 'bg-gray-100 text-gray-700 border-gray-300',
     };
 
     return statusStyles[status] || statusStyles.pending;
   }, [order?.paymentStatus]);
 
   const paymentStatusLabel = useMemo((): string => {
-    const status: PaymentStatus = order?.paymentStatus || "pending";
+    const status: PaymentStatus = order?.paymentStatus || 'pending';
 
     const statusLabels: Record<PaymentStatus, string> = {
-      paid: "Payment Successful",
-      pending: "Payment Pending",
-      failed: "Payment Failed",
-      refunded: "Payment Refunded",
+      paid: 'Payment Successful',
+      pending: 'Payment Pending',
+      failed: 'Payment Failed',
+      refunded: 'Payment Refunded',
     };
 
-    return statusLabels[status] || "Payment Pending";
+    return statusLabels[status] || 'Payment Pending';
   }, [order?.paymentStatus]);
 
   // Order status message and color
   const orderStatusDisplay = useMemo(() => {
-    const status = order?.orderStatus || "pending";
+    const status = order?.orderStatus || 'pending';
 
     const statusConfig = {
       pending: {
-        label: "Order Received",
-        color: "bg-gray-50 text-gray-800 border-gray-200",
+        label: 'Order Received',
+        color: 'bg-gray-50 text-gray-800 border-gray-200',
         icon: Clock,
       },
       confirmed: {
-        label: "Order Confirmed",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Order Confirmed',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: CheckCircle,
       },
       processing: {
-        label: "Being Prepared",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Being Prepared',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: Package,
       },
       shipped: {
-        label: "Shipped",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Shipped',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: Truck,
       },
       delivered: {
-        label: "Delivered",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Delivered',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: CheckCircle,
       },
       cancelled: {
-        label: "Cancelled",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Cancelled',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: XCircle,
       },
       returned: {
-        label: "Returned",
-        color: "bg-gray-100 text-gray-800 border-gray-300",
+        label: 'Returned',
+        color: 'bg-gray-100 text-gray-800 border-gray-300',
         icon: RefreshCw,
       },
     };
 
-    return (
-      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
-    );
+    return statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
   }, [order?.orderStatus]);
 
   // Loading state
@@ -318,9 +307,7 @@ export default function OrderTrackingPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-6">
         <div className="text-center bg-white p-6 rounded border border-gray-200 shadow-sm max-w-sm w-full">
           <Loader2 className="w-6 h-6 animate-spin text-black mx-auto mb-3" />
-          <h2 className="text-base font-semibold text-black mb-2">
-            Loading Order Details
-          </h2>
+          <h2 className="text-base font-semibold text-black mb-2">Loading Order Details</h2>
           <p className="text-sm text-gray-600">
             Please wait while we fetch your order information...
           </p>
@@ -378,12 +365,8 @@ export default function OrderTrackingPage() {
                 <CheckCircle className="w-6 h-6 text-black" />
               </div>
             </div>
-            <h2 className="text-xl font-bold text-black mb-2">
-              Order Delivered Successfully!
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Your order was delivered on {deliveredDateDisplay}
-            </p>
+            <h2 className="text-xl font-bold text-black mb-2">Order Delivered Successfully!</h2>
+            <p className="text-gray-600 mb-4">Your order was delivered on {deliveredDateDisplay}</p>
             <div className="flex flex-col sm:flex-row justify-center gap-2">
               <button className="flex items-center justify-center gap-2 bg-black text-white px-4 py-2 text-sm font-medium hover:bg-gray-800 transition-colors">
                 <Star className="w-4 h-4" />
@@ -407,12 +390,9 @@ export default function OrderTrackingPage() {
                 <XCircle className="w-6 h-6 text-black" />
               </div>
             </div>
-            <h2 className="text-xl font-bold text-black mb-2">
-              Order Cancelled
-            </h2>
+            <h2 className="text-xl font-bold text-black mb-2">Order Cancelled</h2>
             <p className="text-gray-600 mb-4">
-              This order has been cancelled. Refund will be processed within 5-7
-              business days.
+              This order has been cancelled. Refund will be processed within 5-7 business days.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-2">
               <Link
@@ -440,12 +420,9 @@ export default function OrderTrackingPage() {
                 <RefreshCw className="w-6 h-6 text-black" />
               </div>
             </div>
-            <h2 className="text-xl font-bold text-black mb-2">
-              Order Returned
-            </h2>
+            <h2 className="text-xl font-bold text-black mb-2">Order Returned</h2>
             <p className="text-gray-600 mb-4">
-              This order has been returned successfully. Refund processing has
-              started.
+              This order has been returned successfully. Refund processing has started.
             </p>
           </div>
         )}
@@ -464,9 +441,7 @@ export default function OrderTrackingPage() {
             <div className="flex items-center justify-center mb-2">
               <CreditCard className="w-4 h-4" />
             </div>
-            <div className="text-lg font-bold">
-              ₹{order.totalAmount?.toLocaleString()}
-            </div>
+            <div className="text-lg font-bold">₹{order.totalAmount?.toLocaleString()}</div>
             <div className="text-xs text-gray-600">Total</div>
           </div>
 
@@ -482,18 +457,13 @@ export default function OrderTrackingPage() {
             </div>
             <div className="text-sm font-bold">
               {isOrderCompleted
-                ? "Delivered"
+                ? 'Delivered'
                 : isOrderActive
-                ? expectedDeliveryDisplay.split(" ").slice(0, 2).join(" ") ||
-                  "5-7 Days"
+                ? expectedDeliveryDisplay.split(' ').slice(0, 2).join(' ') || '5-7 Days'
                 : orderStatusDisplay.label}
             </div>
             <div className="text-xs text-gray-600">
-              {isOrderCompleted
-                ? "Completed"
-                : isOrderActive
-                ? "Delivery"
-                : "Status"}
+              {isOrderCompleted ? 'Completed' : isOrderActive ? 'Delivery' : 'Status'}
             </div>
           </div>
 
@@ -531,7 +501,7 @@ export default function OrderTrackingPage() {
                         {index < statusSteps.length - 1 && (
                           <div
                             className={`absolute left-4 top-8 w-0.5 h-8 ${
-                              step.completed ? "bg-gray-400" : "bg-gray-200"
+                              step.completed ? 'bg-gray-400' : 'bg-gray-200'
                             }`}
                           />
                         )}
@@ -540,10 +510,10 @@ export default function OrderTrackingPage() {
                         <div
                           className={`w-8 h-8 flex items-center justify-center z-10 transition-all duration-300 ${
                             step.completed
-                              ? "bg-gray-900 text-white"
+                              ? 'bg-gray-900 text-white'
                               : step.active
-                              ? "bg-black text-white"
-                              : "bg-gray-100 text-gray-400 border border-gray-300"
+                              ? 'bg-black text-white'
+                              : 'bg-gray-100 text-gray-400 border border-gray-300'
                           }`}
                         >
                           <step.icon className="w-4 h-4" />
@@ -554,9 +524,7 @@ export default function OrderTrackingPage() {
                           <div className="flex items-center justify-between mb-1">
                             <h4
                               className={`font-medium text-sm ${
-                                step.completed || step.active
-                                  ? "text-black"
-                                  : "text-gray-400"
+                                step.completed || step.active ? 'text-black' : 'text-gray-400'
                               }`}
                             >
                               {step.label}
@@ -574,9 +542,7 @@ export default function OrderTrackingPage() {
                           </div>
                           <p
                             className={`text-xs ${
-                              step.completed || step.active
-                                ? "text-gray-600"
-                                : "text-gray-400"
+                              step.completed || step.active ? 'text-gray-600' : 'text-gray-400'
                             }`}
                           >
                             {step.description}
@@ -603,8 +569,8 @@ export default function OrderTrackingPage() {
                     <div className="w-5 h-5 bg-black flex items-center justify-center">
                       <Package className="w-3 h-3 text-white" />
                     </div>
-                    Order Summary ({order.items.length}{" "}
-                    {order.items.length === 1 ? "item" : "items"})
+                    Order Summary ({order.items.length}{' '}
+                    {order.items.length === 1 ? 'item' : 'items'})
                   </h3>
                 </div>
                 <div className="p-4 space-y-4">
@@ -612,9 +578,7 @@ export default function OrderTrackingPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">Payment Method</span>
-                      <span className="font-medium text-black">
-                        {paymentMethodDisplay}
-                      </span>
+                      <span className="font-medium text-black">{paymentMethodDisplay}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">Payment Status</span>
@@ -631,13 +595,9 @@ export default function OrderTrackingPage() {
                     {/* Order Number and Details */}
                     <div className="bg-gray-50 p-3 rounded">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700">
-                          Order Number
-                        </span>
+                        <span className="text-sm font-medium text-gray-700">Order Number</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-black">
-                            {order.orderNumber}
-                          </span>
+                          <span className="text-sm font-bold text-black">{order.orderNumber}</span>
                           <button
                             onClick={copyOrderNumber}
                             className="p-1 hover:bg-gray-200 transition-colors rounded"
@@ -658,9 +618,7 @@ export default function OrderTrackingPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 text-green-700">
                             <Gift className="w-4 h-4" />
-                            <span className="font-medium">
-                              Applied: {order.couponCode}
-                            </span>
+                            <span className="font-medium">Applied: {order.couponCode}</span>
                           </div>
                           {order.priceBreakdown?.couponDiscount && (
                             <span className="text-green-700 font-medium">
@@ -684,12 +642,8 @@ export default function OrderTrackingPage() {
                             className="flex justify-between items-start text-sm p-2 bg-gray-50 rounded"
                           >
                             <div className="flex-1">
-                              <div className="font-medium text-black">
-                                {item.name}
-                              </div>
-                              <div className="text-gray-500 text-xs">
-                                Quantity: {item.quantity}
-                              </div>
+                              <div className="font-medium text-black">{item.name}</div>
+                              <div className="text-gray-500 text-xs">Quantity: {item.quantity}</div>
                               {item.selectedVariant?.color && (
                                 <div className="text-gray-500 text-xs">
                                   Color: {item.selectedVariant.color}
@@ -702,19 +656,18 @@ export default function OrderTrackingPage() {
                               )}
                             </div>
                             <div className="text-right">
-                              {item.originalPrice &&
-                                item.originalPrice > item.price && (
-                                  <div className="text-xs text-gray-400 line-through">
-                                    ₹{(item.originalPrice * item.quantity).toLocaleString()}
-                                  </div>
-                                )}
+                              {item.originalPrice && item.originalPrice > item.price && (
+                                <div className="text-xs text-gray-400 line-through">
+                                  ₹{(item.originalPrice * item.quantity).toLocaleString()}
+                                </div>
+                              )}
                               <div className="font-medium">
                                 ₹{(item.price * item.quantity).toLocaleString()}
                               </div>
                               {item.insuranceCost && item.insuranceCost > 0 && (
                                 <div className="text-xs text-blue-600 flex items-center gap-1">
-                                  <Shield className="w-3 h-3" />
-                                  ₹{(item.insuranceCost * item.quantity).toLocaleString()} protection
+                                  <Shield className="w-3 h-3" />₹
+                                  {(item.insuranceCost * item.quantity).toLocaleString()} protection
                                 </div>
                               )}
                             </div>
@@ -735,18 +688,14 @@ export default function OrderTrackingPage() {
                       {order.priceBreakdown.itemDiscount > 0 && (
                         <div className="flex justify-between text-sm text-green-600">
                           <span>Item Discounts</span>
-                          <span>
-                            -₹{order.priceBreakdown.itemDiscount.toLocaleString()}
-                          </span>
+                          <span>-₹{order.priceBreakdown.itemDiscount.toLocaleString()}</span>
                         </div>
                       )}
 
                       {order.priceBreakdown.couponDiscount > 0 && (
                         <div className="flex justify-between text-sm text-green-600">
                           <span>Coupon Discount</span>
-                          <span>
-                            -₹{order.priceBreakdown.couponDiscount.toLocaleString()}
-                          </span>
+                          <span>-₹{order.priceBreakdown.couponDiscount.toLocaleString()}</span>
                         </div>
                       )}
 
@@ -763,9 +712,7 @@ export default function OrderTrackingPage() {
                             <Shield className="w-3 h-3" />
                             Protection Plan
                           </span>
-                          <span>
-                            ₹{order.priceBreakdown.totalInsurance.toLocaleString()}
-                          </span>
+                          <span>₹{order.priceBreakdown.totalInsurance.toLocaleString()}</span>
                         </div>
                       )}
 
@@ -773,7 +720,7 @@ export default function OrderTrackingPage() {
                         <span className="text-gray-600">Shipping</span>
                         <span className="font-medium">
                           {order.priceBreakdown.shippingCost === 0
-                            ? "FREE"
+                            ? 'FREE'
                             : `₹${order.priceBreakdown.shippingCost.toLocaleString()}`}
                         </span>
                       </div>
@@ -789,9 +736,7 @@ export default function OrderTrackingPage() {
 
                       {order.priceBreakdown.totalSavings > 0 && (
                         <div className="flex justify-between text-sm bg-green-50 p-2 border border-green-200 rounded">
-                          <span className="text-green-700 font-medium">
-                            Total Savings
-                          </span>
+                          <span className="text-green-700 font-medium">Total Savings</span>
                           <span className="text-green-700 font-bold">
                             ₹{order.priceBreakdown.totalSavings.toLocaleString()}
                           </span>
@@ -802,9 +747,7 @@ export default function OrderTrackingPage() {
                     {/* Final Total */}
                     <div className="border-t pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-base font-bold text-black">
-                          Total Amount
-                        </span>
+                        <span className="text-base font-bold text-black">Total Amount</span>
                         <span className="text-lg font-bold text-black">
                           ₹{order.totalAmount.toLocaleString()}
                         </span>
@@ -826,22 +769,19 @@ export default function OrderTrackingPage() {
                     <div className="w-5 h-5 bg-black flex items-center justify-center">
                       <MapPin className="w-3 h-3 text-white" />
                     </div>
-                    {isOrderCompleted ? "Delivered To" : "Delivery Address"}
+                    {isOrderCompleted ? 'Delivered To' : 'Delivery Address'}
                   </h4>
                 </div>
                 <div className="p-4">
                   <div className="space-y-2">
-                    <div className="font-medium text-black">
-                      {order.shippingAddress.fullName}
-                    </div>
+                    <div className="font-medium text-black">{order.shippingAddress.fullName}</div>
                     <div className="text-sm text-gray-600">
                       <div>{order.shippingAddress.addressLine1}</div>
                       {order.shippingAddress.addressLine2 && (
                         <div>{order.shippingAddress.addressLine2}</div>
                       )}
                       <div className="mt-1">
-                        {order.shippingAddress.city},{" "}
-                        {order.shippingAddress.state} -{" "}
+                        {order.shippingAddress.city}, {order.shippingAddress.state} -{' '}
                         {order.shippingAddress.postalCode}
                       </div>
                     </div>
@@ -877,9 +817,7 @@ export default function OrderTrackingPage() {
                     <h4 className="text-base font-bold">Expected Delivery</h4>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold mb-1">
-                      {expectedDeliveryDisplay}
-                    </div>
+                    <div className="text-lg font-bold mb-1">{expectedDeliveryDisplay}</div>
                     <div className="text-xs text-gray-300">
                       You'll receive SMS and email updates
                     </div>
@@ -902,9 +840,7 @@ export default function OrderTrackingPage() {
                 <div className="p-4">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Tracking Number
-                      </label>
+                      <label className="block text-xs text-gray-600 mb-1">Tracking Number</label>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 bg-gray-50 px-2 py-2 border font-mono text-xs">
                           {order.trackingNumber}
@@ -923,12 +859,8 @@ export default function OrderTrackingPage() {
                     </div>
                     {order.carrier && (
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">
-                          Carrier
-                        </label>
-                        <div className="font-medium text-sm">
-                          {order.carrier}
-                        </div>
+                        <label className="block text-xs text-gray-600 mb-1">Carrier</label>
+                        <div className="font-medium text-sm">{order.carrier}</div>
                       </div>
                     )}
                     <button className="w-full bg-black text-white py-2 px-4 text-sm font-medium hover:bg-gray-800 transition-colors">
@@ -942,9 +874,7 @@ export default function OrderTrackingPage() {
             {/* Quick Actions */}
             <div className="bg-white border border-gray-200 shadow-sm">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <h4 className="text-base font-bold text-black">
-                  Quick Actions
-                </h4>
+                <h4 className="text-base font-bold text-black">Quick Actions</h4>
               </div>
               <div className="p-4 space-y-3">
                 {/* Show different actions based on order status */}
@@ -953,9 +883,7 @@ export default function OrderTrackingPage() {
                     <button className="flex items-center justify-between w-full p-3 bg-green-50 hover:bg-green-100 transition-colors group border border-green-200">
                       <div className="flex items-center gap-3">
                         <Star className="w-4 h-4 text-green-600" />
-                        <span className="font-medium text-green-700">
-                          Rate & Review Products
-                        </span>
+                        <span className="font-medium text-green-700">Rate & Review Products</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-green-600 group-hover:text-green-700" />
                     </button>
@@ -965,9 +893,7 @@ export default function OrderTrackingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <Repeat className="w-4 h-4 text-gray-700" />
-                        <span className="font-medium text-gray-700">
-                          Buy Similar Items
-                        </span>
+                        <span className="font-medium text-gray-700">Buy Similar Items</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
@@ -977,9 +903,7 @@ export default function OrderTrackingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <Package className="w-4 h-4 text-gray-700" />
-                        <span className="font-medium text-gray-700">
-                          View All Orders
-                        </span>
+                        <span className="font-medium text-gray-700">View All Orders</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
@@ -992,9 +916,7 @@ export default function OrderTrackingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <ShoppingBag className="w-4 h-4 text-gray-700" />
-                        <span className="font-medium text-gray-700">
-                          Continue Shopping
-                        </span>
+                        <span className="font-medium text-gray-700">Continue Shopping</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
@@ -1004,9 +926,7 @@ export default function OrderTrackingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <HeadphonesIcon className="w-4 h-4 text-gray-700" />
-                        <span className="font-medium text-gray-700">
-                          Contact Support
-                        </span>
+                        <span className="font-medium text-gray-700">Contact Support</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
@@ -1019,23 +939,18 @@ export default function OrderTrackingPage() {
                     >
                       <div className="flex items-center gap-3">
                         <Package className="w-4 h-4 text-gray-700" />
-                        <span className="font-medium text-gray-700">
-                          Track All Orders
-                        </span>
+                        <span className="font-medium text-gray-700">Track All Orders</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
                     </Link>
-                    {(order.orderStatus === "pending" ||
-                      order.orderStatus === "confirmed") && (
+                    {(order.orderStatus === 'pending' || order.orderStatus === 'confirmed') && (
                       <button
                         onClick={() => router.push(`/orders`)}
                         className="flex items-center justify-between w-full p-3 bg-red-50 hover:bg-red-100 transition-colors group border border-red-200"
                       >
                         <div className="flex items-center gap-3">
                           <XCircle className="w-4 h-4 text-red-600" />
-                          <span className="font-medium text-red-700">
-                            Cancel Order
-                          </span>
+                          <span className="font-medium text-red-700">Cancel Order</span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-red-600 group-hover:text-red-700" />
                       </button>
@@ -1056,8 +971,8 @@ export default function OrderTrackingPage() {
                   Thank You for Your Purchase!
                 </h3>
                 <p className="text-green-700 max-w-2xl mx-auto">
-                  We hope you love your new furniture! Share your experience
-                  with others and discover more amazing products.
+                  We hope you love your new furniture! Share your experience with others and
+                  discover more amazing products.
                 </p>
               </div>
 
@@ -1095,7 +1010,7 @@ export default function OrderTrackingPage() {
                 </h3>
                 <p className="text-gray-600 max-w-2xl mx-auto">
                   {isOrderCancelled
-                    ? "Your order has been cancelled and refund is being processed. Explore our collection for your next purchase."
+                    ? 'Your order has been cancelled and refund is being processed. Explore our collection for your next purchase.'
                     : "Your return has been processed. Thank you for giving us a try. We'd love to serve you better next time."}
                 </p>
               </div>
@@ -1124,12 +1039,10 @@ export default function OrderTrackingPage() {
           <div className="mt-8 bg-white border border-gray-300 shadow-sm">
             <div className="p-6">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  What's Next?
-                </h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">What's Next?</h3>
                 <p className="text-gray-600 max-w-2xl mx-auto">
-                  Your order is being processed. Here's what happens next and
-                  what you can do while you wait.
+                  Your order is being processed. Here's what happens next and what you can do while
+                  you wait.
                 </p>
               </div>
 
@@ -1138,14 +1051,12 @@ export default function OrderTrackingPage() {
                 <div className="text-center">
                   <div
                     className={`w-10 h-10 mx-auto mb-2 ${
-                      statusSteps[0]?.completed ? "bg-green-600" : "bg-black"
+                      statusSteps[0]?.completed ? 'bg-green-600' : 'bg-black'
                     } flex items-center justify-center shadow-sm`}
                   >
                     <CheckCircle className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    Order Confirmed
-                  </h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">Order Confirmed</h4>
                   <p className="text-sm text-gray-600">
                     Your order has been received and confirmed
                   </p>
@@ -1155,56 +1066,44 @@ export default function OrderTrackingPage() {
                   <div
                     className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[2]?.completed
-                        ? "bg-green-600"
+                        ? 'bg-green-600'
                         : statusSteps[2]?.active
-                        ? "bg-black"
-                        : "bg-gray-300"
+                        ? 'bg-black'
+                        : 'bg-gray-300'
                     } flex items-center justify-center shadow-sm`}
                   >
                     <Package className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    Items Prepared
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    We're carefully packaging your items
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-1">Items Prepared</h4>
+                  <p className="text-sm text-gray-600">We're carefully packaging your items</p>
                 </div>
 
                 <div className="text-center">
                   <div
                     className={`w-10 h-10 mx-auto mb-2 ${
                       statusSteps[3]?.completed
-                        ? "bg-green-600"
+                        ? 'bg-green-600'
                         : statusSteps[3]?.active
-                        ? "bg-black"
-                        : "bg-gray-300"
+                        ? 'bg-black'
+                        : 'bg-gray-300'
                     } flex items-center justify-center shadow-sm`}
                   >
                     <Truck className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    Out for Delivery
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Your package is on its way to you
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-1">Out for Delivery</h4>
+                  <p className="text-sm text-gray-600">Your package is on its way to you</p>
                 </div>
 
                 <div className="text-center">
                   <div
                     className={`w-10 h-10 mx-auto mb-2 ${
-                      statusSteps[4]?.completed ? "bg-green-600" : "bg-gray-300"
+                      statusSteps[4]?.completed ? 'bg-green-600' : 'bg-gray-300'
                     } flex items-center justify-center shadow-sm`}
                   >
                     <Home className="w-5 h-5 text-white" />
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    Delivered
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Package delivered safely to your address
-                  </p>
+                  <h4 className="font-semibold text-gray-900 mb-1">Delivered</h4>
+                  <p className="text-sm text-gray-600">Package delivered safely to your address</p>
                 </div>
               </div>
 

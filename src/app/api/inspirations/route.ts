@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
         { tags: { $in: [new RegExp(search, 'i')] } },
-        { keywords: { $in: [new RegExp(search, 'i')] } }
+        { keywords: { $in: [new RegExp(search, 'i')] } },
       ];
     }
 
@@ -34,13 +34,13 @@ export async function GET(request: Request) {
         .skip(skip)
         .limit(limit)
         .lean(),
-      Inspiration.countDocuments(query)
+      Inspiration.countDocuments(query),
     ]);
 
     return NextResponse.json({
-      inspirations: inspirations.map(item => ({
+      inspirations: inspirations.map((item) => ({
         ...item,
-        imageUrl: item.heroImage?.url
+        imageUrl: item.heroImage?.url,
       })),
       pagination: {
         page,
@@ -48,8 +48,8 @@ export async function GET(request: Request) {
         total,
         pages: Math.ceil(total / limit),
         hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     });
   } catch (error) {
     console.error('GET Error:', error);

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Star,
   Camera,
@@ -13,9 +13,9 @@ import {
   AlertCircle,
   CheckCircle,
   Trash2,
-} from "lucide-react";
-import useReviewStore from "@/stores/reviewStore";
-import AuthModal from "../models/AuthModal";
+} from 'lucide-react';
+import useReviewStore from '@/stores/reviewStore';
+import AuthModal from '../models/AuthModal';
 
 interface ProductReviewsProps {
   productId: string;
@@ -33,9 +33,11 @@ const ReviewSkeleton = () => (
           <div className="h-3 bg-gray-200 rounded w-16"></div>
         </div>
         <div className="flex items-center gap-1">
-          {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="w-3 h-3 bg-gray-200 rounded"></div>
-          ))}
+          {Array(5)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="w-3 h-3 bg-gray-200 rounded"></div>
+            ))}
           <div className="h-3 bg-gray-200 rounded w-20 ml-2"></div>
         </div>
       </div>
@@ -56,7 +58,7 @@ const ReviewSkeleton = () => (
 const StatsSkeleton = () => (
   <div className="animate-pulse">
     <div className="space-y-3 mb-1">
-      {[5, 4, 3, 2, 1].map(star => (
+      {[5, 4, 3, 2, 1].map((star) => (
         <div key={star} className="flex items-center gap-3">
           <div className="w-3 h-3 bg-gray-200 rounded"></div>
           <div className="w-3 h-3 bg-gray-200 rounded"></div>
@@ -74,7 +76,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
   // Track voting state per review and vote type
-  const [votingStates, setVotingStates] = useState<Record<string, { helpful: boolean; unhelpful: boolean }>>({});
+  const [votingStates, setVotingStates] = useState<
+    Record<string, { helpful: boolean; unhelpful: boolean }>
+  >({});
 
   const {
     reviews,
@@ -122,8 +126,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
   useEffect(() => {
     if (productId) {
       fetchReviews(productId, 1, true).catch((error) => {
-        console.error("Fetch reviews error:", error);
-        setErrorMessage("Failed to load reviews. Please try refreshing the page.");
+        console.error('Fetch reviews error:', error);
+        setErrorMessage('Failed to load reviews. Please try refreshing the page.');
       });
     }
     return () => clearReviews();
@@ -147,25 +151,25 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
     // Validate file types
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    const invalidFiles = files.filter((file) => !validTypes.includes(file.type));
     if (invalidFiles.length > 0) {
-      setErrorMessage("Please upload only JPG, PNG, GIF, or WebP images");
-      e.target.value = "";
+      setErrorMessage('Please upload only JPG, PNG, GIF, or WebP images');
+      e.target.value = '';
       return;
     }
 
     // Validate file sizes (5MB max per file)
     const maxSize = 5 * 1024 * 1024; // 5MB
-    const oversizedFiles = files.filter(file => file.size > maxSize);
+    const oversizedFiles = files.filter((file) => file.size > maxSize);
     if (oversizedFiles.length > 0) {
-      setErrorMessage("Each image must be less than 5MB");
-      e.target.value = "";
+      setErrorMessage('Each image must be less than 5MB');
+      e.target.value = '';
       return;
     }
 
     if (formData.images.length + files.length > 5) {
-      setErrorMessage("Maximum 5 images allowed per review");
-      e.target.value = "";
+      setErrorMessage('Maximum 5 images allowed per review');
+      e.target.value = '';
       return;
     }
 
@@ -173,9 +177,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       await uploadImages(files);
       setUploadSuccess(`${files.length} image(s) uploaded successfully`);
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to upload images. Please try again.");
+      setErrorMessage(error.message || 'Failed to upload images. Please try again.');
     } finally {
-      e.target.value = "";
+      e.target.value = '';
     }
   };
 
@@ -184,103 +188,105 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     setSuccessMessage('');
 
     if (!userId) {
-      setErrorMessage("Please log in to submit a review");
+      setErrorMessage('Please log in to submit a review');
       setOpenAuthModal(true);
       return;
     }
 
     if (!formData.rating || formData.rating === 0) {
-      setErrorMessage("Please select a rating");
+      setErrorMessage('Please select a rating');
       return;
     }
 
     if (!formData.comment.trim()) {
-      setErrorMessage("Please write a review comment");
+      setErrorMessage('Please write a review comment');
       return;
     }
 
     if (formData.comment.trim().length < 10) {
-      setErrorMessage("Review comment must be at least 10 characters long");
+      setErrorMessage('Review comment must be at least 10 characters long');
       return;
     }
 
     try {
       await submitReview(productId, userId);
-      setSuccessMessage("Review submitted successfully!");
+      setSuccessMessage('Review submitted successfully!');
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to submit review. Please try again.");
+      setErrorMessage(error.message || 'Failed to submit review. Please try again.');
     }
   };
 
   const handleHelpfulVote = async (reviewId: string, isHelpful: boolean) => {
     if (!userId) {
-      setErrorMessage("Please log in to vote on reviews");
+      setErrorMessage('Please log in to vote on reviews');
       return;
     }
 
     const voteType = isHelpful ? 'helpful' : 'unhelpful';
-    
+
     // Prevent multiple rapid clicks on the same button
     if (votingStates[reviewId]?.[voteType]) {
       return;
     }
 
-    setVotingStates(prev => ({ 
-      ...prev, 
-      [reviewId]: { 
-        ...prev[reviewId], 
-        [voteType]: true 
-      } 
+    setVotingStates((prev) => ({
+      ...prev,
+      [reviewId]: {
+        ...prev[reviewId],
+        [voteType]: true,
+      },
     }));
 
     try {
       await voteHelpful(reviewId, isHelpful);
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to submit vote. Please try again.");
+      setErrorMessage(error.message || 'Failed to submit vote. Please try again.');
     } finally {
-      setVotingStates(prev => ({ 
-        ...prev, 
-        [reviewId]: { 
-          ...prev[reviewId], 
-          [voteType]: false 
-        } 
+      setVotingStates((prev) => ({
+        ...prev,
+        [reviewId]: {
+          ...prev[reviewId],
+          [voteType]: false,
+        },
       }));
     }
   };
 
   const handleDeleteReview = async (reviewId: string) => {
     if (!userId) {
-      setErrorMessage("Please log in to delete reviews");
+      setErrorMessage('Please log in to delete reviews');
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this review? This action cannot be undone.")) {
+    if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
       return;
     }
 
     try {
       await deleteReview(reviewId);
-      setSuccessMessage("Review deleted successfully");
+      setSuccessMessage('Review deleted successfully');
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to delete review. Please try again.");
+      setErrorMessage(error.message || 'Failed to delete review. Please try again.');
     }
   };
 
   const handleReportReview = async (reviewId: string) => {
     if (!userId) {
-      setErrorMessage("Please log in to report reviews");
+      setErrorMessage('Please log in to report reviews');
       return;
     }
 
-    if (!confirm("Are you sure you want to report this review? This will flag it for moderation.")) {
+    if (
+      !confirm('Are you sure you want to report this review? This will flag it for moderation.')
+    ) {
       return;
     }
 
     try {
       await reportReview(reviewId);
-      setSuccessMessage("Review reported successfully. Our team will review it shortly.");
+      setSuccessMessage('Review reported successfully. Our team will review it shortly.');
     } catch (error: any) {
-      setErrorMessage(error.message || "Failed to report review. Please try again.");
+      setErrorMessage(error.message || 'Failed to report review. Please try again.');
     }
   };
 
@@ -288,7 +294,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     try {
       await applyFilter(productId, filter);
     } catch (error) {
-      setErrorMessage("Failed to apply filter. Please try again.");
+      setErrorMessage('Failed to apply filter. Please try again.');
     }
   };
 
@@ -296,11 +302,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     try {
       await loadMoreReviews(productId);
     } catch (error) {
-      setErrorMessage("Failed to load more reviews. Please try again.");
+      setErrorMessage('Failed to load more reviews. Please try again.');
     }
   };
 
-  const renderStars = (rating: number, interactive = false, size = "w-3 h-3") => {
+  const renderStars = (rating: number, interactive = false, size = 'w-3 h-3') => {
     return Array.from({ length: 5 }, (_, i) => {
       if (interactive) {
         return (
@@ -316,8 +322,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
             <Star
               className={`w-5 h-5 transition-colors ${
                 i < (hoveredRating || formData.rating)
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300 hover:text-yellow-200"
+                  ? 'fill-yellow-400 text-yellow-400'
+                  : 'text-gray-300 hover:text-yellow-200'
               }`}
             />
           </button>
@@ -327,19 +333,17 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       return (
         <Star
           key={i}
-          className={`${size} ${
-            i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-          }`}
+          className={`${size} ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
         />
       );
     });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -354,7 +358,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
         <div className="bg-green-50 border border-green-200 rounded-sm p-3 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
           <span className="text-sm text-green-800">{successMessage}</span>
-          <button 
+          <button
             onClick={() => setSuccessMessage('')}
             className="ml-auto text-green-600 hover:text-green-800"
             aria-label="Close message"
@@ -368,7 +372,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
         <div className="bg-red-50 border border-red-200 rounded-sm p-3 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
           <span className="text-sm text-red-800">{errorMessage}</span>
-          <button 
+          <button
             onClick={() => setErrorMessage('')}
             className="ml-auto text-red-600 hover:text-red-800"
             aria-label="Close message"
@@ -382,7 +386,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
         <div className="bg-blue-50 border border-blue-200 rounded-sm p-3 flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-blue-600 flex-shrink-0" />
           <span className="text-sm text-blue-800">{uploadSuccess}</span>
-          <button 
+          <button
             onClick={() => setUploadSuccess('')}
             className="ml-auto text-blue-600 hover:text-blue-800"
             aria-label="Close message"
@@ -395,9 +399,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-gray-900 mb-3">
-            Ratings & Reviews
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-3">Ratings & Reviews</h2>
 
           {/* Overall Rating */}
           {loading ? (
@@ -420,8 +422,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
               <div className="flex-1 max-w-xs space-y-1">
                 {[5, 4, 3, 2, 1].map((star) => {
                   const count = stats.breakdown[star] || 0;
-                  const percentage = stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0;
-                  
+                  const percentage =
+                    stats.totalReviews > 0 ? (count / stats.totalReviews) * 100 : 0;
+
                   return (
                     <div key={star} className="flex items-center gap-2 text-xs">
                       <span className="w-2 text-gray-600">{star}</span>
@@ -472,9 +475,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
           {/* Rating */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rating *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rating *</label>
             <div className="flex items-center gap-1">
               {renderStars(formData.rating, true)}
               {formData.rating > 0 && (
@@ -487,9 +488,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
           {/* Comment */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Review *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Review *</label>
             <textarea
               value={formData.comment}
               onChange={(e) => setFormData({ comment: e.target.value })}
@@ -565,7 +564,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
             <button
               type="button"
               onClick={handleSubmitReview}
-              disabled={submitting || !formData.rating || !formData.comment.trim() || formData.comment.trim().length < 10}
+              disabled={
+                submitting ||
+                !formData.rating ||
+                !formData.comment.trim() ||
+                formData.comment.trim().length < 10
+              }
               className="bg-blue-600 text-white px-4 py-2 text-sm font-medium rounded-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {submitting ? (
@@ -601,8 +605,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       {/* Filters */}
       <div className="flex items-center gap-1 flex-wrap">
         <span className="text-sm font-medium text-gray-700 mr-2">Filter:</span>
-        {["all", "5", "4", "3", "2", "1"].map((filterValue) => {
-          const count = getFilteredCount(filterValue === "all" ? "all" : Number(filterValue));
+        {['all', '5', '4', '3', '2', '1'].map((filterValue) => {
+          const count = getFilteredCount(filterValue === 'all' ? 'all' : Number(filterValue));
           return (
             <button
               key={filterValue}
@@ -610,14 +614,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
               disabled={loading}
               className={`px-2 py-1 text-xs font-medium rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors disabled:opacity-50 ${
                 currentFilter === filterValue
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              {filterValue === "all" ? "All" : `${filterValue}★`}
-              <span className="ml-1 opacity-75">
-                ({count})
-              </span>
+              {filterValue === 'all' ? 'All' : `${filterValue}★`}
+              <span className="ml-1 opacity-75">({count})</span>
             </button>
           );
         })}
@@ -626,7 +628,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       {/* Reviews List */}
       <div className="space-y-3">
         {loading ? (
-          Array(1).fill(0).map((_, i) => <ReviewSkeleton key={i} />)
+          Array(1)
+            .fill(0)
+            .map((_, i) => <ReviewSkeleton key={i} />)
         ) : reviews.length === 0 ? (
           <div className="text-center py-6 text-gray-500">
             <div className="text-4xl mb-4">📝</div>
@@ -646,14 +650,15 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                     {review.user?.photoURL ? (
                       <img
                         src={review.user.photoURL}
-                        alt={review.user.name || "User"}
+                        alt={review.user.name || 'User'}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.style.display = "none";
+                          target.style.display = 'none';
                           const parent = target.parentElement;
                           if (parent) {
-                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
+                            parent.innerHTML =
+                              '<div class="w-full h-full flex items-center justify-center"><svg class="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg></div>';
                           }
                         }}
                       />
@@ -664,7 +669,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-gray-900 text-sm truncate">
-                        {review.user?.name || "Anonymous User"}
+                        {review.user?.name || 'Anonymous User'}
                       </span>
                       {review.isVerifiedPurchase && (
                         <div className="flex items-center gap-1 bg-green-100 text-green-800 px-1.5 py-0.5 text-xs font-medium rounded">
@@ -680,7 +685,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <div className="flex items-center gap-1">
-                        {renderStars(review.rating, false, "w-2.5 h-2.5")}
+                        {renderStars(review.rating, false, 'w-2.5 h-2.5')}
                       </div>
                       <span className="text-xs text-gray-500">
                         <Calendar className="w-2.5 h-2.5 inline mr-1" />
@@ -715,7 +720,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                 </div>
               </div>
 
-
               {/* Review Content */}
               <div className="text-gray-700 text-sm leading-relaxed break-words">
                 {review.comment}
@@ -727,39 +731,39 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                   {review.images.slice(0, 4).map((image, index) => (
                     <img
                       key={index}
-                      src={typeof image === "string" ? image : image.url}
+                      src={typeof image === 'string' ? image : image.url}
                       alt={`Review image ${index + 1}`}
                       className="w-16 h-16 object-cover border border-gray-200 rounded cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-opacity"
                       onClick={() => {
-                        const imageUrl = typeof image === "string" ? image : image.url;
-                        window.open(imageUrl, "_blank", "noopener,noreferrer");
+                        const imageUrl = typeof image === 'string' ? image : image.url;
+                        window.open(imageUrl, '_blank', 'noopener,noreferrer');
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          const imageUrl = typeof image === "string" ? image : image.url;
-                          window.open(imageUrl, "_blank", "noopener,noreferrer");
+                          const imageUrl = typeof image === 'string' ? image : image.url;
+                          window.open(imageUrl, '_blank', 'noopener,noreferrer');
                         }
                       }}
                       tabIndex={0}
                     />
                   ))}
                   {review.images.length > 4 && (
-                    <div 
+                    <div
                       className="w-16 h-16 bg-gray-100 border border-gray-200 rounded flex items-center justify-center cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
                       onClick={() => {
                         // Open all remaining images in new tabs
                         review.images.slice(4).forEach((image) => {
-                          const imageUrl = typeof image === "string" ? image : image.url;
-                          window.open(imageUrl, "_blank", "noopener,noreferrer");
+                          const imageUrl = typeof image === 'string' ? image : image.url;
+                          window.open(imageUrl, '_blank', 'noopener,noreferrer');
                         });
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           review.images.slice(4).forEach((image) => {
-                            const imageUrl = typeof image === "string" ? image : image.url;
-                            window.open(imageUrl, "_blank", "noopener,noreferrer");
+                            const imageUrl = typeof image === 'string' ? image : image.url;
+                            window.open(imageUrl, '_blank', 'noopener,noreferrer');
                           });
                         }
                       }}
@@ -779,7 +783,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-500">Was this helpful?</span>
-                  
+
                   {/* Show voting buttons for all logged-in users */}
                   {userId ? (
                     <>
@@ -788,8 +792,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                         disabled={getVotingState(review._id, 'helpful')}
                         className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 rounded px-1 py-0.5 ${
                           review.userVote === 'helpful'
-                            ? "text-green-600 font-medium bg-green-50"
-                            : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                            ? 'text-green-600 font-medium bg-green-50'
+                            : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
                         }`}
                         aria-label="Mark as helpful"
                       >
@@ -805,8 +809,8 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                         disabled={getVotingState(review._id, 'unhelpful')}
                         className={`flex items-center gap-1 text-xs transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded px-1 py-0.5 ${
                           review.userVote === 'unhelpful'
-                            ? "text-red-600 font-medium bg-red-50"
-                            : "text-gray-600 hover:text-red-600 hover:bg-red-50"
+                            ? 'text-red-600 font-medium bg-red-50'
+                            : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
                         }`}
                         aria-label="Mark as not helpful"
                       >
@@ -866,7 +870,10 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                 Loading more reviews...
               </>
             ) : (
-              `Load More Reviews (${Math.min(10, (stats.totalReviews || 0) - reviews.length)} remaining)`
+              `Load More Reviews (${Math.min(
+                10,
+                (stats.totalReviews || 0) - reviews.length,
+              )} remaining)`
             )}
           </button>
         </div>

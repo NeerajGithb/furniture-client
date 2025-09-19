@@ -1,18 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Search,
-  X,
-  TrendingUp,
-  Clock,
-  Loader2,
-  ArrowUpRight,
-} from "lucide-react";
-import useSearchStore from "@/stores/searchStore";
-import { SuggestionsHandler } from "@/lib/suggestions";
-import { getDidYouMeanSuggestions } from "@/lib/didumean";
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, X, TrendingUp, Clock, Loader2, ArrowUpRight } from 'lucide-react';
+import useSearchStore from '@/stores/searchStore';
+import { SuggestionsHandler } from '@/lib/suggestions';
+import { getDidYouMeanSuggestions } from '@/lib/didumean';
 
 interface Product {
   id: string;
@@ -43,35 +36,29 @@ interface SearchBarProps {
   initialQuery?: string;
 }
 
-type SuggestionType =
-  | "query"
-  | "product"
-  | "category"
-  | "trending"
-  | "recent"
-  | "didYouMean";
+type SuggestionType = 'query' | 'product' | 'category' | 'trending' | 'recent' | 'didYouMean';
 
 const PLACEHOLDERS = [
-  "Search furniture, sofas, beds...",
-  "Find dining sets, chairs...",
-  "Discover office furniture...",
-  "Explore home decor items...",
-  "Search by brand, style, color...",
+  'Search furniture, sofas, beds...',
+  'Find dining sets, chairs...',
+  'Discover office furniture...',
+  'Explore home decor items...',
+  'Search by brand, style, color...',
 ];
 
 const TRENDING_SEARCHES = [
-  "sofa set 3 seater",
-  "king size bed with storage",
-  "dining table 6 seater",
-  "ergonomic office chair",
-  "coffee table wooden",
-  "wardrobe with mirror",
-  "study table with drawers",
-  "recliner chair leather",
+  'sofa set 3 seater',
+  'king size bed with storage',
+  'dining table 6 seater',
+  'ergonomic office chair',
+  'coffee table wooden',
+  'wardrobe with mirror',
+  'study table with drawers',
+  'recliner chair leather',
 ];
 
 const usePlaceholderAnimation = () => {
-  const [placeholderText, setPlaceholderText] = useState("");
+  const [placeholderText, setPlaceholderText] = useState('');
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -98,7 +85,7 @@ const usePlaceholderAnimation = () => {
           setCurrentPhraseIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
         }
       },
-      isDeleting ? 40 : 100
+      isDeleting ? 40 : 100,
     );
 
     return () => clearTimeout(timeout);
@@ -108,10 +95,10 @@ const usePlaceholderAnimation = () => {
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({
-  className = "",
+  className = '',
   onSearch,
   autoFocus = false,
-  initialQuery = "",
+  initialQuery = '',
 }) => {
   const [query, setQuery] = useState<string>(initialQuery);
   const [suggestions, setSuggestions] = useState<SuggestionsData | null>(null);
@@ -131,7 +118,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const router = useRouter();
   const pathName = usePathname();
   const animatedPlaceholder = usePlaceholderAnimation();
-  const placeholderText = pathName === "/" ? animatedPlaceholder : "Search furniture & home decor...";
+  const placeholderText =
+    pathName === '/' ? animatedPlaceholder : 'Search furniture & home decor...';
 
   const { setQuery: setSearchQuery } = useSearchStore();
 
@@ -164,8 +152,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [recentSearches]);
 
   useEffect(() => {
-    if (pathName !== "/search") {
-      setQuery("");
+    if (pathName !== '/search') {
+      setQuery('');
     }
     setIsSearching(false);
     setIsLoading(false);
@@ -182,12 +170,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     try {
-      const recentSearchesData = JSON.parse(
-        localStorage.getItem("recentSearches") || "[]"
-      );
+      const recentSearchesData = JSON.parse(localStorage.getItem('recentSearches') || '[]');
       setRecentSearches(recentSearchesData.slice(0, 6));
     } catch (error) {
-      console.error("Error loading search data:", error);
+      console.error('Error loading search data:', error);
     }
   }, []);
   useEffect(() => {
@@ -208,38 +194,41 @@ const SearchBar: React.FC<SearchBarProps> = ({
       const cleanQuery = searchQuery.trim().toLowerCase();
       if (cleanQuery.length < 2) return;
 
-      setRecentSearches(prevRecent => {
+      setRecentSearches((prevRecent) => {
         const updatedRecent = [
           searchQuery,
           ...prevRecent.filter((item) => item.toLowerCase() !== cleanQuery),
         ].slice(0, 6);
 
-        localStorage.setItem("recentSearches", JSON.stringify(updatedRecent));
+        localStorage.setItem('recentSearches', JSON.stringify(updatedRecent));
         return updatedRecent;
       });
     } catch (error) {
-      console.error("Error saving search data:", error);
+      console.error('Error saving search data:', error);
     }
   }, []);
 
-  const getInstantSuggestions = useCallback((searchQuery: string): SuggestionsData => {
-    if (searchQuery.length < 2) {
-      return defaultSuggestions;
-    }
+  const getInstantSuggestions = useCallback(
+    (searchQuery: string): SuggestionsData => {
+      if (searchQuery.length < 2) {
+        return defaultSuggestions;
+      }
 
-    const result = SuggestionsHandler.getSmartSuggestions(searchQuery);
-    const maxItems = 8;
-    const querySuggestions = result.suggestions?.slice(0, maxItems) || [];
+      const result = SuggestionsHandler.getSmartSuggestions(searchQuery);
+      const maxItems = 8;
+      const querySuggestions = result.suggestions?.slice(0, maxItems) || [];
 
-    return {
-      queries: querySuggestions,
-      trending: [],
-      recent: [],
-      products: [],
-      categories: [],
-      didYouMean: [],
-    };
-  }, [defaultSuggestions]);
+      return {
+        queries: querySuggestions,
+        trending: [],
+        recent: [],
+        products: [],
+        categories: [],
+        didYouMean: [],
+      };
+    },
+    [defaultSuggestions],
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
@@ -311,9 +300,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const createSlug = (text: string) => {
       return text
         .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/^-+|-+$/g, "")
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/^-+|-+$/g, '')
         .slice(0, 60);
     };
     const slug = createSlug(searchQuery);
@@ -328,37 +317,37 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
     if (suggestions?.recent && suggestions.recent.length > 0) {
       suggestions.recent.forEach((item) => {
-        items.push({ item, type: "recent", index: currentIndex++ });
+        items.push({ item, type: 'recent', index: currentIndex++ });
       });
     }
 
     if (suggestions?.trending && suggestions.trending.length > 0) {
       suggestions.trending.forEach((item) => {
-        items.push({ item, type: "trending", index: currentIndex++ });
+        items.push({ item, type: 'trending', index: currentIndex++ });
       });
     }
 
     if (suggestions?.queries && suggestions.queries.length > 0) {
       suggestions.queries.forEach((item) => {
-        items.push({ item, type: "query", index: currentIndex++ });
+        items.push({ item, type: 'query', index: currentIndex++ });
       });
     }
 
     if (suggestions?.didYouMean && suggestions.didYouMean.length > 0) {
       suggestions.didYouMean.forEach((item) => {
-        items.push({ item, type: "didYouMean", index: currentIndex++ });
+        items.push({ item, type: 'didYouMean', index: currentIndex++ });
       });
     }
 
     if (suggestions?.products && suggestions.products.length > 0) {
       suggestions.products.forEach((item) => {
-        items.push({ item, type: "product", index: currentIndex++ });
+        items.push({ item, type: 'product', index: currentIndex++ });
       });
     }
 
     if (suggestions?.categories && suggestions.categories.length > 0) {
       suggestions.categories.forEach((item) => {
-        items.push({ item, type: "category", index: currentIndex++ });
+        items.push({ item, type: 'category', index: currentIndex++ });
       });
     }
 
@@ -372,17 +361,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const totalItems = allItems.length;
 
     switch (e.key) {
-      case "ArrowDown":
+      case 'ArrowDown':
         e.preventDefault();
         setSelectedIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
         break;
 
-      case "ArrowUp":
+      case 'ArrowUp':
         e.preventDefault();
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : totalItems - 1));
         break;
 
-      case "Enter":
+      case 'Enter':
         e.preventDefault();
         if (selectedIndex >= 0 && allItems[selectedIndex]) {
           handleSuggestionSelect(allItems[selectedIndex]);
@@ -391,13 +380,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
         }
         break;
 
-      case "Escape":
+      case 'Escape':
         setShowSuggestions(false);
         setSelectedIndex(-1);
         inputRef.current?.blur();
         break;
 
-      case "Tab":
+      case 'Tab':
         if (selectedIndex >= 0 && allItems[selectedIndex]) {
           e.preventDefault();
           const selectedItem = allItems[selectedIndex];
@@ -413,11 +402,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
     type: SuggestionType;
     index: number;
   }): Promise<void> => {
-    let selectedQuery = "";
+    let selectedQuery = '';
 
-    if (suggestionItem.type === "product") {
+    if (suggestionItem.type === 'product') {
       selectedQuery = suggestionItem.item.name;
-    } else if (suggestionItem.type === "category") {
+    } else if (suggestionItem.type === 'category') {
       selectedQuery = suggestionItem.item.name;
     } else {
       selectedQuery = suggestionItem.item;
@@ -443,8 +432,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -456,7 +445,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, []);
 
   const clearSearch = (): void => {
-    setQuery("");
+    setQuery('');
     setSuggestions(defaultSuggestions);
     setShowSuggestions(true);
     setSelectedIndex(-1);
@@ -466,7 +455,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const getItemName = (item: string | Product | Category): string => {
-    if (typeof item === "string") return item;
+    if (typeof item === 'string') return item;
     return item.name;
   };
 
@@ -476,7 +465,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     icon: React.ReactNode,
     startIndex: number,
     title: string,
-    maxItems: number = 6
+    maxItems: number = 6,
   ) => {
     if (!items || items.length === 0) return null;
 
@@ -493,41 +482,31 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <div
               key={`${type}-${i}`}
               className={`px-4 py-[10px] md:py-2 cursor-pointer flex max-md:border-b max-md:border-gray-200 items-center justify-between group transition-colors duration-150 ${
-                isSelected
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-700 hover:bg-gray-50"
+                isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
               }`}
-              onClick={() =>
-                handleSuggestionSelect({ item, type, index: globalIndex })
-              }
+              onClick={() => handleSuggestionSelect({ item, type, index: globalIndex })}
               onMouseEnter={() => setSelectedIndex(globalIndex)}
             >
               <div className="flex items-center space-x-3 flex-1">
                 <div
                   className={`flex-shrink-0 w-4 h-4 transition-colors duration-150 ${
-                    isSelected ? "text-blue-600" : "text-gray-400"
+                    isSelected ? 'text-blue-600' : 'text-gray-400'
                   }`}
                 >
                   {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div
-                    className={`truncate text-sm ${
-                      isSelected ? "text-blue-700" : ""
-                    }`}
-                  >
+                  <div className={`truncate text-sm ${isSelected ? 'text-blue-700' : ''}`}>
                     {itemName}
                   </div>
-                  {type === "product" && item.finalPrice && (
+                  {type === 'product' && item.finalPrice && (
                     <div className="text-sm text-green-600 font-semibold">
                       ₹{item.finalPrice.toLocaleString()}
                     </div>
                   )}
                 </div>
               </div>
-              {isSelected && (
-                <ArrowUpRight size={12} className="text-blue-600" />
-              )}
+              {isSelected && <ArrowUpRight size={12} className="text-blue-600" />}
             </div>
           );
         })}
@@ -541,7 +520,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     startIndex: number,
     query: string,
     isFallback: boolean,
-    maxItems: number = 4
+    maxItems: number = 4,
   ) => {
     if (!items || items.length === 0) return null;
 
@@ -562,9 +541,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <div
               key={`didyoumean-${i}`}
               className={`px-4 py-[10px] md:py-2 max-md:border-b max-md:border-gray-200 cursor-pointer flex items-center justify-between group transition-colors duration-150 ${
-                isSelected
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-700 hover:bg-gray-50"
+                isSelected ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
               }`}
               onClick={() => {
                 setQuery(suggestion);
@@ -575,22 +552,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <div className="flex items-center space-x-3 flex-1">
                 <div
                   className={`flex-shrink-0 w-4 h-4 transition-colors duration-150 ${
-                    isSelected ? "text-blue-600" : "text-gray-400"
+                    isSelected ? 'text-blue-600' : 'text-gray-400'
                   }`}
                 >
                   {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div
-                    className={`truncate ${isSelected ? "text-blue-700" : ""}`}
-                  >
+                  <div className={`truncate ${isSelected ? 'text-blue-700' : ''}`}>
                     {suggestion}
                   </div>
                 </div>
               </div>
-              {isSelected && (
-                <ArrowUpRight size={12} className="text-blue-600" />
-              )}
+              {isSelected && <ArrowUpRight size={12} className="text-blue-600" />}
             </div>
           );
         })}
@@ -630,7 +603,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 md:pl-5 md:pr-16 md:h-[30px] md:max-h-[30px] md:text-xs
 focus:outline-none md:focus:border-gray-600 md:focus:bg-white transition-all duration-300 ease-out 
 text-gray-900 placeholder-gray-400 
-${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
+${isSearching || loadingProducts ? 'cursor-not-allowed opacity-70' : ''}`}
             autoComplete="off"
             aria-label="Search furniture and home decor"
             aria-expanded={showSuggestions}
@@ -659,20 +632,15 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
               disabled={isSearching || loadingProducts || !query.trim()}
               className={`p-2 rounded transition-colors duration-200 ${
                 isSearching || loadingProducts
-                  ? "text-blue-600 bg-blue-50"
+                  ? 'text-blue-600 bg-blue-50'
                   : query.trim()
-                  ? "text-blue-600 hover:bg-blue-50"
-                  : "text-gray-400"
+                  ? 'text-blue-600 hover:bg-blue-50'
+                  : 'text-gray-400'
               }`}
-              aria-label={
-                isSearching || loadingProducts ? "Searching..." : "Search"
-              }
+              aria-label={isSearching || loadingProducts ? 'Searching...' : 'Search'}
             >
               {isSearching || isLoading || loadingProducts ? (
-                <Loader2
-                  size={20}
-                  className="animate-spin md:w-[18px] md:h-[18px]"
-                />
+                <Loader2 size={20} className="animate-spin md:w-[18px] md:h-[18px]" />
               ) : (
                 <Search size={20} className="md:w-[18px] md:h-[18px] max-md:text-white" />
               )}
@@ -686,9 +654,9 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
           ref={suggestionsRef}
           className="fixed md:absolute md:top-full left-0 right-0 mt-4 md:mt-2 bg-white border border-gray-200 rounded-xs shadow-all z-50 max-w-full"
           style={{
-            maxHeight: "min(400px, 80vh)",
-            width: "100%",
-            overflow: "hidden",
+            maxHeight: 'min(400px, 80vh)',
+            width: '100%',
+            overflow: 'hidden',
           }}
           role="listbox"
           aria-label="Search suggestions"
@@ -699,11 +667,11 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
                 <>
                   {renderSuggestionSection(
                     suggestions.recent,
-                    "recent",
+                    'recent',
                     <Clock size={12} />,
                     currentIndex,
-                    "Recent Searches",
-                    4
+                    'Recent Searches',
+                    4,
                   )}
                   {((currentIndex += suggestions.recent.length), null)}
                 </>
@@ -713,11 +681,11 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
                 <>
                   {renderSuggestionSection(
                     suggestions.trending,
-                    "trending",
+                    'trending',
                     <TrendingUp size={12} />,
                     currentIndex,
-                    "Trending Searches",
-                    8
+                    'Trending Searches',
+                    8,
                   )}
                   {((currentIndex += suggestions.trending.length), null)}
                 </>
@@ -727,11 +695,11 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
                 <>
                   {renderSuggestionSection(
                     suggestions.queries,
-                    "query",
+                    'query',
                     <Search size={12} />,
                     currentIndex,
-                    "Suggestions",
-                    8
+                    'Suggestions',
+                    8,
                   )}
                 </>
               )}
@@ -749,7 +717,7 @@ ${isSearching || loadingProducts ? "cursor-not-allowed opacity-70" : ""}`}
                       currentIndex + (suggestions?.queries?.length || 0),
                       query,
                       didYouMeanSuggestions.isFallback,
-                      4
+                      4,
                     )}
                 </>
               );

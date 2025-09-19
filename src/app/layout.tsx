@@ -1,16 +1,16 @@
 // app/layout.js
-import "./globals.css";
-import Providers from "@/context/Providers";
-import ToastProvider from "@/provider/ToastProvider";
-import Header from "@/components/ui/Header";
-import Footer from "@/components/ui/Footer";
-import { Suspense } from "react";
-import { Inter } from "next/font/google";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import './globals.css';
+import Providers from '@/context/Providers';
+import ToastProvider from '@/provider/ToastProvider';
+import Header from '@/components/ui/Header';
+import Footer from '@/components/ui/Footer';
+import { Suspense } from 'react';
+import { Inter } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-body",
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-body',
 });
 
 export default function RootLayout({
@@ -23,8 +23,7 @@ export default function RootLayout({
       <body className="bg-gray-100 text-gray-900">
         <div
           style={{
-            fontFamily:
-              "var(--font-body), Inter, system-ui, -apple-system, sans-serif",
+            fontFamily: 'var(--font-body), Inter, system-ui, -apple-system, sans-serif',
           }}
         >
           <Suspense

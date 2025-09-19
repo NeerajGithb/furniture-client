@@ -62,7 +62,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     if (get().initialized) return;
 
     try {
-      
       set({ loading: true });
       const response = await fetchWithCredentials('/api/wishlist?limit=1000');
 
@@ -85,8 +84,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         initialized: true,
         loading: false,
       });
-      
-      
     } catch (error) {
       console.error('Wishlist initialization error:', error);
       set({
@@ -103,7 +100,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       if (response.ok) {
         const data: WishlistData = await handleApiResponse(response);
         set({ wishlist: data });
-        
       }
     } catch (error) {
       console.error('Wishlist refresh error:', error);
@@ -114,9 +110,9 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     const { updatingItems, wishlist } = get();
 
     if (updatingItems.has(productId)) return false;
-    
+
     // Check if already in wishlist
-    if (wishlist?.items.some(item => item.productId === productId)) {
+    if (wishlist?.items.some((item) => item.productId === productId)) {
       toast.error('Product already in wishlist');
       return false;
     }
@@ -180,9 +176,9 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     const { updatingItems, wishlist } = get();
 
     if (updatingItems.has(productId)) return false;
-    
+
     // Check if product is in wishlist
-    if (!wishlist?.items.some(item => item.productId === productId)) {
+    if (!wishlist?.items.some((item) => item.productId === productId)) {
       toast.error('Product not in wishlist');
       return false;
     }
@@ -231,13 +227,13 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   // Batch remove items from wishlist (for order completion)
   batchRemoveFromWishlist: async (productIds: string[]): Promise<boolean> => {
     const { wishlist } = get();
-    
+
     if (!wishlist || !productIds.length) return false;
 
     const originalWishlist = wishlist;
-    
+
     // Optimistic update - remove all specified items
-    const remainingItems = wishlist.items.filter(item => !productIds.includes(item.productId));
+    const remainingItems = wishlist.items.filter((item) => !productIds.includes(item.productId));
     const removedCount = wishlist.items.length - remainingItems.length;
 
     if (removedCount === 0) {
@@ -268,11 +264,11 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
       // Refresh to get accurate server data
       await get().refreshWishlist();
-      
+
       return true;
     } catch (error) {
       console.error('Batch remove from wishlist error:', error);
-      
+
       // Rollback optimistic update
       set({ wishlist: originalWishlist });
       return false;
@@ -320,8 +316,8 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   // Computed getters
   isWishlisted: (productId: string) => {
     const { wishlist } = get();
-    return wishlist?.items.some(item => item.productId === productId) ?? false;
+    return wishlist?.items.some((item) => item.productId === productId) ?? false;
   },
-  
+
   isUpdating: (productId: string) => get().updatingItems.has(productId),
 }));

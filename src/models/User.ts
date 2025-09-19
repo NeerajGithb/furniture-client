@@ -1,6 +1,6 @@
-import mongoose, { Document, Schema } from "mongoose";
-import bcrypt from "bcrypt";
-import slugify from "slugify";
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
+import slugify from 'slugify';
 
 export interface IUser extends Document {
   name: string;
@@ -21,47 +21,44 @@ const userSchema = new Schema<IUser>(
     slug: { type: String, lowercase: true, unique: true },
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/\S+@\S+\.\S+/, "Invalid email address"],
+      match: [/\S+@\S+\.\S+/, 'Invalid email address'],
     },
     password: {
       type: String,
-      minlength: [6, "Password must be at least 6 characters"],
+      minlength: [6, 'Password must be at least 6 characters'],
       select: false,
     },
     phone: {
       type: String,
-      match: [/^[6-9]\d{9}$/, "Invalid phone number"],
+      match: [/^[6-9]\d{9}$/, 'Invalid phone number'],
       unique: true,
       sparse: true,
     },
-    photoURL: { type: String, default: "" },
+    photoURL: { type: String, default: '' },
     hasOAuth: { type: Boolean, default: false },
     resetCode: { type: String },
     resetCodeExpires: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-// Hash password before save
-userSchema.pre("save", async function (next) {
+userSchema.pre('save', async function (next) {
   const user = this as IUser;
 
-  if (user.isModified("password") && user.password) {
+  if (user.isModified('password') && user.password) {
     const salt = await bcrypt.genSalt(12);
     user.password = await bcrypt.hash(user.password, salt);
   }
 
-  // Generate unique slug if name changed or slug empty
-  if (!user.slug || user.isModified("name")) {
+  if (!user.slug || user.isModified('name')) {
     let baseSlug = slugify(user.name, { lower: true, strict: true });
     let slug = baseSlug;
     let i = 1;
 
-    // Ensure slug is unique
     while (await mongoose.models.User.findOne({ slug })) {
       slug = `${baseSlug}-${i++}`;
     }
@@ -71,9 +68,8 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Password check
 userSchema.methods.comparePassword = function (inputPassword: string) {
-  return bcrypt.compare(inputPassword, this.password || "");
+  return bcrypt.compare(inputPassword, this.password || '');
 };
 
-export default mongoose.models.User || mongoose.model<IUser>("User", userSchema);
+export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   useState,
@@ -11,9 +11,9 @@ import {
   ReactElement,
   ReactNode,
   ReactPortal,
-} from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+} from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Filter,
@@ -22,24 +22,24 @@ import {
   AlertCircle,
   ShoppingBag,
   RefreshCw,
-} from "lucide-react";
-import ProductGrid from "@/components/product/ProductGrid";
-import FilterSidebar from "@/components/filter/FilterSidebar";
-import useSearchStore from "@/stores/searchStore";
-import SearchEmptyState from "@/components/state/SearchEmptyState";
-import GridSkeleton from "@/components/sceleton/GridSkeleton";
-import { Category } from "@/types/Product";
+} from 'lucide-react';
+import ProductGrid from '@/components/product/ProductGrid';
+import FilterSidebar from '@/components/filter/FilterSidebar';
+import useSearchStore from '@/stores/searchStore';
+import SearchEmptyState from '@/components/state/SearchEmptyState';
+import GridSkeleton from '@/components/sceleton/GridSkeleton';
+import { Category } from '@/types/Product';
 
 // Sort options matching slug page
 const SORT_OPTIONS = [
-  { value: "relevance", label: "Most Relevant" },
-  { value: "newest", label: "Newest First" },
-  { value: "price-low", label: "Price: Low to High" },
-  { value: "price-high", label: "Price: High to Low" },
-  { value: "name-asc", label: "Name: A-Z" },
-  { value: "name-desc", label: "Name: Z-A" },
-  { value: "rating", label: "Customer Rating" },
-  { value: "discount", label: "Highest Discount" },
+  { value: 'relevance', label: 'Most Relevant' },
+  { value: 'newest', label: 'Newest First' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'name-asc', label: 'Name: A-Z' },
+  { value: 'name-desc', label: 'Name: Z-A' },
+  { value: 'rating', label: 'Customer Rating' },
+  { value: 'discount', label: 'Highest Discount' },
 ];
 
 // Cache stable selectors
@@ -62,7 +62,6 @@ const selectFallback = (state: any) => state.fallback;
 const selectNoResults = (state: any) => state.noResults;
 
 const SearchPage: React.FC = () => {
-  
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -90,7 +89,7 @@ const SearchPage: React.FC = () => {
   // Local state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const lastSearchRef = useRef<string>("");
+  const lastSearchRef = useRef<string>('');
 
   // Refs for stable actions
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -98,7 +97,7 @@ const SearchPage: React.FC = () => {
   const isLoadingMoreRef = useRef(false);
 
   // Get current query
-  const query: string = searchParams.get("q") || "";
+  const query: string = searchParams.get('q') || '';
 
   // Update store query when URL changes
   useEffect(() => {
@@ -109,17 +108,17 @@ const SearchPage: React.FC = () => {
   const filterParams = useMemo(
     () => ({
       query: query,
-      selectedCategory: searchParams.get("category") || "",
-      selectedSubcategory: searchParams.get("subcategory") || "",
-      selectedMaterial: searchParams.get("material") || "",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      inStockOnly: searchParams.get("inStock") === "true",
-      onSaleOnly: searchParams.get("onSale") === "true",
-      discountRange: searchParams.get("discount") || "",
-      sortBy: searchParams.get("sort") || "relevance",
+      selectedCategory: searchParams.get('category') || '',
+      selectedSubcategory: searchParams.get('subcategory') || '',
+      selectedMaterial: searchParams.get('material') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      inStockOnly: searchParams.get('inStock') === 'true',
+      onSaleOnly: searchParams.get('onSale') === 'true',
+      discountRange: searchParams.get('discount') || '',
+      sortBy: searchParams.get('sort') || 'relevance',
     }),
-    [query, searchParams]
+    [query, searchParams],
   );
 
   // Check active filters - now includes discount
@@ -144,7 +143,7 @@ const SearchPage: React.FC = () => {
       inStockOnly ||
       onSaleOnly ||
       discountRange ||
-      (sortBy && sortBy !== "relevance")
+      (sortBy && sortBy !== 'relevance')
     );
   }, [filterParams]);
 
@@ -154,7 +153,7 @@ const SearchPage: React.FC = () => {
     const searchKey = `${query}-${searchParams.toString()}`;
 
     if (!query.trim()) {
-      lastSearchRef.current = "";
+      lastSearchRef.current = '';
       return;
     }
 
@@ -186,44 +185,44 @@ const SearchPage: React.FC = () => {
 
     try {
       const params = new URLSearchParams();
-      params.set("q", query);
+      params.set('q', query);
 
       // Add all filter parameters
       if (filterParams.selectedCategory) {
-        params.set("category", filterParams.selectedCategory);
+        params.set('category', filterParams.selectedCategory);
       }
       if (filterParams.selectedSubcategory) {
-        params.set("subcategory", filterParams.selectedSubcategory);
+        params.set('subcategory', filterParams.selectedSubcategory);
       }
       if (filterParams.selectedMaterial) {
-        params.set("material", filterParams.selectedMaterial);
+        params.set('material', filterParams.selectedMaterial);
       }
       if (filterParams.minPrice) {
-        params.set("minPrice", filterParams.minPrice);
+        params.set('minPrice', filterParams.minPrice);
       }
       if (filterParams.maxPrice) {
-        params.set("maxPrice", filterParams.maxPrice);
+        params.set('maxPrice', filterParams.maxPrice);
       }
       if (filterParams.inStockOnly) {
-        params.set("inStock", "true");
+        params.set('inStock', 'true');
       }
       if (filterParams.onSaleOnly) {
-        params.set("onSale", "true");
+        params.set('onSale', 'true');
       }
       if (filterParams.discountRange) {
-        params.set("discount", filterParams.discountRange);
+        params.set('discount', filterParams.discountRange);
       }
-      if (filterParams.sortBy !== "relevance") {
-        params.set("sort", filterParams.sortBy);
+      if (filterParams.sortBy !== 'relevance') {
+        params.set('sort', filterParams.sortBy);
       }
 
-      params.set("page", nextPage.toString());
-      params.set("limit", "20");
+      params.set('page', nextPage.toString());
+      params.set('limit', '20');
 
       await searchProducts(query, params.toString(), false);
       setCurrentPage(nextPage);
     } catch (error) {
-      console.error("Error loading more search results:", error);
+      console.error('Error loading more search results:', error);
     } finally {
       setTimeout(() => {
         isLoadingMoreRef.current = false;
@@ -262,11 +261,7 @@ const SearchPage: React.FC = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
-        if (
-          entry.isIntersecting &&
-          loadMoreRef.current &&
-          !isLoadingMoreRef.current
-        ) {
+        if (entry.isIntersecting && loadMoreRef.current && !isLoadingMoreRef.current) {
           setTimeout(() => {
             if (loadMoreRef.current && !isLoadingMoreRef.current) {
               loadMoreRef.current();
@@ -276,8 +271,8 @@ const SearchPage: React.FC = () => {
       },
       {
         threshold: 0.1,
-        rootMargin: "200px",
-      }
+        rootMargin: '200px',
+      },
     );
 
     observer.observe(target);
@@ -287,7 +282,7 @@ const SearchPage: React.FC = () => {
   // Navigation functions
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
-    params.set("q", query);
+    params.set('q', query);
     router.push(`${pathname}?${params.toString()}`);
   }, [router, pathname, query]);
 
@@ -295,43 +290,41 @@ const SearchPage: React.FC = () => {
     (filterKey: string) => {
       const params = new URLSearchParams(searchParams);
 
-      if (filterKey === "category") {
-        params.delete("category");
-        params.delete("subcategory");
-      } else if (filterKey === "subcategory") {
-        params.delete("subcategory");
-      } else if (filterKey === "price") {
-        params.delete("minPrice");
-        params.delete("maxPrice");
+      if (filterKey === 'category') {
+        params.delete('category');
+        params.delete('subcategory');
+      } else if (filterKey === 'subcategory') {
+        params.delete('subcategory');
+      } else if (filterKey === 'price') {
+        params.delete('minPrice');
+        params.delete('maxPrice');
       } else {
         params.delete(filterKey);
       }
 
       router.push(`${pathname}?${params.toString()}`);
     },
-    [router, pathname, searchParams]
+    [router, pathname, searchParams],
   );
 
   // Helper functions
   const findCategoryName = useCallback(
     (slug: any) => {
       if (!categories) return slug;
-      return (
-        categories.find((c: { slug: any }) => c.slug === slug)?.name || slug
-      );
+      return categories.find((c: { slug: any }) => c.slug === slug)?.name || slug;
     },
-    [categories]
+    [categories],
   );
 
   const findSubcategoryName = useCallback(
     (subcategorySlug: any) => {
       if (!subcategories) return subcategorySlug;
       return (
-        subcategories.find((s: { slug: any }) => s.slug === subcategorySlug)
-          ?.name || subcategorySlug
+        subcategories.find((s: { slug: any }) => s.slug === subcategorySlug)?.name ||
+        subcategorySlug
       );
     },
-    [subcategories]
+    [subcategories],
   );
 
   const findSortLabel = useCallback((value: string) => {
@@ -340,25 +333,22 @@ const SearchPage: React.FC = () => {
 
   const getDiscountLabel = useCallback((value: string) => {
     const discountOptions = [
-      { value: "", label: "All Products" },
-      { value: "10", label: "10% or more" },
-      { value: "25", label: "25% or more" },
-      { value: "50", label: "50% or more" },
-      { value: "70", label: "70% or more" },
+      { value: '', label: 'All Products' },
+      { value: '10', label: '10% or more' },
+      { value: '25', label: '25% or more' },
+      { value: '50', label: '50% or more' },
+      { value: '70', label: '70% or more' },
     ];
-    return (
-      discountOptions.find((opt) => opt.value === value)?.label ||
-      `${value}% or more`
-    );
+    return discountOptions.find((opt) => opt.value === value)?.label || `${value}% or more`;
   }, []);
 
   const handleSuggestionClick = useCallback(
     (suggestionText: string) => {
       const params = new URLSearchParams(searchParams);
-      params.set("q", suggestionText);
+      params.set('q', suggestionText);
       router.push(`${pathname}?${params.toString()}`);
     },
-    [router, pathname, searchParams]
+    [router, pathname, searchParams],
   );
 
   // Active filter count - now includes discount
@@ -384,7 +374,7 @@ const SearchPage: React.FC = () => {
       inStockOnly,
       onSaleOnly,
       discountRange,
-      sortBy !== "relevance",
+      sortBy !== 'relevance',
     ];
 
     return filters.filter(Boolean).length;
@@ -394,20 +384,20 @@ const SearchPage: React.FC = () => {
   const filters = useMemo(
     () => ({
       categories: Array.isArray(categories)
-        ? categories.filter((c: any) => c && typeof c === "object" && c._id)
+        ? categories.filter((c: any) => c && typeof c === 'object' && c._id)
         : [],
       subcategories: Array.isArray(subcategories)
-        ? subcategories.filter((s: any) => s && typeof s === "object" && s._id)
+        ? subcategories.filter((s: any) => s && typeof s === 'object' && s._id)
         : [],
       materials: Array.isArray(materials)
-        ? materials.filter((m: any) => m && typeof m === "object" && m._id)
+        ? materials.filter((m: any) => m && typeof m === 'object' && m._id)
         : [],
       priceRange:
-        priceRange && typeof priceRange === "object"
+        priceRange && typeof priceRange === 'object'
           ? priceRange
           : { minPrice: 0, maxPrice: 100000 },
     }),
-    [categories, subcategories, materials, priceRange]
+    [categories, subcategories, materials, priceRange],
   );
 
   // Determine what to show - Fixed logic
@@ -431,19 +421,19 @@ const SearchPage: React.FC = () => {
               <motion.nav
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
                 className="mb-2 text-xs text-gray-600 flex items-center justify-start flex-wrap gap-1"
               >
                 <span
                   className="cursor-pointer hover:text-indigo-600 transition"
-                  onClick={() => router.push("/")}
+                  onClick={() => router.push('/')}
                 >
                   Home
                 </span>
                 <span className="text-gray-400">›</span>
                 <span
                   className="cursor-pointer hover:text-indigo-600 transition"
-                  onClick={() => router.push("/products")}
+                  onClick={() => router.push('/products')}
                 >
                   Furniture
                 </span>
@@ -451,9 +441,7 @@ const SearchPage: React.FC = () => {
                 {query ? (
                   <span
                     className="cursor-pointer hover:text-indigo-600 transition text-gray-500"
-                    onClick={() =>
-                      router.push(`/search?q=${encodeURIComponent(query)}`)
-                    }
+                    onClick={() => router.push(`/search?q=${encodeURIComponent(query)}`)}
                   >
                     {query}
                   </span>
@@ -467,31 +455,25 @@ const SearchPage: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
                   className="mb-3 pb-2 border-b border-gray-200"
                 >
                   <h1 className="text-sm font-semibold text-gray-900 text-center leading-tight">
                     {products.length > 0 ? (
                       <>
-                        Showing{" "}
+                        Showing{' '}
                         <span className="font-bold text-gray-900">
                           {(pagination.page - 1) * pagination.limit + 1}
-                        </span>{" "}
-                        –{" "}
+                        </span>{' '}
+                        –{' '}
                         <span className="font-bold text-gray-900">
-                          {Math.min(
-                            pagination.page * pagination.limit,
-                            totalProducts
-                          )}
-                        </span>{" "}
-                        of{" "}
+                          {Math.min(pagination.page * pagination.limit, totalProducts)}
+                        </span>{' '}
+                        of{' '}
                         <span className="font-bold text-gray-900">
                           {totalProducts?.toLocaleString() || 0}
-                        </span>{" "}
-                        results for{" "}
-                        <span className="font-bold text-indigo-600">
-                          "{query}"
-                        </span>
+                        </span>{' '}
+                        results for <span className="font-bold text-indigo-600">"{query}"</span>
                         {fallback && (
                           <span className="block text-xs text-orange-600 mt-1">
                             (Related results - no exact matches found)
@@ -499,9 +481,7 @@ const SearchPage: React.FC = () => {
                         )}
                       </>
                     ) : (
-                      <span className="text-gray-600">
-                        Search results for "{query}"
-                      </span>
+                      <span className="text-gray-600">Search results for "{query}"</span>
                     )}
                   </h1>
                 </motion.div>
@@ -547,7 +527,7 @@ const SearchPage: React.FC = () => {
                         key={category._id}
                         onClick={() => {
                           const params = new URLSearchParams(searchParams);
-                          params.set("category", category.slug);
+                          params.set('category', category.slug);
                           router.push(`${pathname}?${params.toString()}`);
                         }}
                         className="px-2 py-1 text-xs bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
@@ -563,7 +543,7 @@ const SearchPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
                 className="mb-1"
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -572,9 +552,7 @@ const SearchPage: React.FC = () => {
                       {shouldShowError && (
                         <div className="flex items-center gap-1.5 text-red-600 bg-red-50 rounded-full px-2.5 py-1 shadow-sm">
                           <AlertCircle className="w-3 h-3" />
-                          <span className="font-medium text-xs">
-                            Search error
-                          </span>
+                          <span className="font-medium text-xs">Search error</span>
                         </div>
                       )}
                     </div>
@@ -611,7 +589,7 @@ const SearchPage: React.FC = () => {
                         {findCategoryName(filterParams.selectedCategory)}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("category")}
+                          onClick={() => removeFilter('category')}
                         />
                       </span>
                     )}
@@ -621,7 +599,7 @@ const SearchPage: React.FC = () => {
                         {findSubcategoryName(filterParams.selectedSubcategory)}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("subcategory")}
+                          onClick={() => removeFilter('subcategory')}
                         />
                       </span>
                     )}
@@ -631,7 +609,7 @@ const SearchPage: React.FC = () => {
                         {filterParams.selectedMaterial}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("material")}
+                          onClick={() => removeFilter('material')}
                         />
                       </span>
                     )}
@@ -642,7 +620,7 @@ const SearchPage: React.FC = () => {
                         {filterParams.maxPrice || 100000}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("price")}
+                          onClick={() => removeFilter('price')}
                         />
                       </span>
                     )}
@@ -652,7 +630,7 @@ const SearchPage: React.FC = () => {
                         {getDiscountLabel(filterParams.discountRange)}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("discount")}
+                          onClick={() => removeFilter('discount')}
                         />
                       </span>
                     )}
@@ -662,7 +640,7 @@ const SearchPage: React.FC = () => {
                         In Stock
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("inStock")}
+                          onClick={() => removeFilter('inStock')}
                         />
                       </span>
                     )}
@@ -672,17 +650,17 @@ const SearchPage: React.FC = () => {
                         On Sale
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("onSale")}
+                          onClick={() => removeFilter('onSale')}
                         />
                       </span>
                     )}
 
-                    {filterParams.sortBy !== "relevance" && (
+                    {filterParams.sortBy !== 'relevance' && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium">
                         {findSortLabel(filterParams.sortBy)}
                         <X
                           className="w-2.5 h-2.5 cursor-pointer hover:text-red-500 transition-colors"
-                          onClick={() => removeFilter("sort")}
+                          onClick={() => removeFilter('sort')}
                         />
                       </span>
                     )}
@@ -726,8 +704,8 @@ const SearchPage: React.FC = () => {
                         className="px-1 mb-3"
                       >
                         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 text-xs p-2.5 rounded-md">
-                          Showing related results for <strong>"{query}"</strong>{" "}
-                          - no exact matches found.
+                          Showing related results for <strong>"{query}"</strong> - no exact matches
+                          found.
                         </div>
                       </motion.div>
                     )}
@@ -747,35 +725,29 @@ const SearchPage: React.FC = () => {
               )}
 
               {/* End of Results */}
-              {!hasMore &&
-                products &&
-                products.length > 0 &&
-                !loadingMore &&
-                !loadingProducts && (
-                  <motion.div
-                    className="bg-gray-50 p-3 border border-gray-200 rounded-md h-[80px] w-[250px] mx-auto mt-4 mb-6 flex justify-center items-center"
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
-                    <div className="space-y-1.5">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <ShoppingBag className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div className="text-gray-900 font-semibold text-xs text-center">
-                        All results shown!
-                      </div>
-                      <div className="text-gray-600 text-[10px] text-center leading-tight">
-                        Found {totalProducts?.toLocaleString() || 0} results
-                        {fallback && (
-                          <span className="block text-orange-600 mt-0.5">
-                            (Related results only)
-                          </span>
-                        )}
-                      </div>
+              {!hasMore && products && products.length > 0 && !loadingMore && !loadingProducts && (
+                <motion.div
+                  className="bg-gray-50 p-3 border border-gray-200 rounded-md h-[80px] w-[250px] mx-auto mt-4 mb-6 flex justify-center items-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <div className="space-y-1.5">
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                      <ShoppingBag className="w-4 h-4 text-gray-600" />
                     </div>
-                  </motion.div>
-                )}
+                    <div className="text-gray-900 font-semibold text-xs text-center">
+                      All results shown!
+                    </div>
+                    <div className="text-gray-600 text-[10px] text-center leading-tight">
+                      Found {totalProducts?.toLocaleString() || 0} results
+                      {fallback && (
+                        <span className="block text-orange-600 mt-0.5">(Related results only)</span>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </main>
         </div>
@@ -795,7 +767,7 @@ const SearchPage: React.FC = () => {
                 initial={{ x: -300, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -300, opacity: 0 }}
-                transition={{ type: "tween", duration: 0.3, ease: "easeOut" }}
+                transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <FilterSidebar

@@ -7,7 +7,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export default function SignInPage() {
   const [isAuthOpen, setIsAuthOpen] = useState(true);
-  const {user} = useCurrentUser();
+  const { user } = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') || '/';

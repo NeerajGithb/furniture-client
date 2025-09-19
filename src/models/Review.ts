@@ -1,4 +1,3 @@
-// models/Review.ts - Updated model
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IReview extends Document {
@@ -15,7 +14,7 @@ export interface IReview extends Document {
   }[];
   isVerifiedPurchase: boolean;
   helpfulVotes: number;
-  unhelpfulVotes: number; // Add this field
+  unhelpfulVotes: number;
   reportedCount: number;
   status: 'pending' | 'approved' | 'rejected';
   moderatorNote?: string;
@@ -24,7 +23,7 @@ export interface IReview extends Document {
   approve(moderatorNote?: string): Promise<IReview>;
   reject(moderatorNote?: string): Promise<IReview>;
   addHelpfulVote(): Promise<IReview>;
-  addUnhelpfulVote(): Promise<IReview>; // Add this method
+  addUnhelpfulVote(): Promise<IReview>;
   reportReview(): Promise<IReview>;
 }
 
@@ -34,7 +33,7 @@ interface IReviewStatics {
     page?: number,
     limit?: number,
     sortBy?: string,
-    userId?: string // Add userId to get user vote status
+    userId?: string,
   ): Promise<any[]>;
   getReviewStats(productId: string): Promise<{
     totalReviews: number;
@@ -45,124 +44,130 @@ interface IReviewStatics {
 
 interface IReviewModel extends Model<IReview>, IReviewStatics {}
 
-const ReviewSchema = new Schema<IReview>({
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  productId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
-  },
-  orderId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Order'
-  },
-  rating: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 5
-  },
-  title: {
-    type: String,
-    trim: true,
-    maxlength: 100
-  },
-  comment: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 10,
-    maxlength: 1000
-  },
-  images: [{
-    url: {
-      type: String,
+const ReviewSchema = new Schema<IReview>(
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       required: true,
-      validate: {
-        validator: function(v: string) {
-          return /^https?:\/\/.+/.test(v);
-        },
-        message: 'Invalid image URL'
-      }
     },
-    publicId: {
-      type: String,
-      required: true
+    productId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true,
     },
-    alt: {
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Order',
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    title: {
       type: String,
       trim: true,
-      maxlength: 100
-    }
-  }],
-  isVerifiedPurchase: {
-    type: Boolean,
-    default: false
+      maxlength: 100,
+    },
+    comment: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 10,
+      maxlength: 1000,
+    },
+    images: [
+      {
+        url: {
+          type: String,
+          required: true,
+          validate: {
+            validator: function (v: string) {
+              return /^https?:\/\/.+/.test(v);
+            },
+            message: 'Invalid image URL',
+          },
+        },
+        publicId: {
+          type: String,
+          required: true,
+        },
+        alt: {
+          type: String,
+          trim: true,
+          maxlength: 100,
+        },
+      },
+    ],
+    isVerifiedPurchase: {
+      type: Boolean,
+      default: false,
+    },
+    helpfulVotes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    unhelpfulVotes: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    reportedCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+    moderatorNote: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
   },
-  helpfulVotes: {
-    type: Number,
-    default: 0,
-    min: 0
+  {
+    timestamps: true,
   },
-  unhelpfulVotes: { // Add this field
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  reportedCount: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
-  },
-  moderatorNote: {
-    type: String,
-    trim: true,
-    maxlength: 500
-  }
-}, {
-  timestamps: true
-});
+);
 
-// Indexes
 ReviewSchema.index({ productId: 1, status: 1 });
 ReviewSchema.index({ userId: 1 });
 ReviewSchema.index({ rating: 1 });
 ReviewSchema.index({ createdAt: -1 });
 ReviewSchema.index({ isVerifiedPurchase: 1 });
 ReviewSchema.index({ helpfulVotes: -1 });
-ReviewSchema.index({ unhelpfulVotes: 1 }); // Index for unhelpful votes
+ReviewSchema.index({ unhelpfulVotes: 1 });
 ReviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
-ReviewSchema.index({ 
-  title: 'text', 
-  comment: 'text' 
-}, {
-  weights: { title: 2, comment: 1 }
-});
+ReviewSchema.index(
+  {
+    title: 'text',
+    comment: 'text',
+  },
+  {
+    weights: { title: 2, comment: 1 },
+  },
+);
 
-ReviewSchema.virtual('age').get(function() {
+ReviewSchema.virtual('age').get(function () {
   return Date.now() - this.createdAt.getTime();
 });
 
-// Updated getProductReviews to include user vote information
-ReviewSchema.statics.getProductReviews = async function(
-  productId: string, 
-  page: number = 1, 
+ReviewSchema.statics.getProductReviews = async function (
+  productId: string,
+  page: number = 1,
   limit: number = 10,
   sortBy: string = 'newest',
-  userId?: string
+  userId?: string,
 ) {
   const skip = (page - 1) * limit;
   let sort: any = { createdAt: -1 };
-  
+
   switch (sortBy) {
     case 'oldest':
       sort = { createdAt: 1 };
@@ -181,26 +186,24 @@ ReviewSchema.statics.getProductReviews = async function(
       break;
   }
 
-  // Get reviews
-  const reviews = await this.find({ 
-    productId: new mongoose.Types.ObjectId(productId), 
-    status: 'approved' 
+  const reviews = await this.find({
+    productId: new mongoose.Types.ObjectId(productId),
+    status: 'approved',
   })
-  .populate('userId', 'name photoURL email')
-  .sort(sort)
-  .skip(skip)
-  .limit(limit)
-  .lean();
+    .populate('userId', 'name photoURL email')
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .lean();
 
-  // If userId provided, get user votes for these reviews
   if (userId && reviews.length > 0) {
     try {
       const UserVote = mongoose.model('UserVote');
-      const reviewIds = reviews.map((r: { _id: any; }) => r._id);
-      
+      const reviewIds = reviews.map((r: { _id: any }) => r._id);
+
       const userVotes = await UserVote.find({
         userId: new mongoose.Types.ObjectId(userId),
-        reviewId: { $in: reviewIds }
+        reviewId: { $in: reviewIds },
       }).lean();
 
       const voteMap = userVotes.reduce((acc: any, vote: any) => {
@@ -208,35 +211,34 @@ ReviewSchema.statics.getProductReviews = async function(
         return acc;
       }, {});
 
-      // Add userVote to each review
-      return reviews.map((review: { _id: { toString: () => string | number; }; }) => ({
+      return reviews.map((review: { _id: { toString: () => string | number } }) => ({
         ...review,
-        userVote: voteMap[review._id.toString()] || null
+        userVote: voteMap[review._id.toString()] || null,
       }));
     } catch (error) {
       console.error('Error fetching user votes:', error);
-      // Return reviews without vote info if there's an error
+
       return reviews.map((review: any) => ({
         ...review,
-        userVote: null
+        userVote: null,
       }));
     }
   }
 
   return reviews.map((review: any) => ({
     ...review,
-    userVote: null
+    userVote: null,
   }));
 };
 
-ReviewSchema.statics.getReviewStats = async function(productId: string) {
+ReviewSchema.statics.getReviewStats = async function (productId: string) {
   try {
     const stats = await this.aggregate([
-      { 
-        $match: { 
-          productId: new mongoose.Types.ObjectId(productId), 
-          status: 'approved' 
-        } 
+      {
+        $match: {
+          productId: new mongoose.Types.ObjectId(productId),
+          status: 'approved',
+        },
       },
       {
         $group: {
@@ -246,8 +248,8 @@ ReviewSchema.statics.getReviewStats = async function(productId: string) {
           ratingBreakdown: { $push: '$rating' },
           verifiedCount: { $sum: { $cond: ['$isVerifiedPurchase', 1, 0] } },
           totalHelpfulVotes: { $sum: '$helpfulVotes' },
-          totalUnhelpfulVotes: { $sum: '$unhelpfulVotes' } // Add unhelpful votes
-        }
+          totalUnhelpfulVotes: { $sum: '$unhelpfulVotes' },
+        },
       },
       {
         $addFields: {
@@ -256,21 +258,18 @@ ReviewSchema.statics.getReviewStats = async function(productId: string) {
             4: { $size: { $filter: { input: '$ratingBreakdown', cond: { $eq: ['$$this', 4] } } } },
             3: { $size: { $filter: { input: '$ratingBreakdown', cond: { $eq: ['$$this', 3] } } } },
             2: { $size: { $filter: { input: '$ratingBreakdown', cond: { $eq: ['$$this', 2] } } } },
-            1: { $size: { $filter: { input: '$ratingBreakdown', cond: { $eq: ['$$this', 1] } } } }
+            1: { $size: { $filter: { input: '$ratingBreakdown', cond: { $eq: ['$$this', 1] } } } },
           },
           verifiedPercentage: {
             $cond: {
               if: { $eq: ['$totalReviews', 0] },
               then: 0,
               else: {
-                $multiply: [
-                  { $divide: ['$verifiedCount', '$totalReviews'] },
-                  100
-                ]
-              }
-            }
-          }
-        }
+                $multiply: [{ $divide: ['$verifiedCount', '$totalReviews'] }, 100],
+              },
+            },
+          },
+        },
       },
       {
         $project: {
@@ -281,20 +280,22 @@ ReviewSchema.statics.getReviewStats = async function(productId: string) {
           verifiedCount: 1,
           verifiedPercentage: { $round: [{ $ifNull: ['$verifiedPercentage', 0] }, 1] },
           totalHelpfulVotes: 1,
-          totalUnhelpfulVotes: 1 // Include in projection
-        }
-      }
+          totalUnhelpfulVotes: 1,
+        },
+      },
     ]);
 
-    return stats[0] || {
-      totalReviews: 0,
-      averageRating: 0,
-      breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
-      verifiedCount: 0,
-      verifiedPercentage: 0,
-      totalHelpfulVotes: 0,
-      totalUnhelpfulVotes: 0
-    };
+    return (
+      stats[0] || {
+        totalReviews: 0,
+        averageRating: 0,
+        breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        verifiedCount: 0,
+        verifiedPercentage: 0,
+        totalHelpfulVotes: 0,
+        totalUnhelpfulVotes: 0,
+      }
+    );
   } catch (error) {
     console.error('Error in getReviewStats:', error);
     return {
@@ -304,36 +305,34 @@ ReviewSchema.statics.getReviewStats = async function(productId: string) {
       verifiedCount: 0,
       verifiedPercentage: 0,
       totalHelpfulVotes: 0,
-      totalUnhelpfulVotes: 0
+      totalUnhelpfulVotes: 0,
     };
   }
 };
 
-// Instance methods
-ReviewSchema.methods.approve = function(moderatorNote?: string) {
+ReviewSchema.methods.approve = function (moderatorNote?: string) {
   this.status = 'approved';
   if (moderatorNote) this.moderatorNote = moderatorNote;
   return this.save();
 };
 
-ReviewSchema.methods.reject = function(moderatorNote?: string) {
+ReviewSchema.methods.reject = function (moderatorNote?: string) {
   this.status = 'rejected';
   if (moderatorNote) this.moderatorNote = moderatorNote;
   return this.save();
 };
 
-ReviewSchema.methods.addHelpfulVote = function() {
+ReviewSchema.methods.addHelpfulVote = function () {
   this.helpfulVotes = (this.helpfulVotes || 0) + 1;
   return this.save();
 };
 
-// Add new method for unhelpful votes
-ReviewSchema.methods.addUnhelpfulVote = function() {
+ReviewSchema.methods.addUnhelpfulVote = function () {
   this.unhelpfulVotes = (this.unhelpfulVotes || 0) + 1;
   return this.save();
 };
 
-ReviewSchema.methods.reportReview = function() {
+ReviewSchema.methods.reportReview = function () {
   this.reportedCount = (this.reportedCount || 0) + 1;
   if (this.reportedCount >= 5) {
     this.status = 'pending';
@@ -341,20 +340,20 @@ ReviewSchema.methods.reportReview = function() {
   return this.save();
 };
 
-// Pre-save middleware
-ReviewSchema.pre('save', async function(next) {
+ReviewSchema.pre('save', async function (next) {
   if (this.isNew && this.orderId && !this.isVerifiedPurchase) {
     try {
       const Order = mongoose.model('Order');
       const order = await Order.findOne({
         _id: this.orderId,
         userId: this.userId,
-        orderStatus: { $in: ['delivered', 'completed'] }
+        orderStatus: { $in: ['delivered', 'completed'] },
       });
-      
-      if (order && order.items.some((item: any) => 
-        item.productId.toString() === this.productId.toString()
-      )) {
+
+      if (
+        order &&
+        order.items.some((item: any) => item.productId.toString() === this.productId.toString())
+      ) {
         this.isVerifiedPurchase = true;
       }
     } catch (error) {
@@ -381,18 +380,17 @@ ReviewSchema.pre('save', async function(next) {
   next();
 });
 
-// Post-save middleware to update product ratings
-ReviewSchema.post('save', async function(doc) {
+ReviewSchema.post('save', async function (doc) {
   if (doc.status === 'approved') {
     try {
       const Product = mongoose.model('Product');
       const stats = await (this.constructor as any).getReviewStats(doc.productId.toString());
-      
+
       await Product.findByIdAndUpdate(doc.productId, {
         ratings: stats.averageRating,
         'reviews.average': stats.averageRating,
         'reviews.count': stats.totalReviews,
-        'reviews.breakdown': stats.breakdown
+        'reviews.breakdown': stats.breakdown,
       });
     } catch (error) {
       console.error('Error updating product ratings:', error);
@@ -400,21 +398,21 @@ ReviewSchema.post('save', async function(doc) {
   }
 });
 
-ReviewSchema.post('deleteOne', { document: true, query: false }, async function(doc: any) {
+ReviewSchema.post('deleteOne', { document: true, query: false }, async function (doc: any) {
   try {
     const Product = mongoose.model('Product');
     const stats = await (this.constructor as any).getReviewStats(this.productId.toString());
-    
+
     await Product.findByIdAndUpdate(this.productId, {
       ratings: stats.averageRating,
       'reviews.average': stats.averageRating,
       'reviews.count': stats.totalReviews,
-      'reviews.breakdown': stats.breakdown
+      'reviews.breakdown': stats.breakdown,
     });
   } catch (error) {
     console.error('Error updating product ratings after deletion:', error);
   }
 });
 
-export default (mongoose.models.Review as IReviewModel) || 
+export default (mongoose.models.Review as IReviewModel) ||
   mongoose.model<IReview, IReviewModel>('Review', ReviewSchema);

@@ -1,9 +1,9 @@
-"use client";
-import { memo, useRef } from "react";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
-import { useProductStore } from "@/stores/productStore";
+'use client';
+import { memo, useRef } from 'react';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useProductStore } from '@/stores/productStore';
 
 const selectResetProductState = (state: any) => state.resetProductState;
 
@@ -20,8 +20,7 @@ const CategoryGrid = () => {
   const loading = useProductStore(storeSelectors.loading);
   const error = useProductStore(storeSelectors.error);
 
-  const showSkeletons =
-    loading || (!loading && categories.length === 0 && !error);
+  const showSkeletons = loading || (!loading && categories.length === 0 && !error);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -29,7 +28,7 @@ const CategoryGrid = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({
         left: 200,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
     }
   };
@@ -58,21 +57,16 @@ const CategoryGrid = () => {
         <h2 className="text-xl md:text-2xl font-light text-black mb-2 tracking-wide">
           POPULAR CATEGORIES
         </h2>
-        <p className="text-gray-500 text-xs md:text-sm">
-          Explore our most popular categories
-        </p>
+        <p className="text-gray-500 text-xs md:text-sm">Explore our most popular categories</p>
       </motion.div>
 
       {/* Mobile: Horizontal scroll + Scroll button */}
       <div className="block md:hidden">
         <div className="relative">
-          <div
-            className="overflow-x-auto scrollbar-hide"
-            ref={scrollRef}
-          >
+          <div className="overflow-x-auto scrollbar-hide" ref={scrollRef}>
             <div
               className="grid grid-rows-2 grid-flow-col gap-4 pb-2"
-              style={{ width: "max-content" }}
+              style={{ width: 'max-content' }}
             >
               {showSkeletons
                 ? Array.from({ length: 12 }).map((_, i) => (
@@ -96,7 +90,7 @@ const CategoryGrid = () => {
                       >
                         <div className="relative w-30 h-30 mb-2 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-105">
                           <Image
-                            src={category.mainImage?.url || "/placeholder.png"}
+                            src={category.mainImage?.url || '/placeholder.png'}
                             alt={category.mainImage?.alt || category.name}
                             fill
                             className="object-cover"
@@ -113,11 +107,7 @@ const CategoryGrid = () => {
           </div>
 
           {/* Scroll Right Button */}
-          <button
-            type="button"
-            onClick={handleScrollRight}
-            className="absolute top-10 -right-3"
-          >
+          <button type="button" onClick={handleScrollRight} className="absolute top-10 -right-3">
             <svg
               className="w-4 h-4 text-gray-800"
               fill="none"
@@ -153,7 +143,7 @@ const CategoryGrid = () => {
                 >
                   <div className="relative aspect-square w-full overflow-hidden shadow-all transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
                     <Image
-                      src={category.mainImage?.url || "/placeholder.png"}
+                      src={category.mainImage?.url || '/placeholder.png'}
                       alt={category.mainImage?.alt || category.name}
                       fill
                       className="object-cover"

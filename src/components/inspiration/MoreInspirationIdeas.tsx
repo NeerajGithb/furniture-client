@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useHomeStore } from "@/stores/homeStore";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect } from "react";
+import { useHomeStore } from '@/stores/homeStore';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect } from 'react';
 
-const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId: string }) => {
+const MoreInspirationIdeas = ({ currentInspirationId }: { currentInspirationId: string }) => {
   const { inspirations, loading, fetchInspirations } = useHomeStore();
 
   useEffect(() => {
@@ -14,9 +14,7 @@ const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId:
   }, [fetchInspirations]);
 
   // filter out current inspiration
-  const filteredInspirations = inspirations.filter(
-    (insp) => insp._id !== currentInspirationId
-  );
+  const filteredInspirations = inspirations.filter((insp) => insp._id !== currentInspirationId);
 
   if (loading) {
     return (
@@ -25,9 +23,7 @@ const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId:
           <h2 className="text-3xl md:text-4xl font-light text-neutral-900 mb-2">
             More Inspiration Ideas
           </h2>
-          <p className="text-neutral-600 text-sm">
-            Discover other styles you might like
-          </p>
+          <p className="text-neutral-600 text-sm">Discover other styles you might like</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {[...Array(8)].map((_, i) => (
@@ -59,9 +55,7 @@ const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId:
         <h2 className="text-3xl md:text-4xl font-light text-neutral-900 mb-2">
           More Inspiration Ideas
         </h2>
-        <p className="text-neutral-600 text-sm">
-          Discover other styles you might like
-        </p>
+        <p className="text-neutral-600 text-sm">Discover other styles you might like</p>
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -76,7 +70,7 @@ const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId:
             <Link href={`/inspiration/${inspiration.slug}`}>
               <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100">
                 <Image
-                  src={inspiration.heroImage?.url || "/placeholder.jpg"}
+                  src={inspiration.heroImage?.url || '/placeholder.jpg'}
                   alt={inspiration.heroImage?.alt || inspiration.title}
                   fill
                   className="object-cover transition duration-500 ease-out group-hover:scale-105"
@@ -97,9 +91,7 @@ const MoreInspirationIdeas = ({ currentInspirationId } : { currentInspirationId:
               </div>
 
               <div className="mt-4 text-center">
-                <h3 className="text-lg font-medium text-neutral-900">
-                  {inspiration.title}
-                </h3>
+                <h3 className="text-lg font-medium text-neutral-900">{inspiration.title}</h3>
                 <p className="text-xs text-neutral-500 mt-1 line-clamp-2">
                   {inspiration.description}
                 </p>

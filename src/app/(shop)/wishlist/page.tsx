@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Heart, ArrowLeft, Filter, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useWishlistStore } from "@/stores/wishlistStore";
-import { useCartStore } from "@/stores/cartStore";
-import ProductCard from "@/components/product/ProductCard";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Heart, ArrowLeft, Filter, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import { useCartStore } from '@/stores/cartStore';
+import ProductCard from '@/components/product/ProductCard';
 
 const WishlistPage = () => {
   const { user } = useCurrentUser();
@@ -22,13 +22,9 @@ const WishlistPage = () => {
     isUpdating: isWishlistUpdating,
   } = useWishlistStore();
 
-  const {
-    addToCart,
-    isUpdating: isCartUpdating,
-    initializeCart,
-  } = useCartStore();
+  const { addToCart, isUpdating: isCartUpdating, initializeCart } = useCartStore();
 
-  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterCategory, setFilterCategory] = useState('all');
 
   // Initialize stores
   useEffect(() => {
@@ -40,16 +36,10 @@ const WishlistPage = () => {
 
   const filteredItems =
     wishlist?.items?.filter((item) =>
-      filterCategory === "all"
-        ? true
-        : item.product?.category === filterCategory
+      filterCategory === 'all' ? true : item.product?.category === filterCategory,
     ) || [];
 
-  const categories = [
-    ...new Set(
-      wishlist?.items?.map((i) => i.product?.category).filter(Boolean)
-    ),
-  ];
+  const categories = [...new Set(wishlist?.items?.map((i) => i.product?.category).filter(Boolean))];
 
   const handleMoveToCart = async (productId: string) => {
     const added = await addToCart(productId, 1);
@@ -67,7 +57,7 @@ const WishlistPage = () => {
           <h1 className="text-2xl font-bold mb-3">Please Login</h1>
           <p className="text-gray-600 mb-6">Login to view your wishlist.</p>
           <button
-            onClick={() => router.push("/auth/signin")}
+            onClick={() => router.push('/auth/signin')}
             className="bg-black text-white px-8 py-3 rounded font-medium hover:bg-gray-800 transition"
           >
             Login
@@ -93,9 +83,7 @@ const WishlistPage = () => {
         <div className="bg-white p-12 rounded shadow text-center">
           <Heart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-3">Your wishlist is empty</h2>
-          <p className="text-gray-600 mb-6">
-            Save items you love to easily find them later.
-          </p>
+          <p className="text-gray-600 mb-6">Save items you love to easily find them later.</p>
           <Link
             href="/products"
             className="inline-block bg-black text-white px-8 py-3 rounded font-medium hover:bg-gray-800 transition"
@@ -112,14 +100,9 @@ const WishlistPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2 md:mb-8">
         <div className="flex items-center gap-4">
-         
           <div>
-            <h1 className="text-2xl font-bold">
-              My Wishlist ({wishlist.items.length})
-            </h1>
-            <p className="text-gray-600 text-sm mt-1">
-              Items you've saved for later
-            </p>
+            <h1 className="text-2xl font-bold">My Wishlist ({wishlist.items.length})</h1>
+            <p className="text-gray-600 text-sm mt-1">Items you've saved for later</p>
           </div>
         </div>
       </div>
@@ -165,15 +148,13 @@ const WishlistPage = () => {
               <div className="sm:hidden mt-2 flex justify-center">
                 <button
                   onClick={() => handleMoveToCart(product._id)}
-                  disabled={
-                    !product.isInStock || loadingCart || loadingWishlist
-                  }
+                  disabled={!product.isInStock || loadingCart || loadingWishlist}
                   className="bg-black text-white py-2 w-full rounded font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
                 >
                   {loadingCart || loadingWishlist ? (
                     <Loader2 className="w-4 h-4 mx-auto animate-spin" />
                   ) : (
-                    "Move to Cart"
+                    'Move to Cart'
                   )}
                 </button>
               </div>

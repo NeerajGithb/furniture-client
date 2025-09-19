@@ -19,7 +19,7 @@ const COLORS = {
   textLight: '#7f8c8d',
   border: '#ecf0f1',
   background: '#f8f9fa',
-  white: '#ffffff'
+  white: '#ffffff',
 };
 
 const createTransporter = () => {
@@ -32,26 +32,26 @@ const createTransporter = () => {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
   });
 };
 
 const getUserFriendlyPaymentMethod = (method: string): string => {
   const methods: Record<string, string> = {
-    'cod': 'Cash on Delivery',
-    'COD': 'Cash on Delivery',
-    'cash_on_delivery': 'Cash on Delivery',
-    'online': 'Online Payment',
-    'card': 'Credit/Debit Card',
-    'upi': 'UPI Payment',
-    'netbanking': 'Net Banking',
-    'wallet': 'Digital Wallet',
-    'razorpay': 'Online Payment',
-    'stripe': 'Online Payment',
-    'paypal': 'PayPal',
-    'paytm': 'Paytm Wallet',
-    'gpay': 'Google Pay',
-    'phonepe': 'PhonePe'
+    cod: 'Cash on Delivery',
+    COD: 'Cash on Delivery',
+    cash_on_delivery: 'Cash on Delivery',
+    online: 'Online Payment',
+    card: 'Credit/Debit Card',
+    upi: 'UPI Payment',
+    netbanking: 'Net Banking',
+    wallet: 'Digital Wallet',
+    razorpay: 'Online Payment',
+    stripe: 'Online Payment',
+    paypal: 'PayPal',
+    paytm: 'Paytm Wallet',
+    gpay: 'Google Pay',
+    phonepe: 'PhonePe',
   };
   return methods[method?.toLowerCase()] || 'Cash on Delivery';
 };
@@ -61,7 +61,7 @@ const formatCurrency = (amount: number): string => {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 
@@ -70,7 +70,7 @@ const formatDate = (date: Date | string): string => {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'long'
+    weekday: 'long',
   });
 };
 
@@ -83,33 +83,67 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
   <title>Order Received #${order.orderNumber} - V Furnitures</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: ${COLORS.text}; background-color: ${COLORS.background}; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: ${
+      COLORS.text
+    }; background-color: ${COLORS.background}; }
     .email-wrapper { width: 100%; background-color: ${COLORS.background}; padding: 20px 0; }
-    .email-container { max-width: 600px; margin: 0 auto; background: ${COLORS.white}; border: 1px solid ${COLORS.border}; border-radius: 8px; overflow: hidden; }
-    .header { background: ${COLORS.warning}; color: ${COLORS.white}; text-align: center; padding: 32px 24px; }
+    .email-container { max-width: 600px; margin: 0 auto; background: ${
+      COLORS.white
+    }; border: 1px solid ${COLORS.border}; border-radius: 8px; overflow: hidden; }
+    .header { background: ${COLORS.warning}; color: ${
+    COLORS.white
+  }; text-align: center; padding: 32px 24px; }
     .brand-logo { font-size: 24px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
     .status-icon { font-size: 32px; margin-bottom: 12px; display: block; }
     .status-title { font-size: 20px; font-weight: 600; margin: 16px 0 8px; }
     .status-message { font-size: 16px; opacity: 0.95; line-height: 1.5; }
     .content-section { padding: 24px; border-bottom: 1px solid ${COLORS.border}; }
     .content-section:last-child { border-bottom: none; }
-    .section-title { font-size: 18px; font-weight: 600; color: ${COLORS.text}; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid ${COLORS.border}; }
+    .section-title { font-size: 18px; font-weight: 600; color: ${
+      COLORS.text
+    }; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid ${COLORS.border}; }
     .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 16px 0; }
-    .info-card { padding: 16px; border: 1px solid ${COLORS.border}; border-radius: 6px; background: ${COLORS.background}; }
-    .info-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: ${COLORS.textLight}; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .info-card { padding: 16px; border: 1px solid ${
+      COLORS.border
+    }; border-radius: 6px; background: ${COLORS.background}; }
+    .info-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: ${
+      COLORS.textLight
+    }; margin-bottom: 4px; letter-spacing: 0.5px; }
     .info-value { font-size: 15px; font-weight: 600; color: ${COLORS.text}; }
-    .product-item { display: flex; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid ${COLORS.border}; }
+    .product-item { display: flex; align-items: flex-start; padding: 16px 0; border-bottom: 1px solid ${
+      COLORS.border
+    }; }
     .product-item:last-child { border-bottom: none; }
-    .product-image { width: 60px; height: 60px; background: ${COLORS.background}; border: 1px solid ${COLORS.border}; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .product-image { width: 60px; height: 60px; background: ${
+      COLORS.background
+    }; border: 1px solid ${
+    COLORS.border
+  }; border-radius: 6px; margin-right: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
     .product-details { flex: 1; min-width: 0; }
     .product-name { font-weight: 600; color: ${COLORS.text}; margin-bottom: 4px; font-size: 15px; }
-    .product-quantity { font-size: 12px; color: ${COLORS.textLight}; background: ${COLORS.background}; border: 1px solid ${COLORS.border}; padding: 2px 8px; border-radius: 4px; display: inline-block; }
-    .product-price { font-weight: 700; color: ${COLORS.primary}; font-size: 16px; text-align: right; min-width: 80px; }
-    .total-section { background: ${COLORS.background}; border: 2px solid ${COLORS.warning}; padding: 20px; border-radius: 6px; margin: 16px 0; }
-    .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 700; color: ${COLORS.primary}; }
-    .address-card { background: ${COLORS.background}; border: 1px solid ${COLORS.border}; padding: 16px; border-radius: 6px; font-size: 14px; line-height: 1.6; }
-    .cta-button { display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 16px 0; border: none; cursor: pointer; }
-    .footer { background: ${COLORS.text}; color: ${COLORS.white}; padding: 24px; text-align: center; }
+    .product-quantity { font-size: 12px; color: ${COLORS.textLight}; background: ${
+    COLORS.background
+  }; border: 1px solid ${
+    COLORS.border
+  }; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+    .product-price { font-weight: 700; color: ${
+      COLORS.primary
+    }; font-size: 16px; text-align: right; min-width: 80px; }
+    .total-section { background: ${COLORS.background}; border: 2px solid ${
+    COLORS.warning
+  }; padding: 20px; border-radius: 6px; margin: 16px 0; }
+    .total-row { display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: 700; color: ${
+      COLORS.primary
+    }; }
+    .address-card { background: ${COLORS.background}; border: 1px solid ${
+    COLORS.border
+  }; padding: 16px; border-radius: 6px; font-size: 14px; line-height: 1.6; }
+    .cta-button { display: inline-block; background: ${COLORS.primary}; color: ${
+    COLORS.white
+  }; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; margin: 16px 0; border: none; cursor: pointer; }
+    .footer { background: ${COLORS.text}; color: ${
+    COLORS.white
+  }; padding: 24px; text-align: center; }
     .footer-brand { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
     .footer-text { color: #bdc3c7; font-size: 14px; line-height: 1.5; margin: 8px 0; }
     .contact-info { margin: 16px 0; font-size: 13px; color: #bdc3c7; }
@@ -157,7 +191,9 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
       
       <div class="content-section">
         <div class="section-title">Your Products</div>
-        ${order.items.map((item: any) => `
+        ${order.items
+          .map(
+            (item: any) => `
           <div class="product-item">
             <div class="product-image">🪑</div>
             <div class="product-details">
@@ -166,7 +202,9 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
             </div>
             <div class="product-price">${formatCurrency(item.price * item.quantity)}</div>
           </div>
-        `).join('')}
+        `,
+          )
+          .join('')}
         
         <div class="total-section">
           <div class="total-row">
@@ -182,7 +220,9 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
           <strong>${order.shippingAddress.fullName}</strong><br>
           ${order.shippingAddress.addressLine1}<br>
           ${order.shippingAddress.addressLine2 ? order.shippingAddress.addressLine2 + '<br>' : ''}
-          ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}<br>
+          ${order.shippingAddress.city}, ${order.shippingAddress.state} ${
+    order.shippingAddress.postalCode
+  }<br>
           ${order.shippingAddress.country}<br><br>
           <strong>Phone:</strong> ${order.shippingAddress.phone}
         </div>
@@ -190,8 +230,12 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
       
       <div class="content-section">
         <div class="section-title">What's Next?</div>
-        <p style="color: ${COLORS.textLight}; margin-bottom: 16px;">Your order will be confirmed within 24 hours. Our craftsmen will then begin creating your premium furniture with attention to detail.</p>
-        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/orders/${order._id}" class="cta-button">View Order Details</a>
+        <p style="color: ${
+          COLORS.textLight
+        }; margin-bottom: 16px;">Your order will be confirmed within 24 hours. Our craftsmen will then begin creating your premium furniture with attention to detail.</p>
+        <a href="${process.env.NEXT_PUBLIC_BASE_URL}/orders/${
+    order._id
+  }" class="cta-button">View Order Details</a>
       </div>
       
       <div class="footer">
@@ -214,7 +258,6 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
 const sendWelcomeEmail = async (order: any, userEmail: string) => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      
       return { success: false, error: 'Email not configured' };
     }
 
@@ -222,15 +265,15 @@ const sendWelcomeEmail = async (order: any, userEmail: string) => {
     const mailOptions = {
       from: {
         name: 'V Furnitures',
-        address: process.env.EMAIL_USER!
+        address: process.env.EMAIL_USER!,
       },
       to: userEmail,
       subject: `Order Received #${order.orderNumber} - V Furnitures`,
-      html: generateWelcomeEmailHTML(order, null)
+      html: generateWelcomeEmailHTML(order, null),
     };
 
     await transporter.sendMail(mailOptions);
-    
+
     return { success: true };
   } catch (error) {
     console.error('Failed to send welcome email:', error);
@@ -241,8 +284,6 @@ const sendWelcomeEmail = async (order: any, userEmail: string) => {
 // GET - Fetch user's orders (UNCHANGED)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
-    
-    
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -252,11 +293,11 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     await connectDB();
 
     let query: any = { userId: user.userId };
-    
+
     if (status && status !== 'all') {
       query.orderStatus = status;
     }
-    
+
     if (orderNumber) {
       query.orderNumber = { $regex: orderNumber, $options: 'i' };
     }
@@ -266,7 +307,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const orders = await Order.find(query)
       .populate({
         path: 'items.productId',
-        select: 'name mainImage slug'
+        select: 'name mainImage slug',
       })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -275,10 +316,10 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     const totalOrders = await Order.countDocuments(query);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order) => ({
       _id: order._id,
       orderNumber: order.orderNumber,
-      items: order.items.map((item : any) => ({
+      items: order.items.map((item: any) => ({
         _id: item._id,
         name: item.name,
         price: item.price,
@@ -291,12 +332,14 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         itemId: item.itemId, // NEW
         discount: item.discount || 0, // NEW
         discountPercent: item.discountPercent || 0, // NEW
-        product: item.productId ? {
-          _id: item.productId._id,
-          name: item.productId.name,
-          mainImage: item.productId.mainImage,
-          slug: item.productId.slug
-        } : null
+        product: item.productId
+          ? {
+              _id: item.productId._id,
+              name: item.productId.name,
+              mainImage: item.productId.mainImage,
+              slug: item.productId.slug,
+            }
+          : null,
       })),
       totalAmount: order.totalAmount,
       orderStatus: order.orderStatus,
@@ -307,14 +350,12 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       shippingAddress: order.shippingAddress,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
-      
+
       // NEW FIELDS - Add price breakdown if available
       priceBreakdown: order.priceBreakdown,
       insuranceEnabled: order.insuranceEnabled,
-      couponCode: order.couponCode
+      couponCode: order.couponCode,
     }));
-
-    
 
     return NextResponse.json({
       orders: formattedOrders,
@@ -322,16 +363,12 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         currentPage: page,
         totalPages,
         totalOrders,
-        hasMore: page < totalPages
-      }
+        hasMore: page < totalPages,
+      },
     });
-
   } catch (error) {
     console.error('Orders GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
 });
 
@@ -339,15 +376,15 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
-    
-    const { 
-      addressId, 
+
+    const {
+      addressId,
       paymentMethod,
-      selectedItems, 
+      selectedItems,
       cartData,
       totals,
       insuranceEnabled = [],
-      couponCode // NEW
+      couponCode, // NEW
     } = body;
 
     console.log('Order creation request:', {
@@ -355,78 +392,63 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       paymentMethod,
       selectedItems: selectedItems?.length || 0,
       cartData: cartData?.length || 0,
-      totalAmount: totals?.totalAmount
+      totalAmount: totals?.totalAmount,
     });
 
     if (!addressId || !paymentMethod) {
       return NextResponse.json(
         { error: 'Address and payment method are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate that we have selected items from frontend
     if (!selectedItems || !Array.isArray(selectedItems) || selectedItems.length === 0) {
-      return NextResponse.json(
-        { error: 'No items selected for checkout' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No items selected for checkout' }, { status: 400 });
     }
 
     if (!cartData || !Array.isArray(cartData) || cartData.length === 0) {
-      return NextResponse.json(
-        { error: 'Cart data is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Cart data is required' }, { status: 400 });
     }
 
     await connectDB();
 
     // Get shipping address
-    const address = await Address.findOne({ 
-      _id: addressId, 
-      userId: user.userId 
+    const address = await Address.findOne({
+      _id: addressId,
+      userId: user.userId,
     });
-    
+
     if (!address) {
-      return NextResponse.json(
-        { error: 'Address not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
     // Process only selected items instead of entire cart
     const orderItems = [];
-    
-    
 
     for (const productId of selectedItems) {
       // Find the item in cartData
-      const cartItem = cartData.find(item => item.productId === productId);
-      
+      const cartItem = cartData.find((item) => item.productId === productId);
+
       if (!cartItem) {
         console.error(`Cart item not found for product ID: ${productId}`);
         return NextResponse.json(
           { error: `Selected item not found in cart data: ${productId}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       // Verify product exists and has sufficient stock
       const product = await Product.findById(productId);
-      
+
       if (!product) {
-        return NextResponse.json(
-          { error: `Product not found: ${productId}` },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: `Product not found: ${productId}` }, { status: 404 });
       }
 
-      if (product.inStockQuantity !== undefined && 
-          product.inStockQuantity < cartItem.quantity) {
+      if (product.inStockQuantity !== undefined && product.inStockQuantity < cartItem.quantity) {
         return NextResponse.json(
           { error: `Insufficient stock for ${product.name}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
@@ -441,33 +463,35 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         sku: product.sku, // NEW
         itemId: product.itemId, // NEW
         discount: (product.originalPrice || product.finalPrice) - product.finalPrice, // NEW - calculate discount
-        discountPercent: product.discountPercent || 0 // NEW
+        discountPercent: product.discountPercent || 0, // NEW
       };
 
       // Include selected variant if available
-      if (cartItem.selectedVariant && 
-          typeof cartItem.selectedVariant === 'object' &&
-          cartItem.selectedVariant !== null &&
-          (cartItem.selectedVariant.color || cartItem.selectedVariant.size || cartItem.selectedVariant.sku)) {
+      if (
+        cartItem.selectedVariant &&
+        typeof cartItem.selectedVariant === 'object' &&
+        cartItem.selectedVariant !== null &&
+        (cartItem.selectedVariant.color ||
+          cartItem.selectedVariant.size ||
+          cartItem.selectedVariant.sku)
+      ) {
         orderItem.selectedVariant = cartItem.selectedVariant;
       }
 
       // NEW - Add insurance cost if this product has insurance enabled
       if (insuranceEnabled.includes(productId)) {
-        orderItem.insuranceCost = Math.round((product.finalPrice * cartItem.quantity) * 0.02); // 2% insurance
+        orderItem.insuranceCost = Math.round(product.finalPrice * cartItem.quantity * 0.02); // 2% insurance
       }
 
       orderItems.push(orderItem);
 
       // Update product stock
       await Product.findByIdAndUpdate(product._id, {
-        $inc: { 
+        $inc: {
           inStockQuantity: -cartItem.quantity,
-          totalSold: cartItem.quantity
-        }
+          totalSold: cartItem.quantity,
+        },
       });
-
-      
     }
 
     // Use totals from frontend instead of recalculating
@@ -478,24 +502,21 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     // Fallback calculation if totals not provided
     if (!totals || totalAmount === 0) {
-      
-      subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
       shippingCost = subtotal >= 500 ? 0 : 40; // Free shipping above ₹500
-      
+
       // Calculate insurance cost
       insuranceCost = 0;
       if (insuranceEnabled && Array.isArray(insuranceEnabled)) {
         for (const item of orderItems) {
           if (insuranceEnabled.includes(item.productId.toString())) {
-            insuranceCost += Math.round((item.price * item.quantity) * 0.02);
+            insuranceCost += Math.round(item.price * item.quantity * 0.02);
           }
         }
       }
-      
+
       totalAmount = subtotal + shippingCost + insuranceCost;
     }
-
-    
 
     // FIX: Generate orderNumber explicitly before creating order
     const timestamp = Date.now().toString();
@@ -520,23 +541,19 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         city: address.city,
         state: address.state,
         postalCode: address.postalCode,
-        country: address.country
+        country: address.country,
       },
       paymentMethod,
       expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
       trackingNumber: `TRK-${Date.now()}`,
-      
+
       // NEW FIELDS
       insuranceEnabled,
-      couponCode
+      couponCode,
     };
-
-    
 
     const order = new Order(orderData);
     await order.save();
-
-    
 
     // Create payment record
     const payment = await Payment.create({
@@ -546,7 +563,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       amount: totalAmount,
       method: paymentMethod,
       gateway: paymentMethod === 'cod' ? 'mock' : 'razorpay',
-      status: paymentMethod === 'cod' ? 'pending' : 'pending'
+      status: paymentMethod === 'cod' ? 'pending' : 'pending',
     });
 
     // For COD, mark order as confirmed
@@ -571,7 +588,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         paymentMethod: order.paymentMethod,
         expectedDeliveryDate: order.expectedDeliveryDate,
         shippingAddress: order.shippingAddress,
-        items: orderItems.map(item => ({
+        items: orderItems.map((item) => ({
           productId: item.productId,
           name: item.name,
           quantity: item.quantity,
@@ -580,40 +597,36 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           sku: item.sku, // NEW
           itemId: item.itemId, // NEW
           discount: item.discount, // NEW
-          discountPercent: item.discountPercent // NEW
+          discountPercent: item.discountPercent, // NEW
         })),
-        
+
         // NEW - Include price breakdown in response
         priceBreakdown: order.priceBreakdown,
         insuranceEnabled: order.insuranceEnabled,
-        couponCode: order.couponCode
+        couponCode: order.couponCode,
       },
-      paymentId: payment.paymentId
+      paymentId: payment.paymentId,
     });
-
   } catch (error) {
     console.error('Order creation error:', error);
-    
+
     // Handle specific mongoose validation errors
     if ((error as any).name === 'ValidationError') {
       const validationErrors = Object.values((error as any).errors).map((err: any) => err.message);
       return NextResponse.json(
         { error: `Validation failed: ${validationErrors.join(', ')}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
+
     // Handle cast errors (like invalid ObjectId)
     if ((error as any).name === 'CastError') {
       return NextResponse.json(
         { error: `Invalid data format: ${(error as any).message}` },
-        { status: 400 }
+        { status: 400 },
       );
     }
-    
-    return NextResponse.json(
-      { error: 'Failed to create order' },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
   }
 });

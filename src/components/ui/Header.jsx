@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
   Search,
   ShoppingCart,
@@ -12,20 +12,20 @@ import {
   Heart,
   Plus,
   DivideIcon,
-} from "lucide-react";
-import { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useAuth } from "@/context/AuthContext";
-import Sidebar from "./Sidebar";
-import AuthModal from "../models/AuthModal";
-import SearchModal from "../search/SearchModal";
-import SearchBar from "../search/SearchBar";
-import { useCartStore } from "@/stores/cartStore";
-import { useWishlistStore } from "@/stores/wishlistStore";
-import { useProductStore } from "@/stores/productStore";
-import { useHomeStore } from "@/stores/homeStore";
-import UserDropdown from "./UserDropdown";
-import { useMediaQuery } from "@/utils/useMediaQuery";
+} from 'lucide-react';
+import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import Sidebar from './Sidebar';
+import AuthModal from '../models/AuthModal';
+import SearchModal from '../search/SearchModal';
+import SearchBar from '../search/SearchBar';
+import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import { useProductStore } from '@/stores/productStore';
+import { useHomeStore } from '@/stores/homeStore';
+import UserDropdown from './UserDropdown';
+import { useMediaQuery } from '@/utils/useMediaQuery';
 
 const cartCountSelector = (state) => state.cart?.items?.length || 0;
 const wishlistCountSelector = (state) => state.wishlist?.items?.length || 0;
@@ -57,11 +57,11 @@ const Avatar = memo(({ src, alt, fallbackText }) => {
   );
 });
 
-Avatar.displayName = "Avatar";
+Avatar.displayName = 'Avatar';
 
 const NAV_ITEMS = [
-  { href: "/orders", label: "Orders" },
-  { href: "/categories", label: "Browse" },
+  { href: '/orders', label: 'Orders' },
+  { href: '/categories', label: 'Browse' },
 ];
 
 const useScrollState = () => {
@@ -84,75 +84,66 @@ const useScrollState = () => {
     };
 
     setScrolled(window.scrollY > 80);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [scrolled]);
 
   return scrolled;
 };
 
-const InspirationItem = memo(
-  ({ inspiration, isActive, onEnter, onActivate, onGetPosition }) => {
-    const itemRef = useRef(null);
+const InspirationItem = memo(({ inspiration, isActive, onEnter, onActivate, onGetPosition }) => {
+  const itemRef = useRef(null);
 
-    const handleMouseEnter = useCallback(() => {
-      onEnter(inspiration.name);
-      if (itemRef.current) {
-        const rect = itemRef.current.getBoundingClientRect();
-        onGetPosition(rect);
-      }
-    }, [inspiration.name, onEnter, onGetPosition]);
+  const handleMouseEnter = useCallback(() => {
+    onEnter(inspiration.name);
+    if (itemRef.current) {
+      const rect = itemRef.current.getBoundingClientRect();
+      onGetPosition(rect);
+    }
+  }, [inspiration.name, onEnter, onGetPosition]);
 
-    const handleClick = useCallback(() => {
-      onActivate(null);
-    }, [onActivate]);
+  const handleClick = useCallback(() => {
+    onActivate(null);
+  }, [onActivate]);
 
-    const displayName = inspiration.name.split(" ")[0];
+  const displayName = inspiration.name.split(' ')[0];
 
-    return (
-      <motion.li
-        ref={itemRef}
-        onMouseEnter={handleMouseEnter}
-        className="relative group flex-shrink-0"
-        whileHover={{ y: -1 }}
-        transition={{ duration: 0.1 }}
+  return (
+    <motion.li
+      ref={itemRef}
+      onMouseEnter={handleMouseEnter}
+      className="relative group flex-shrink-0"
+      whileHover={{ y: -1 }}
+      transition={{ duration: 0.1 }}
+    >
+      <button
+        className="flex items-center gap-1.5 text-sm font-normal text-gray-800 hover:text-black transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 whitespace-nowrap min-w-0"
+        onClick={handleClick}
+        title={inspiration.name}
       >
-        <button
-          className="flex items-center gap-1.5 text-sm font-normal text-gray-800 hover:text-black transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 whitespace-nowrap min-w-0"
-          onClick={handleClick}
-          title={inspiration.name}
-        >
-          <span className="font-semibold truncate">{displayName}</span>
-          <motion.div
-            animate={{ rotate: isActive ? 180 : 0 }}
-            transition={{ duration: 0.15, ease: "easeInOut" }}
-            className="flex-shrink-0"
-          >
-            <ChevronDown size={12} className="text-gray-600" />
-          </motion.div>
-        </button>
+        <span className="font-semibold truncate">{displayName}</span>
         <motion.div
-          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-[1px] bg-black rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: isActive ? "80%" : 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        />
-      </motion.li>
-    );
-  }
-);
+          animate={{ rotate: isActive ? 180 : 0 }}
+          transition={{ duration: 0.15, ease: 'easeInOut' }}
+          className="flex-shrink-0"
+        >
+          <ChevronDown size={12} className="text-gray-600" />
+        </motion.div>
+      </button>
+      <motion.div
+        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-[1px] bg-black rounded-full"
+        initial={{ width: 0 }}
+        animate={{ width: isActive ? '80%' : 0 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      />
+    </motion.li>
+  );
+});
 
-InspirationItem.displayName = "InspirationItem";
+InspirationItem.displayName = 'InspirationItem';
 
 const InspirationMegaMenu = memo(
-  ({
-    inspiration,
-    categories,
-    subcategories,
-    onClose,
-    onClearTimeout,
-    tabPosition,
-  }) => {
+  ({ inspiration, categories, subcategories, onClose, onClearTimeout, tabPosition }) => {
     const [showAllCategories, setShowAllCategories] = useState(false);
     const [expandedSubcategories, setExpandedSubcategories] = useState({});
 
@@ -181,8 +172,7 @@ const InspirationMegaMenu = memo(
       ? inspirationCategories
       : inspirationCategories.slice(0, maxVisibleCategories);
 
-    const hasMoreCategories =
-      inspirationCategories.length > maxVisibleCategories;
+    const hasMoreCategories = inspirationCategories.length > maxVisibleCategories;
 
     const getDropdownWidthValue = (count, viewportWidth) => {
       if (viewportWidth < 640) return Math.min(viewportWidth - 32, 320);
@@ -198,16 +188,16 @@ const InspirationMegaMenu = memo(
     };
 
     const getGridColumns = (count, viewportWidth) => {
-      if (viewportWidth < 640) return "grid-cols-1";
-      if (viewportWidth < 768) return count > 1 ? "grid-cols-2" : "grid-cols-1";
+      if (viewportWidth < 640) return 'grid-cols-1';
+      if (viewportWidth < 768) return count > 1 ? 'grid-cols-2' : 'grid-cols-1';
       if (viewportWidth < 1024)
-        return count > 2 ? "grid-cols-3" : `grid-cols-${Math.max(1, count)}`;
+        return count > 2 ? 'grid-cols-3' : `grid-cols-${Math.max(1, count)}`;
 
-      if (count === 0 || count === 1) return "grid-cols-1";
-      if (count === 2) return "grid-cols-2";
-      if (count === 3) return "grid-cols-3";
-      if (count === 4) return "grid-cols-4";
-      return "grid-cols-5";
+      if (count === 0 || count === 1) return 'grid-cols-1';
+      if (count === 2) return 'grid-cols-2';
+      if (count === 3) return 'grid-cols-3';
+      if (count === 4) return 'grid-cols-4';
+      return 'grid-cols-5';
     };
 
     const getDropdownPosition = () => {
@@ -219,25 +209,22 @@ const InspirationMegaMenu = memo(
         return {
           left: `${padding}px`,
           right: `${padding}px`,
-          transform: "none",
-          width: "auto",
+          transform: 'none',
+          width: 'auto',
           maxHeight: `${Math.min(viewportHeight * 0.7, 500)}px`,
-          overflowY: "auto",
+          overflowY: 'auto',
         };
       }
 
-      const dropdownWidth = getDropdownWidthValue(
-        visibleCategories.length,
-        viewportWidth
-      );
+      const dropdownWidth = getDropdownWidthValue(visibleCategories.length, viewportWidth);
 
       if (!tabPosition) {
         return {
-          left: "50%",
-          transform: "translateX(-50%)",
+          left: '50%',
+          transform: 'translateX(-50%)',
           width: `${dropdownWidth}px`,
           maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
-          overflowY: "auto",
+          overflowY: 'auto',
         };
       }
 
@@ -258,19 +245,19 @@ const InspirationMegaMenu = memo(
         return {
           left: `${padding}px`,
           right: `${padding}px`,
-          transform: "none",
-          width: "auto",
+          transform: 'none',
+          width: 'auto',
           maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
-          overflowY: "auto",
+          overflowY: 'auto',
         };
       }
 
       return {
         left: `${leftPosition}px`,
-        transform: "none",
+        transform: 'none',
         width: `${dropdownWidth}px`,
         maxHeight: `${Math.min(viewportHeight * 0.8, 600)}px`,
-        overflowY: "auto",
+        overflowY: 'auto',
       };
     };
 
@@ -283,26 +270,23 @@ const InspirationMegaMenu = memo(
         initial={{ opacity: 0, y: -10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.98 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        transition={{ duration: 0.25, ease: 'easeOut' }}
         className="absolute top-full z-50 bg-white shadow-lg border border-gray-200 rounded-xs"
         style={{
           left: positionStyle.left,
-          right: positionStyle.right || "auto",
-          width: positionStyle.width || "auto",
+          right: positionStyle.right || 'auto',
+          width: positionStyle.width || 'auto',
           transform: positionStyle.transform,
           maxHeight: positionStyle.maxHeight,
           overflowY: positionStyle.overflowY,
-          maxWidth: "calc(100vw - 24px)",
+          maxWidth: 'calc(100vw - 24px)',
         }}
         onMouseEnter={handleMouseEnter}
       >
         <div className="p-4">
           {visibleCategories.length > 0 ? (
             <motion.div
-              className={`grid ${getGridColumns(
-                visibleCategories.length,
-                viewportWidth
-              )} gap-2`}
+              className={`grid ${getGridColumns(visibleCategories.length, viewportWidth)} gap-2`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1, duration: 0.2 }}
@@ -311,9 +295,7 @@ const InspirationMegaMenu = memo(
                 const categorySubcategories =
                   subcategories?.filter((sub) => {
                     const categoryId =
-                      typeof sub.categoryId === "object"
-                        ? sub.categoryId?._id
-                        : sub.categoryId;
+                      typeof sub.categoryId === 'object' ? sub.categoryId?._id : sub.categoryId;
                     return categoryId === category._id;
                   }) || [];
 
@@ -322,15 +304,14 @@ const InspirationMegaMenu = memo(
                   ? categorySubcategories
                   : categorySubcategories.slice(0, maxVisibleSubcategories);
 
-                const hasMoreSubs =
-                  categorySubcategories.length > maxVisibleSubcategories;
+                const hasMoreSubs = categorySubcategories.length > maxVisibleSubcategories;
 
                 return (
                   <div key={category._id} className="group relative min-w-0">
                     <div className="space-y-3">
                       <div className="relative">
                         <Link
-                          href={`/${category.slug || ""}`}
+                          href={`/${category.slug || ''}`}
                           onClick={handleLinkClick}
                           className="block text-sm font-bold text-black hover:text-gray-600 transition-colors duration-150 mb-2 leading-tight truncate"
                           title={category.name}
@@ -357,17 +338,14 @@ const InspirationMegaMenu = memo(
 
                             {hasMoreSubs && (
                               <button
-                                onClick={() =>
-                                  toggleSubcategories(category._id)
-                                }
+                                onClick={() => toggleSubcategories(category._id)}
                                 className="flex items-center gap-1 text-xs text-black hover:text-gray-600 font-semibold py-1.5 mt-2 transition-all duration-150 hover:bg-gray-50 rounded px-2 w-full text-left"
                               >
                                 <span className="truncate">
                                   {isExpanded
-                                    ? "Show less"
+                                    ? 'Show less'
                                     : `+${
-                                        categorySubcategories.length -
-                                        maxVisibleSubcategories
+                                        categorySubcategories.length - maxVisibleSubcategories
                                       } more`}
                                 </span>
                                 <motion.div
@@ -418,10 +396,7 @@ const InspirationMegaMenu = memo(
                     className="inline-flex items-center gap-2 text-xs font-semibold text-black hover:text-gray-600 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-150 shadow-sm whitespace-nowrap"
                   >
                     <Plus size={14} className="flex-shrink-0" />
-                    <span>
-                      Show {inspirationCategories.length - maxVisibleCategories}{" "}
-                      more
-                    </span>
+                    <span>Show {inspirationCategories.length - maxVisibleCategories} more</span>
                   </button>
                 </div>
               </div>
@@ -430,24 +405,19 @@ const InspirationMegaMenu = memo(
         </div>
       </motion.div>
     );
-  }
+  },
 );
 
-InspirationMegaMenu.displayName = "InspirationMegaMenu";
+InspirationMegaMenu.displayName = 'InspirationMegaMenu';
 
 const Header = () => {
-  
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
 
   const categories = useProductStore(categoriesSelector);
   const subcategories = useProductStore(subcategoriesSelector);
   const loadingCategories = useProductStore(loadingCategoriesSelector);
-  const {
-    inspirations,
-    loading: loadingInspirations,
-    fetchInspirations,
-  } = useHomeStore();
+  const { inspirations, loading: loadingInspirations, fetchInspirations } = useHomeStore();
 
   const initializeRef = useRef(false);
   useEffect(() => {
@@ -465,7 +435,7 @@ const Header = () => {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const scrolled = useScrollState();
-  const isMdDown = useMediaQuery("(max-width: 767px)");
+  const isMdDown = useMediaQuery('(max-width: 767px)');
   const cartCount = useCartStore(cartCountSelector);
   const wishlistCount = useWishlistStore(wishlistCountSelector);
 
@@ -482,7 +452,7 @@ const Header = () => {
 
   const activeInspirationData = useMemo(
     () => transformedInspirations.find((i) => i.name === activeInspiration),
-    [transformedInspirations, activeInspiration]
+    [transformedInspirations, activeInspiration],
   );
 
   const handleInspirationEnter = useCallback((inspirationName) => {
@@ -522,24 +492,21 @@ const Header = () => {
   const closeSearch = useCallback(() => setIsSearchOpen(false), []);
   const openAuth = useCallback(() => setIsAuthOpen(true), []);
   const closeAuth = useCallback(() => setIsAuthOpen(false), []);
-  const toggleDropdown = useCallback(
-    () => setIsDropdownOpen((prev) => !prev),
-    []
-  );
+  const toggleDropdown = useCallback(() => setIsDropdownOpen((prev) => !prev), []);
   const closeDropdown = useCallback(() => setIsDropdownOpen(false), []);
   const openDropdown = useCallback(() => setIsDropdownOpen(true), []);
-  const [currentQuery, setCurrentQuery] = useState("");
+  const [currentQuery, setCurrentQuery] = useState('');
 
   // Add this useEffect to Header component to sync with localStorage
   useEffect(() => {
     const syncQuery = () => {
       try {
-        const lastQuery = localStorage.getItem("lastSearchQuery");
+        const lastQuery = localStorage.getItem('lastSearchQuery');
         if (lastQuery && lastQuery.trim()) {
           setCurrentQuery(lastQuery);
         }
       } catch (error) {
-        console.error("Error reading search query:", error);
+        console.error('Error reading search query:', error);
       }
     };
 
@@ -547,7 +514,7 @@ const Header = () => {
     syncQuery();
 
     // Listen for storage changes (when search happens in modal)
-    window.addEventListener("storage", syncQuery);
+    window.addEventListener('storage', syncQuery);
 
     // Custom event listener for same-tab updates
     const handleQueryUpdate = (event) => {
@@ -556,18 +523,18 @@ const Header = () => {
       }
     };
 
-    window.addEventListener("searchQueryUpdated", handleQueryUpdate);
+    window.addEventListener('searchQueryUpdated', handleQueryUpdate);
 
     return () => {
-      window.removeEventListener("storage", syncQuery);
-      window.removeEventListener("searchQueryUpdated", handleQueryUpdate);
+      window.removeEventListener('storage', syncQuery);
+      window.removeEventListener('searchQueryUpdated', handleQueryUpdate);
     };
   }, []);
 
   // Clear query when navigating away from search
   useEffect(() => {
-    if (pathname !== "/search") {
-      setCurrentQuery("");
+    if (pathname !== '/search') {
+      setCurrentQuery('');
     }
   }, [pathname]);
   useEffect(() => {
@@ -623,10 +590,7 @@ const Header = () => {
       return (
         <div className="h-12 flex items-center justify-center gap-2 px-3 overflow-hidden">
           {Array.from({ length: 4 }, (_, i) => (
-            <div
-              key={i}
-              className="w-20 h-3 bg-gray-200 rounded animate-pulse flex-shrink-0"
-            ></div>
+            <div key={i} className="w-20 h-3 bg-gray-200 rounded animate-pulse flex-shrink-0"></div>
           ))}
         </div>
       );
@@ -667,10 +631,9 @@ const Header = () => {
     );
   }, [loadingInspirations, JSON.stringify(transformedInspirations)]);
 
-  const fixedHeaderClasses =
-    "fixed top-0 left-0 right-0 z-50 shadow-[0_2px_1px_rgba(0,0,0,0.15)]";
+  const fixedHeaderClasses = 'fixed top-0 left-0 right-0 z-50 shadow-[0_2px_1px_rgba(0,0,0,0.15)]';
   const headerClasses = `h-[52px] md:h-14 flex items-center bg-white md:shadow-xs ${
-    isMdDown ? fixedHeaderClasses : ""
+    isMdDown ? fixedHeaderClasses : ''
   }`;
 
   return (
@@ -726,14 +689,14 @@ const Header = () => {
                         href={href}
                         className={`relative group text-sm font-normal px-3 py-2 transition-colors duration-150 rounded whitespace-nowrap ${
                           isActive
-                            ? "text-black bg-gray-50"
-                            : "text-gray-800 hover:text-black hover:bg-gray-50"
+                            ? 'text-black bg-gray-50'
+                            : 'text-gray-800 hover:text-black hover:bg-gray-50'
                         }`}
                       >
                         <span>{label}</span>
                         <span
                           className={`absolute left-0 -bottom-0.5 h-0.5 bg-black transition-all duration-200 ease-out ${
-                            isActive ? "w-full" : "w-0 group-hover:w-full"
+                            isActive ? 'w-full' : 'w-0 group-hover:w-full'
                           }`}
                         />
                       </Link>
@@ -749,7 +712,7 @@ const Header = () => {
                       x: scrolled && isMdDown ? -44 : 0,
                     }}
                     transition={{
-                      type: "spring",
+                      type: 'spring',
                       stiffness: 400,
                       damping: 30,
                       duration: 0.3,
@@ -768,12 +731,12 @@ const Header = () => {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
-                            type: "spring",
+                            type: 'spring',
                             stiffness: 500,
                             damping: 15,
                           }}
                         >
-                          {wishlistCount > 9 ? "9+" : wishlistCount}
+                          {wishlistCount > 9 ? '9+' : wishlistCount}
                         </motion.span>
                       )}
                     </Link>
@@ -790,12 +753,12 @@ const Header = () => {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{
-                            type: "spring",
+                            type: 'spring',
                             stiffness: 500,
                             damping: 15,
                           }}
                         >
-                          {cartCount > 9 ? "9+" : cartCount}
+                          {cartCount > 9 ? '9+' : cartCount}
                         </motion.span>
                       )}
                     </Link>
@@ -815,15 +778,12 @@ const Header = () => {
                           whileTap={{ scale: 0.95 }}
                         >
                           <Avatar
-                            src={user?.photoURL || ""}
+                            src={user?.photoURL || ''}
                             alt="User Avatar"
-                            fallbackText={user?.name?.[0]?.toUpperCase() || "U"}
+                            fallbackText={user?.name?.[0]?.toUpperCase() || 'U'}
                           />
                         </motion.button>
-                        <UserDropdown
-                          isOpen={isDropdownOpen}
-                          onClose={closeDropdown}
-                        />
+                        <UserDropdown isOpen={isDropdownOpen} onClose={closeDropdown} />
                       </div>
                     ) : (
                       <motion.button
@@ -861,7 +821,7 @@ const Header = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 44 }}
                         transition={{
-                          type: "spring",
+                          type: 'spring',
                           stiffness: 400,
                           damping: 30,
                           duration: 0.3,
@@ -896,7 +856,7 @@ const Header = () => {
                 opacity: 1,
                 transition: {
                   duration: 0.8,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 },
               }}
               exit={{
@@ -904,7 +864,7 @@ const Header = () => {
                 opacity: 0,
                 transition: {
                   duration: 0,
-                  ease: "easeIn",
+                  ease: 'easeIn',
                 },
               }}
             >
@@ -913,9 +873,7 @@ const Header = () => {
                 <nav className="hidden lg:block">{InspirationNavigation}</nav>
 
                 {/* Tablet sticky navigation */}
-                <nav className="hidden md:block lg:hidden">
-                  {TabletInspirations}
-                </nav>
+                <nav className="hidden md:block lg:hidden">{TabletInspirations}</nav>
               </div>
 
               {/* Sticky mega menu dropdown */}
@@ -942,18 +900,14 @@ const Header = () => {
         >
           <div className="max-w-[1600px] mx-auto px-2 lg:px-6">
             {/* Desktop navigation - Hide when sticky header is visible */}
-            <nav
-              className={`lg:block ${
-                scrolled && !isMdDown ? "hidden" : "hidden lg:block"
-              }`}
-            >
+            <nav className={`lg:block ${scrolled && !isMdDown ? 'hidden' : 'hidden lg:block'}`}>
               {InspirationNavigation}
             </nav>
 
             {/* Tablet navigation - Hide when sticky header is visible */}
             <nav
               className={`md:block lg:hidden ${
-                scrolled && !isMdDown ? "hidden" : "hidden md:block lg:hidden"
+                scrolled && !isMdDown ? 'hidden' : 'hidden md:block lg:hidden'
               }`}
             >
               {TabletInspirations}
@@ -969,7 +923,7 @@ const Header = () => {
                     initial={{ y: -60, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: -60, opacity: 0 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
                   >
                     <motion.button
                       onClick={openSearch}
@@ -979,17 +933,12 @@ const Header = () => {
                     >
                       <span
                         className={`text-sm truncate ${
-                          currentQuery
-                            ? "text-gray-900 font-medium"
-                            : "text-gray-500"
+                          currentQuery ? 'text-gray-900 font-medium' : 'text-gray-500'
                         }`}
                       >
-                        {currentQuery || "What are you looking for?"}
+                        {currentQuery || 'What are you looking for?'}
                       </span>
-                      <Search
-                        size={16}
-                        className="text-gray-600 flex-shrink-0"
-                      />
+                      <Search size={16} className="text-gray-600 flex-shrink-0" />
                     </motion.button>
                   </motion.div>
                 )}
@@ -1015,11 +964,7 @@ const Header = () => {
 
       {/* Modals and overlays */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={closeSearch}
-        initialQuery={currentQuery}
-      />
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} initialQuery={currentQuery} />
       <AuthModal isOpen={isAuthOpen} onClose={closeAuth} />
     </>
   );

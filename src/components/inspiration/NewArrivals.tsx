@@ -1,60 +1,49 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useHomeStore } from "@/stores/homeStore";
-import { motion } from "framer-motion";
-import ProductCard from "../product/ProductCard";
-import { Product } from "@/types/Product";
+import { useEffect } from 'react';
+import { useHomeStore } from '@/stores/homeStore';
+import { motion } from 'framer-motion';
+import ProductCard from '../product/ProductCard';
+import { Product } from '@/types/Product';
 
 interface NewArrivalsProps {
   inspirationSlug: string;
   categoryName?: string;
   limit?: number;
-  sort?: "newest" | "oldest" | "popular";
+  sort?: 'newest' | 'oldest' | 'popular';
 }
 
 const NewArrivals = ({
   inspirationSlug,
   categoryName,
   limit = 20,
-  sort = "newest",
+  sort = 'newest',
 }: NewArrivalsProps) => {
-  
-  const {
-    fetchRelatedProducts,
-    relatedProducts,
-    relatedProductsLoading,
-    relatedProductsError,
-  } = useHomeStore();
+  const { fetchRelatedProducts, relatedProducts, relatedProductsLoading, relatedProductsError } =
+    useHomeStore();
 
   useEffect(() => {
     if (inspirationSlug) {
       fetchRelatedProducts(inspirationSlug, limit, sort);
     }
   }, [inspirationSlug, limit, sort, fetchRelatedProducts]);
-  
 
   if (relatedProductsLoading) {
     return (
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              New Arrivals
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">New Arrivals</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               {categoryName
                 ? `Latest products in ${categoryName}`
-                : "Discover our newest additions"}
+                : 'Discover our newest additions'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg overflow-hidden shadow-sm"
-              >
+              <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
                 <div className="aspect-square bg-gray-200 animate-pulse" />
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-gray-200 rounded animate-pulse" />
@@ -88,13 +77,9 @@ const NewArrivals = ({
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            New Arrivals
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">New Arrivals</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {categoryName
-              ? `Latest products in ${categoryName}`
-              : "Discover our newest additions"}
+            {categoryName ? `Latest products in ${categoryName}` : 'Discover our newest additions'}
           </p>
         </motion.div>
 

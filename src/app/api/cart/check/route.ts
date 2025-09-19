@@ -11,10 +11,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const { productIds } = body;
 
     if (!productIds || !Array.isArray(productIds)) {
-      return NextResponse.json(
-        { error: 'Product IDs array is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product IDs array is required' }, { status: 400 });
     }
 
     await connectDB();
@@ -22,24 +19,20 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const cart = await Cart.findOne({ userId: user.userId });
     if (!cart) {
       return NextResponse.json({
-        cartProducts: []
+        cartProducts: [],
       });
     }
 
     // Return only the productIds that are in the cart
-    const cartProducts = productIds.filter(productId =>
-      cart.items.some((item: any) => item.productId.toString() === productId)
+    const cartProducts = productIds.filter((productId) =>
+      cart.items.some((item: any) => item.productId.toString() === productId),
     );
 
     return NextResponse.json({
-      cartProducts
+      cartProducts,
     });
-
   } catch (error) {
     console.error('Cart check error:', error);
-    return NextResponse.json(
-      { error: 'Failed to check cart status' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to check cart status' }, { status: 500 });
   }
 });

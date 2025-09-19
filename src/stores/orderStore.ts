@@ -1,10 +1,17 @@
 // stores/orderStore.ts - Fixed version
-import { create } from "zustand";
-import { fetchWithCredentials, handleApiResponse } from "@/utils/fetchWithCredentials";
-import { toast } from "react-hot-toast";
+import { create } from 'zustand';
+import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
+import { toast } from 'react-hot-toast';
 
 // Types
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'returned';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentMethod = 'cod' | 'card' | 'upi' | 'netbanking' | 'wallet';
 
@@ -270,8 +277,6 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Fixed processOrderData function
 const processOrderData = (order: any): Order => {
-  
-
   // Calculate item totals and savings
   const processedItems = (order.items || []).map((item: any) => {
     const itemPrice = item.price || 0;
@@ -289,10 +294,22 @@ const processOrderData = (order: any): Order => {
   });
 
   // Calculate totals from items
-  const itemsSubtotal = processedItems.reduce((sum: number, item: any) => sum + (item.itemTotal || 0), 0);
-  const originalSubtotal = processedItems.reduce((sum: number, item: any) => sum + (item.originalItemTotal || 0), 0);
-  const totalItemSavings = processedItems.reduce((sum: number, item: any) => sum + (item.itemSavings || 0), 0);
-  const totalInsurance = processedItems.reduce((sum: number, item: any) => sum + (item.itemInsuranceTotal || 0), 0);
+  const itemsSubtotal = processedItems.reduce(
+    (sum: number, item: any) => sum + (item.itemTotal || 0),
+    0,
+  );
+  const originalSubtotal = processedItems.reduce(
+    (sum: number, item: any) => sum + (item.originalItemTotal || 0),
+    0,
+  );
+  const totalItemSavings = processedItems.reduce(
+    (sum: number, item: any) => sum + (item.itemSavings || 0),
+    0,
+  );
+  const totalInsurance = processedItems.reduce(
+    (sum: number, item: any) => sum + (item.itemInsuranceTotal || 0),
+    0,
+  );
 
   // Handle legacy discount field
   const legacyDiscount = typeof order.discount === 'number' ? order.discount : 0;
@@ -309,38 +326,50 @@ const processOrderData = (order: any): Order => {
     shippingCost: order.priceBreakdown?.shippingCost || order.shippingCost || 0,
     tax: order.priceBreakdown?.tax || order.tax || 0,
     grandTotal: order.priceBreakdown?.grandTotal || order.totalAmount || 0,
-    totalSavings: (totalItemSavings || legacyDiscount || 0) + (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
+    totalSavings:
+      (totalItemSavings || legacyDiscount || 0) +
+      (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
 
     // Additional UI fields
     itemsSubtotal: itemsSubtotal || order.subtotal || 0,
     insuranceTotal: totalInsurance || legacyInsurance || 0,
-    subtotalWithInsurance: (itemsSubtotal || order.subtotal || 0) + (totalInsurance || legacyInsurance || 0),
-    totalBeforeCoupon: (itemsSubtotal || order.subtotal || 0) + (totalInsurance || legacyInsurance || 0) + (order.shippingCost || 0),
+    subtotalWithInsurance:
+      (itemsSubtotal || order.subtotal || 0) + (totalInsurance || legacyInsurance || 0),
+    totalBeforeCoupon:
+      (itemsSubtotal || order.subtotal || 0) +
+      (totalInsurance || legacyInsurance || 0) +
+      (order.shippingCost || 0),
     totalAfterCoupon: order.totalAmount || 0,
-    youSaved: (totalItemSavings || legacyDiscount || 0) + (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
+    youSaved:
+      (totalItemSavings || legacyDiscount || 0) +
+      (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
   };
 
   return {
     ...order,
     items: processedItems,
-    discount: typeof order.discount === 'number' ? order.discount : (order.discount ? 1 : 0),
-    insuranceCost: typeof order.insuranceCost === 'number' ? order.insuranceCost : (order.insuranceCost ? 1 : 0),
+    discount: typeof order.discount === 'number' ? order.discount : order.discount ? 1 : 0,
+    insuranceCost:
+      typeof order.insuranceCost === 'number' ? order.insuranceCost : order.insuranceCost ? 1 : 0,
     insuranceEnabled: order.insuranceEnabled || [],
     orderTimeline: order.orderTimeline || [],
     priceBreakdown,
     // Ensure orderSummary is available
     orderSummary: {
       totalItems: processedItems.length,
-      totalQuantity: processedItems.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0),
+      totalQuantity: processedItems.reduce(
+        (sum: number, item: any) => sum + (item.quantity || 0),
+        0,
+      ),
       hasInsurance: totalInsurance > 0,
       hasCoupon: !!(order.couponCode || order.priceBreakdown?.couponDiscount),
       canCancel: ['pending', 'confirmed'].includes(order.orderStatus),
       canReturn: ['delivered'].includes(order.orderStatus),
       estimatedDelivery: order.expectedDeliveryDate,
       orderAge: Date.now() - new Date(order.createdAt).getTime(),
-      isRecentOrder: (Date.now() - new Date(order.createdAt).getTime()) < (7 * 24 * 60 * 60 * 1000), // 7 days
-      ...order.orderSummary
-    }
+      isRecentOrder: Date.now() - new Date(order.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000, // 7 days
+      ...order.orderSummary,
+    },
   };
 };
 
@@ -369,25 +398,28 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     try {
       const filters: OrderFilters = {
         limit: 20,
-        page: 1
+        page: 1,
       };
 
       await get().fetchOrders(filters, true);
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to initialize orders";
+      const errorMessage = error instanceof Error ? error.message : 'Failed to initialize orders';
       set({ error: errorMessage, loading: false });
-      console.error("Order initialization error:", errorMessage);
+      console.error('Order initialization error:', errorMessage);
     }
   },
 
   fetchOrders: async (filters = {}, forceRefresh = false) => {
     const state = get();
 
-    if (!forceRefresh &&
+    if (
+      !forceRefresh &&
       state.orders.length > 0 &&
       Date.now() - state.lastFetchTime < CACHE_DURATION &&
-      !filters.page && !filters.status && !filters.skip) {
+      !filters.page &&
+      !filters.status &&
+      !filters.skip
+    ) {
       return;
     }
 
@@ -420,20 +452,22 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         totalOrders: data.pagination?.totalOrders || data.total || 0,
         currentPage: data.pagination?.currentPage || data.page || 1,
         totalPages: data.pagination?.totalPages || data.pages || 1,
-        hasMore: data.pagination?.hasMore !== undefined ? data.pagination.hasMore : (newOrders.length === (filters.limit || 50)),
+        hasMore:
+          data.pagination?.hasMore !== undefined
+            ? data.pagination.hasMore
+            : newOrders.length === (filters.limit || 50),
         lastFetchTime: Date.now(),
         loading: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error fetching orders";
-      console.error("Orders fetch error:", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Error fetching orders';
+      console.error('Orders fetch error:', errorMessage);
 
       set({
         error: errorMessage,
         loading: false,
-        orders: filters.skip ? state.orders : []
+        orders: filters.skip ? state.orders : [],
       });
 
       toast.error(errorMessage);
@@ -457,14 +491,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      
 
       const processedOrder = processOrderData(data.order);
       set({ order: processedOrder, loading: false, error: null });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error fetching order";
-      console.error("Order fetch error:", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Error fetching order';
+      console.error('Order fetch error:', errorMessage);
       set({ error: errorMessage, loading: false, order: null });
       toast.error(errorMessage);
     }
@@ -487,14 +519,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      
 
       const processedOrder = processOrderData(data.order);
       set({ order: processedOrder, loading: false, error: null });
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error fetching order";
-      console.error("Order fetch by number error:", errorMessage);
+      const errorMessage = error instanceof Error ? error.message : 'Error fetching order';
+      console.error('Order fetch by number error:', errorMessage);
       set({ error: errorMessage, loading: false, order: null });
       toast.error(errorMessage);
     }
@@ -504,40 +534,40 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     // Enhanced temporary order with new fields
     const tempOrder: Order = {
       _id: `temp-${Date.now()}`,
-      orderNumber: "TEMP",
-      userId: "temp",
-      items: orderData.items.map(i => ({
+      orderNumber: 'TEMP',
+      userId: 'temp',
+      items: orderData.items.map((i) => ({
         _id: `temp-${i.productId}`,
-        product: { _id: i.productId, name: "Loading..." },
-        name: "Loading item...",
+        product: { _id: i.productId, name: 'Loading...' },
+        name: 'Loading item...',
         price: i.price,
         originalPrice: i.originalPrice,
         quantity: i.quantity,
         selectedVariant: i.selectedVariant,
         insuranceCost: i.insuranceCost || 0,
-        sku: "",
-        itemId: "",
+        sku: '',
+        itemId: '',
         discount: 0,
         discountPercent: 0,
-        productImage: "",
+        productImage: '',
         itemTotal: i.price * i.quantity,
         originalItemTotal: (i.originalPrice || i.price) * i.quantity,
         itemSavings: 0,
         itemInsuranceTotal: i.insuranceCost || 0,
       })),
       totalAmount: orderData.totals.totalAmount,
-      orderStatus: "pending",
-      paymentStatus: "pending",
+      orderStatus: 'pending',
+      paymentStatus: 'pending',
       paymentMethod: orderData.paymentMethod,
       shippingAddress: {
         _id: orderData.addressId,
-        fullName: "Loading...",
-        phone: "",
-        addressLine1: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: ""
+        fullName: 'Loading...',
+        phone: '',
+        addressLine1: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -560,20 +590,20 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         shippingCost: orderData.totals.shippingCost,
         tax: 0,
         grandTotal: orderData.totals.totalAmount,
-        totalSavings: orderData.totals.couponDiscount || 0
-      }
+        totalSavings: orderData.totals.couponDiscount || 0,
+      },
     };
 
-    set(state => ({
+    set((state) => ({
       orders: [tempOrder, ...state.orders],
       order: tempOrder,
-      totalOrders: state.totalOrders + 1
+      totalOrders: state.totalOrders + 1,
     }));
 
     try {
-      const response = await fetchWithCredentials("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetchWithCredentials('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
 
@@ -583,27 +613,25 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      
 
       const newOrder = processOrderData(data.order);
 
-      set(state => ({
-        orders: state.orders.map(o => o._id === tempOrder._id ? newOrder : o),
+      set((state) => ({
+        orders: state.orders.map((o) => (o._id === tempOrder._id ? newOrder : o)),
         order: newOrder,
         lastFetchTime: Date.now(),
       }));
 
-      toast.success("Order created successfully");
+      toast.success('Order created successfully');
       return newOrder;
-
     } catch (error) {
-      set(state => ({
-        orders: state.orders.filter(o => o._id !== tempOrder._id),
+      set((state) => ({
+        orders: state.orders.filter((o) => o._id !== tempOrder._id),
         order: null,
-        totalOrders: Math.max(0, state.totalOrders - 1)
+        totalOrders: Math.max(0, state.totalOrders - 1),
       }));
 
-      const errorMessage = error instanceof Error ? error.message : "Error creating order";
+      const errorMessage = error instanceof Error ? error.message : 'Error creating order';
       toast.error(errorMessage);
       return null;
     }
@@ -613,19 +641,20 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   updateOrderStatus: async (id: string, status: OrderStatus) => {
     const prevState = { orders: get().orders, order: get().order };
 
-    set(state => ({
-      orders: state.orders.map(o =>
-        o._id === id ? { ...o, orderStatus: status, updatedAt: new Date().toISOString() } : o
+    set((state) => ({
+      orders: state.orders.map((o) =>
+        o._id === id ? { ...o, orderStatus: status, updatedAt: new Date().toISOString() } : o,
       ),
-      order: state.order?._id === id ?
-        { ...state.order, orderStatus: status, updatedAt: new Date().toISOString() } :
-        state.order
+      order:
+        state.order?._id === id
+          ? { ...state.order, orderStatus: status, updatedAt: new Date().toISOString() }
+          : state.order,
     }));
 
     try {
       const response = await fetchWithCredentials(`/api/orders/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderStatus: status }),
       });
 
@@ -637,17 +666,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const data = await handleApiResponse(response);
       const updatedOrder = processOrderData(data.order);
 
-      set(state => ({
-        orders: state.orders.map(o => o._id === id ? updatedOrder : o),
-        order: state.order?._id === id ? updatedOrder : state.order
+      set((state) => ({
+        orders: state.orders.map((o) => (o._id === id ? updatedOrder : o)),
+        order: state.order?._id === id ? updatedOrder : state.order,
       }));
 
-      toast.success("Order status updated");
+      toast.success('Order status updated');
       return true;
-
     } catch (error) {
       set(prevState);
-      const errorMessage = error instanceof Error ? error.message : "Error updating status";
+      const errorMessage = error instanceof Error ? error.message : 'Error updating status';
       toast.error(errorMessage);
       return false;
     }
@@ -656,8 +684,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   updateOrderNotes: async (orderNumber: string, notes: string) => {
     try {
       const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes }),
       });
 
@@ -669,18 +697,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const data = await handleApiResponse(response);
       const updatedOrder = processOrderData(data.order);
 
-      set(state => ({
-        orders: state.orders.map(o =>
-          o.orderNumber === orderNumber ? updatedOrder : o
-        ),
-        order: state.order?.orderNumber === orderNumber ? updatedOrder : state.order
+      set((state) => ({
+        orders: state.orders.map((o) => (o.orderNumber === orderNumber ? updatedOrder : o)),
+        order: state.order?.orderNumber === orderNumber ? updatedOrder : state.order,
       }));
 
-      toast.success("Order notes updated");
+      toast.success('Order notes updated');
       return true;
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error updating notes";
+      const errorMessage = error instanceof Error ? error.message : 'Error updating notes';
       toast.error(errorMessage);
       return false;
     }
@@ -690,29 +715,34 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     const prevState = { orders: get().orders, order: get().order };
     const cancelledAt = new Date().toISOString();
 
-    set(state => ({
-      orders: state.orders.map(o =>
-        o._id === id ? {
-          ...o,
-          orderStatus: "cancelled",
-          cancelledAt,
-          cancellationReason: reason,
-          updatedAt: cancelledAt
-        } : o
+    set((state) => ({
+      orders: state.orders.map((o) =>
+        o._id === id
+          ? {
+              ...o,
+              orderStatus: 'cancelled',
+              cancelledAt,
+              cancellationReason: reason,
+              updatedAt: cancelledAt,
+            }
+          : o,
       ),
-      order: state.order?._id === id ? {
-        ...state.order,
-        orderStatus: "cancelled",
-        cancelledAt,
-        cancellationReason: reason,
-        updatedAt: cancelledAt
-      } : state.order
+      order:
+        state.order?._id === id
+          ? {
+              ...state.order,
+              orderStatus: 'cancelled',
+              cancelledAt,
+              cancellationReason: reason,
+              updatedAt: cancelledAt,
+            }
+          : state.order,
     }));
 
     try {
       const response = await fetchWithCredentials(`/api/orders/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'cancel', reason }),
       });
 
@@ -724,17 +754,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       const data = await handleApiResponse(response);
       const updatedOrder = processOrderData(data.order);
 
-      set(state => ({
-        orders: state.orders.map(o => o._id === id ? updatedOrder : o),
-        order: state.order?._id === id ? updatedOrder : state.order
+      set((state) => ({
+        orders: state.orders.map((o) => (o._id === id ? updatedOrder : o)),
+        order: state.order?._id === id ? updatedOrder : state.order,
       }));
 
-      toast.success("Order cancelled successfully");
+      toast.success('Order cancelled successfully');
       return true;
-
     } catch (error) {
       set(prevState);
-      const errorMessage = error instanceof Error ? error.message : "Error cancelling order";
+      const errorMessage = error instanceof Error ? error.message : 'Error cancelling order';
       toast.error(errorMessage);
       return false;
     }
@@ -746,13 +775,13 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       return false;
     }
 
-    set(state => ({
-      deletingOrders: [...state.deletingOrders, orderNumber]
+    set((state) => ({
+      deletingOrders: [...state.deletingOrders, orderNumber],
     }));
 
     try {
       const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -760,22 +789,21 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         throw new Error(errorData.error || 'Failed to delete order');
       }
 
-      set(state => ({
-        orders: state.orders.filter(o => o.orderNumber !== orderNumber),
+      set((state) => ({
+        orders: state.orders.filter((o) => o.orderNumber !== orderNumber),
         order: state.order?.orderNumber === orderNumber ? null : state.order,
         totalOrders: Math.max(0, state.totalOrders - 1),
-        deletingOrders: state.deletingOrders.filter(on => on !== orderNumber)
+        deletingOrders: state.deletingOrders.filter((on) => on !== orderNumber),
       }));
 
-      toast.success("Order deleted successfully");
+      toast.success('Order deleted successfully');
       return true;
-
     } catch (error) {
-      set(state => ({
-        deletingOrders: state.deletingOrders.filter(on => on !== orderNumber)
+      set((state) => ({
+        deletingOrders: state.deletingOrders.filter((on) => on !== orderNumber),
       }));
 
-      const errorMessage = error instanceof Error ? error.message : "Error deleting order";
+      const errorMessage = error instanceof Error ? error.message : 'Error deleting order';
       toast.error(errorMessage);
       return false;
     }
@@ -784,25 +812,25 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   // Utils
   clearError: () => set({ error: null }),
   clearOrder: () => set({ order: null }),
-  clearOrders: () => set({
-    orders: [],
-    totalOrders: 0,
-    currentPage: 1,
-    totalPages: 1,
-    hasMore: false,
-    lastFetchTime: 0,
-    deletingOrders: []
-  }),
+  clearOrders: () =>
+    set({
+      orders: [],
+      totalOrders: 0,
+      currentPage: 1,
+      totalPages: 1,
+      hasMore: false,
+      lastFetchTime: 0,
+      deletingOrders: [],
+    }),
 
   // Enhanced getters
   getOrderByNumber: (orderNumber: string) =>
-    get().orders.find(order => order.orderNumber === orderNumber) || null,
+    get().orders.find((order) => order.orderNumber === orderNumber) || null,
 
   getOrdersByStatus: (status: OrderStatus) =>
-    get().orders.filter(order => order.orderStatus === status),
+    get().orders.filter((order) => order.orderStatus === status),
 
-  isOrderBeingDeleted: (orderNumber: string) =>
-    get().deletingOrders.includes(orderNumber),
+  isOrderBeingDeleted: (orderNumber: string) => get().deletingOrders.includes(orderNumber),
 
   // Enhanced getters
   getOrderPriceBreakdown: (orderNumber: string) => {
@@ -817,8 +845,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   canCancelOrder: (orderNumber: string) => {
     const order = get().getOrderByNumber(orderNumber);
-    return order?.orderSummary?.canCancel ||
-      ['pending', 'confirmed'].includes(order?.orderStatus || '');
+    return (
+      order?.orderSummary?.canCancel || ['pending', 'confirmed'].includes(order?.orderStatus || '')
+    );
   },
 
   canReturnOrder: (orderNumber: string) => {

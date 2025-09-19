@@ -1,4 +1,3 @@
-// models/SubCategory.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISubCategory extends Document {
@@ -17,47 +16,46 @@ const SubCategorySchema: Schema = new Schema(
     name: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
-      required: true
+      required: true,
     },
     slug: {
       type: String,
       required: true,
       lowercase: true,
-      trim: true
+      trim: true,
     },
     mainImage: {
       type: new Schema(
         {
           url: { type: String },
-          alt: { type: String }
+          alt: { type: String },
         },
-        { _id: false }
+        { _id: false },
       ),
       required: false,
-      default: undefined
+      default: undefined,
     },
     description: {
       type: String,
-      default: ""
-    }
+      default: '',
+    },
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
-  }
+    toObject: { virtuals: true },
+  },
 );
 
-// Virtual to populate parent category if needed
 SubCategorySchema.virtual('category', {
   ref: 'Category',
   localField: 'categoryId',
   foreignField: '_id',
-  justOne: true
+  justOne: true,
 });
 
 export default mongoose.models.SubCategory ||

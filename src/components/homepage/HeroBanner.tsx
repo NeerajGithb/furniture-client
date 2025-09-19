@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const HeroBanner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -14,23 +14,23 @@ const HeroBanner = () => {
   const slides = [
     {
       id: 1,
-      image: "/homepage/baner/living.png",
-      category: "living-room",
+      image: '/homepage/baner/living.png',
+      category: 'living-room',
     },
     {
       id: 2,
-      image: "/homepage/baner/bedroom.png",
-      category: "bedroom-inspiration",
+      image: '/homepage/baner/bedroom.png',
+      category: 'bedroom-inspiration',
     },
     {
       id: 3,
-      image: "/homepage/baner/dining.png",
-      category: "dining-inspiration",
+      image: '/homepage/baner/dining.png',
+      category: 'dining-inspiration',
     },
     {
       id: 4,
-      image: "/homepage/baner/sofa.png",
-      category: "office-inspiration",
+      image: '/homepage/baner/sofa.png',
+      category: 'office-inspiration',
     },
   ];
 
@@ -72,17 +72,17 @@ const HeroBanner = () => {
     (e: React.MouseEvent | React.TouchEvent) => {
       stopAutoSlide();
       isSwipingRef.current = false;
-      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
       startPosRef.current = { x: clientX, y: clientY };
     },
-    [stopAutoSlide]
+    [stopAutoSlide],
   );
 
   const handleMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!startPosRef.current) return;
-    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     const deltaX = Math.abs(clientX - startPosRef.current.x);
     const deltaY = Math.abs(clientY - startPosRef.current.y);
 
@@ -96,8 +96,7 @@ const HeroBanner = () => {
   const handleEnd = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (isSwipingRef.current) {
-        const clientX =
-          "changedTouches" in e ? e.changedTouches[0].clientX : e.clientX;
+        const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
         const distance = startPosRef.current!.x - clientX;
         if (distance > 50) {
           // Swiped left
@@ -110,17 +109,14 @@ const HeroBanner = () => {
       startAutoSlide();
       startPosRef.current = null;
     },
-    [nextSlide, prevSlide, startAutoSlide]
+    [nextSlide, prevSlide, startAutoSlide],
   );
 
   const handleImageClick = useCallback(
     (category: string) => {
       if (!isSwipingRef.current) {
         // Replace "-inspiration" with "-collection"
-        const friendlyCategory = category.replace(
-          "-inspiration",
-          "-collection"
-        );
+        const friendlyCategory = category.replace('-inspiration', '-collection');
 
         router.push(`/collections/${friendlyCategory}`);
       }
@@ -128,7 +124,7 @@ const HeroBanner = () => {
       // Reset the swiping flag after a click
       isSwipingRef.current = false;
     },
-    [router]
+    [router],
   );
 
   return (
@@ -143,13 +139,13 @@ const HeroBanner = () => {
         onMouseDown={handleStart}
         onMouseMove={handleMove}
         onMouseUp={handleEnd}
-        style={{ touchAction: "pan-y" }}
+        style={{ touchAction: 'pan-y' }}
       >
         {slides.map((slide, index) => (
           <div
             key={slide.id}
             className={`absolute inset-0 transition-opacity duration-700 ease-out cursor-pointer ${
-              index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+              index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
             onClick={() => handleImageClick(slide.category)}
           >
@@ -195,9 +191,7 @@ const HeroBanner = () => {
             onMouseEnter={stopAutoSlide}
             onMouseLeave={startAutoSlide}
             className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full focus:outline-none transition-colors ${
-              index === currentSlide
-                ? "bg-white shadow-sm"
-                : "bg-white/50 hover:bg-white/75"
+              index === currentSlide ? 'bg-white shadow-sm' : 'bg-white/50 hover:bg-white/75'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

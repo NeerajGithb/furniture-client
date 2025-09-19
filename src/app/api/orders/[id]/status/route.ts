@@ -12,121 +12,112 @@ interface RouteParams {
 }
 
 // PUT - Update order status
-export const PUT = withAuth(async (
-  request: NextRequest,
-  user: AuthenticatedUser,
-  { params }: RouteParams
-) => {
-  try {
-    const { id } = params;
-    
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Order ID is required' },
-        { status: 400 }
-      );
-    }
+export const PUT = withAuth(
+  async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
+    try {
+      const { id } = params;
 
-    const body = await request.json();
-    const { status } = body;
-
-    if (!status) {
-      return NextResponse.json(
-        { error: 'Status is required' },
-        { status: 400 }
-      );
-    }
-
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid order status' },
-        { status: 400 }
-      );
-    }
-
-    await connectDB();
-
-    // Find the order
-    const order = await Order.findOne({
-      _id: id,
-      userId: user.userId
-    });
-
-    if (!order) {
-      return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
-
-    // Update order status
-    order.orderStatus = status;
-    
-    // Handle special status updates
-    if (status === 'delivered') {
-      order.deliveredAt = new Date();
-      // If COD, mark payment as paid
-      if (order.paymentMethod === 'cod') {
-        order.paymentStatus = 'paid';
+      if (!id) {
+        return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
       }
-    }
 
-    await order.save();
+      const body = await request.json();
+      const { status } = body;
 
-    // Update payment record if needed
-    if (status === 'delivered' && order.paymentMethod === 'cod') {
-      const payment = await Payment.findOne({ orderId: order._id });
-      if (payment) {
-        payment.status = 'paid';
-        await payment.save();
+      if (!status) {
+        return NextResponse.json({ error: 'Status is required' }, { status: 400 });
       }
+
+      const validStatuses = [
+        'pending',
+        'confirmed',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled',
+      ];
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json({ error: 'Invalid order status' }, { status: 400 });
+      }
+
+      await connectDB();
+
+      // Find the order
+      const order = await Order.findOne({
+        _id: id,
+        userId: user.userId,
+      });
+
+      if (!order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      }
+
+      // Update order status
+      order.orderStatus = status;
+
+      // Handle special status updates
+      if (status === 'delivered') {
+        order.deliveredAt = new Date();
+        // If COD, mark payment as paid
+        if (order.paymentMethod === 'cod') {
+          order.paymentStatus = 'paid';
+        }
+      }
+
+      await order.save();
+
+      // Update payment record if needed
+      if (status === 'delivered' && order.paymentMethod === 'cod') {
+        const payment = await Payment.findOne({ orderId: order._id });
+        if (payment) {
+          payment.status = 'paid';
+          await payment.save();
+        }
+      }
+
+      // Return updated order data
+      const updatedOrder = await Order.findById(id).populate({
+        path: 'items.productId',
+        select: 'name mainImage',
+      });
+
+      const formattedOrder = {
+        _id: updatedOrder._id,
+        orderNumber: updatedOrder.orderNumber,
+        items: updatedOrder.items.map((item: any) => ({
+          _id: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          productImage: item.productImage,
+          selectedVariant: item.selectedVariant || null,
+          product: item.productId
+            ? {
+                _id: item.productId._id,
+                name: item.productId.name,
+                mainImage: item.productId.mainImage,
+              }
+            : null,
+        })),
+        totalAmount: updatedOrder.totalAmount,
+        orderStatus: updatedOrder.orderStatus,
+        paymentStatus: updatedOrder.paymentStatus,
+        paymentMethod: updatedOrder.paymentMethod,
+        expectedDeliveryDate: updatedOrder.expectedDeliveryDate,
+        trackingNumber: updatedOrder.trackingNumber,
+        shippingAddress: updatedOrder.shippingAddress,
+        deliveredAt: updatedOrder.deliveredAt,
+        createdAt: updatedOrder.createdAt,
+        updatedAt: updatedOrder.updatedAt,
+      };
+
+      return NextResponse.json({
+        message: 'Order status updated successfully',
+        order: formattedOrder,
+      });
+    } catch (error) {
+      console.error('Update order status error:', error);
+      return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
     }
-
-    // Return updated order data
-    const updatedOrder = await Order.findById(id).populate({
-      path: 'items.productId',
-      select: 'name mainImage'
-    });
-
-    const formattedOrder = {
-      _id: updatedOrder._id,
-      orderNumber: updatedOrder.orderNumber,
-      items: updatedOrder.items.map((item: any) => ({
-        _id: item._id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        productImage: item.productImage,
-        selectedVariant: item.selectedVariant || null,
-        product: item.productId ? {
-          _id: item.productId._id,
-          name: item.productId.name,
-          mainImage: item.productId.mainImage
-        } : null
-      })),
-      totalAmount: updatedOrder.totalAmount,
-      orderStatus: updatedOrder.orderStatus,
-      paymentStatus: updatedOrder.paymentStatus,
-      paymentMethod: updatedOrder.paymentMethod,
-      expectedDeliveryDate: updatedOrder.expectedDeliveryDate,
-      trackingNumber: updatedOrder.trackingNumber,
-      shippingAddress: updatedOrder.shippingAddress,
-      deliveredAt: updatedOrder.deliveredAt,
-      createdAt: updatedOrder.createdAt,
-      updatedAt: updatedOrder.updatedAt
-    };
-
-    return NextResponse.json({
-      message: 'Order status updated successfully',
-      order: formattedOrder
-    });
-
-  } catch (error) {
-    console.error('Update order status error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update order status' },
-      { status: 500 }
-    );
-  }
-});
+  },
+);

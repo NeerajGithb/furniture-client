@@ -1,4 +1,3 @@
-
 type EmptyStateProps = {
   hasFilters: boolean;
   onClearFilters: () => void;
@@ -15,4 +14,3 @@ type ProductsPageProps = {
 };
 
 export type { EmptyStateProps, ProductsPageProps };
-

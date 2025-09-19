@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useHomeStore } from "@/stores/homeStore";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useHomeStore } from '@/stores/homeStore';
+import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const RoomInspiration = () => {
   const { inspirations, loading, fetchInspirations } = useHomeStore();
@@ -43,12 +43,8 @@ const RoomInspiration = () => {
     return (
       <section className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center px-6">
-          <h2 className="text-4xl font-light text-black mb-4 tracking-tight">
-            Room Inspiration
-          </h2>
-          <p className="text-neutral-500 text-lg">
-            No inspirations available at the moment
-          </p>
+          <h2 className="text-4xl font-light text-black mb-4 tracking-tight">Room Inspiration</h2>
+          <p className="text-neutral-500 text-lg">No inspirations available at the moment</p>
         </div>
       </section>
     );
@@ -61,15 +57,14 @@ const RoomInspiration = () => {
         className="text-center px-6 pb-3 md:pb-16"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
       >
         <h1 className="text-xl md:text-2xl font-light text-black mb-6 tracking-tight leading-none">
           SHOP BY ROOM
         </h1>
         <div className="w-16 h-px bg-black mx-auto mb-6"></div>
         <p className="text-neutral-600 text-xs md:text-sm font-light max-w-md mx-auto leading-relaxed">
-          Discover curated room inspirations to transform your space with style
-          and functionality.
+          Discover curated room inspirations to transform your space with style and functionality.
         </p>
       </motion.div>
 
@@ -85,7 +80,7 @@ const RoomInspiration = () => {
               transition={{
                 duration: 0.6,
                 delay: idx * 0.1,
-                ease: "easeOut",
+                ease: 'easeOut',
               }}
             >
               <Link href={`/inspiration/${inspiration.slug}`}>
@@ -111,7 +106,7 @@ const RoomInspiration = () => {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.2 + idx * 0.1 }}
                     >
-                      {inspiration.title.replace(/inspiration/i, "").trim()}
+                      {inspiration.title.replace(/inspiration/i, '').trim()}
                     </motion.h3>
 
                     {/* Action Buttons */}
@@ -131,7 +126,7 @@ const RoomInspiration = () => {
                 </div>
                 <div className="mt-4 text-center hidden md:block">
                   <h3 className="text-lg font-medium text-neutral-900 mb-1 group-hover:text-neutral-700 transition-colors">
-                    {inspiration.title.replace(/inspiration/i, "").trim()}
+                    {inspiration.title.replace(/inspiration/i, '').trim()}
                   </h3>
                   <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
                     {inspiration.description}

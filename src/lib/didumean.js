@@ -1,136 +1,89 @@
-// didumean.js - Furniture "Did you mean" suggestions
 const FURNITURE_SUGGESTIONS = {
-  // Living Room Furniture
-  sofa: ["sofa set", "sofa bed", "corner sofa", "leather sofa", "fabric sofa"],
-  couch: ["sofa", "sectional sofa", "loveseat", "recliner"],
-  chair: [
-    "dining chair",
-    "office chair",
-    "accent chair",
-    "armchair",
-    "recliner chair",
-  ],
-  table: [
-    "dining table",
-    "coffee table",
-    "side table",
-    "console table",
-    "center table",
-  ],
+  sofa: ['sofa set', 'sofa bed', 'corner sofa', 'leather sofa', 'fabric sofa'],
+  couch: ['sofa', 'sectional sofa', 'loveseat', 'recliner'],
+  chair: ['dining chair', 'office chair', 'accent chair', 'armchair', 'recliner chair'],
+  table: ['dining table', 'coffee table', 'side table', 'console table', 'center table'],
 
-  // Bedroom Furniture
-  bed: [
-    "king size bed",
-    "queen bed",
-    "single bed",
-    "double bed",
-    "bed with storage",
-  ],
-  mattress: ["memory foam mattress", "spring mattress", "orthopedic mattress"],
-  wardrobe: ["wardrobe with mirror", "3 door wardrobe", "sliding wardrobe"],
-  dresser: ["chest of drawers", "dressing table", "bedside table"],
+  bed: ['king size bed', 'queen bed', 'single bed', 'double bed', 'bed with storage'],
+  mattress: ['memory foam mattress', 'spring mattress', 'orthopedic mattress'],
+  wardrobe: ['wardrobe with mirror', '3 door wardrobe', 'sliding wardrobe'],
+  dresser: ['chest of drawers', 'dressing table', 'bedside table'],
 
-  // Dining Room
-  dining: ["dining table", "dining set", "dining chair", "6 seater dining"],
-  kitchen: ["kitchen cabinet", "kitchen island", "bar stool", "kitchen table"],
+  dining: ['dining table', 'dining set', 'dining chair', '6 seater dining'],
+  kitchen: ['kitchen cabinet', 'kitchen island', 'bar stool', 'kitchen table'],
 
-  // Office Furniture
-  desk: ["study table", "office desk", "computer table", "writing desk"],
-  office: [
-    "office chair",
-    "office table",
-    "filing cabinet",
-    "office furniture",
-  ],
+  desk: ['study table', 'office desk', 'computer table', 'writing desk'],
+  office: ['office chair', 'office table', 'filing cabinet', 'office furniture'],
 
-  // Storage
-  cabinet: [
-    "kitchen cabinet",
-    "storage cabinet",
-    "display cabinet",
-    "tv cabinet",
-  ],
-  shelf: ["bookshelf", "wall shelf", "display shelf", "storage shelf"],
-  drawer: ["chest of drawers", "bedside table", "storage drawer"],
+  cabinet: ['kitchen cabinet', 'storage cabinet', 'display cabinet', 'tv cabinet'],
+  shelf: ['bookshelf', 'wall shelf', 'display shelf', 'storage shelf'],
+  drawer: ['chest of drawers', 'bedside table', 'storage drawer'],
 
-  // Materials
-  wood: ["wooden furniture", "teak wood", "sheesham wood", "oak wood"],
-  metal: ["metal furniture", "steel furniture", "iron furniture"],
-  leather: ["leather sofa", "leather chair", "leather furniture"],
-  fabric: ["fabric sofa", "fabric chair", "upholstered furniture"],
+  wood: ['wooden furniture', 'teak wood', 'sheesham wood', 'oak wood'],
+  metal: ['metal furniture', 'steel furniture', 'iron furniture'],
+  leather: ['leather sofa', 'leather chair', 'leather furniture'],
+  fabric: ['fabric sofa', 'fabric chair', 'upholstered furniture'],
 
-  // Styles
-  modern: [
-    "modern furniture",
-    "contemporary furniture",
-    "minimalist furniture",
-  ],
-  classic: ["classic furniture", "traditional furniture", "vintage furniture"],
-  luxury: ["luxury furniture", "premium furniture", "designer furniture"],
+  modern: ['modern furniture', 'contemporary furniture', 'minimalist furniture'],
+  classic: ['classic furniture', 'traditional furniture', 'vintage furniture'],
+  luxury: ['luxury furniture', 'premium furniture', 'designer furniture'],
 
-  // Common misspellings and variations
-  soffa: ["sofa", "sofa set"],
-  chai: ["chair", "dining chair"],
-  tebal: ["table", "dining table"],
-  bead: ["bed", "king size bed"],
-  draw: ["drawer", "chest of drawers"],
-  cuboard: ["cupboard", "wardrobe"],
-  almari: ["wardrobe", "almirah"],
-  almira: ["wardrobe", "almirah"],
-  diwan: ["divan", "daybed"],
-  centre: ["center table", "coffee table"],
-  dinning: ["dining table", "dining set"],
-  matress: ["mattress", "memory foam mattress"],
-  wadrobe: ["wardrobe", "wardrobe with mirror"],
+  soffa: ['sofa', 'sofa set'],
+  chai: ['chair', 'dining chair'],
+  tebal: ['table', 'dining table'],
+  bead: ['bed', 'king size bed'],
+  draw: ['drawer', 'chest of drawers'],
+  cuboard: ['cupboard', 'wardrobe'],
+  almari: ['wardrobe', 'almirah'],
+  almira: ['wardrobe', 'almirah'],
+  diwan: ['divan', 'daybed'],
+  centre: ['center table', 'coffee table'],
+  dinning: ['dining table', 'dining set'],
+  matress: ['mattress', 'memory foam mattress'],
+  wadrobe: ['wardrobe', 'wardrobe with mirror'],
 
-  // Size variations
-  "3 seater": ["3 seater sofa", "sofa set 3 seater"],
-  "2 seater": ["2 seater sofa", "loveseat"],
-  "6 seater": ["6 seater dining table", "dining set 6 seater"],
-  "4 seater": ["4 seater dining table", "dining set 4 seater"],
-  king: ["king size bed", "king bed"],
-  queen: ["queen size bed", "queen bed"],
-  single: ["single bed", "single seater"],
-  double: ["double bed", "double seater"],
+  '3 seater': ['3 seater sofa', 'sofa set 3 seater'],
+  '2 seater': ['2 seater sofa', 'loveseat'],
+  '6 seater': ['6 seater dining table', 'dining set 6 seater'],
+  '4 seater': ['4 seater dining table', 'dining set 4 seater'],
+  king: ['king size bed', 'king bed'],
+  queen: ['queen size bed', 'queen bed'],
+  single: ['single bed', 'single seater'],
+  double: ['double bed', 'double seater'],
 
-  // Room specific
-  bedroom: ["bed", "wardrobe", "dressing table", "bedside table"],
-  livingroom: ["sofa", "coffee table", "tv unit", "center table"],
-  kitchen: ["dining table", "kitchen cabinet", "bar stool"],
-  bathroom: ["bathroom cabinet", "mirror cabinet", "storage cabinet"],
-  balcony: ["outdoor furniture", "garden furniture", "patio set"],
+  bedroom: ['bed', 'wardrobe', 'dressing table', 'bedside table'],
+  livingroom: ['sofa', 'coffee table', 'tv unit', 'center table'],
+  kitchen: ['dining table', 'kitchen cabinet', 'bar stool'],
+  bathroom: ['bathroom cabinet', 'mirror cabinet', 'storage cabinet'],
+  balcony: ['outdoor furniture', 'garden furniture', 'patio set'],
 };
 
-// Default fallback if nothing matches
 const FALLBACK_SUGGESTIONS = [
-  "sofa",
-  "bed",
-  "dining table",
-  "wardrobe",
-  "office chair",
-  "bookshelf",
+  'sofa',
+  'bed',
+  'dining table',
+  'wardrobe',
+  'office chair',
+  'bookshelf',
 ];
 
-// Function to get "did you mean" suggestions
 export const getDidYouMeanSuggestions = (searchQuery) => {
   let suggestions = [];
 
-  if (!searchQuery || typeof searchQuery !== "string") {
+  if (!searchQuery || typeof searchQuery !== 'string') {
     suggestions = FALLBACK_SUGGESTIONS.slice(0, 3);
-    suggestions.isFallback = true; // ✅ add flag
+    suggestions.isFallback = true;
     return suggestions;
   }
 
   const query = searchQuery.toLowerCase().trim();
 
-  // Direct match
   if (FURNITURE_SUGGESTIONS[query]) {
     suggestions = FURNITURE_SUGGESTIONS[query].slice(0, 3);
     suggestions.isFallback = false;
     return suggestions;
   }
 
-  // Partial match
   const partialMatches = [];
   for (const [key, items] of Object.entries(FURNITURE_SUGGESTIONS)) {
     if (key.includes(query) || query.includes(key)) {
@@ -138,7 +91,6 @@ export const getDidYouMeanSuggestions = (searchQuery) => {
     }
   }
 
-  // Fuzzy match if nothing found
   if (partialMatches.length === 0) {
     for (const [key, items] of Object.entries(FURNITURE_SUGGESTIONS)) {
       if (levenshteinDistance(query, key) <= 2 && key.length > 2) {
@@ -159,7 +111,6 @@ export const getDidYouMeanSuggestions = (searchQuery) => {
   }
 };
 
-// Simple Levenshtein distance calculation
 function levenshteinDistance(str1, str2) {
   const matrix = Array(str2.length + 1)
     .fill(null)
@@ -179,7 +130,7 @@ function levenshteinDistance(str1, str2) {
       matrix[j][i] = Math.min(
         matrix[j][i - 1] + 1,
         matrix[j - 1][i] + 1,
-        matrix[j - 1][i - 1] + indicator
+        matrix[j - 1][i - 1] + indicator,
       );
     }
   }

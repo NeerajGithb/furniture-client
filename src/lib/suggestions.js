@@ -1,37 +1,63 @@
-// lib/suggestions.js
-
 import { SYNONYMS, getSynonymGroup } from './synonyms';
 
 export class SuggestionsHandler {
-  // Predefined suggestion categories
   static SUGGESTION_CATEGORIES = {
     trending: [
-      "3 seater sofa", "dining table", "office chair", "king size bed",
-      "wooden cabinet", "leather sofa", "study table", "wardrobe",
-      "coffee table", "recliner chair"
+      '3 seater sofa',
+      'dining table',
+      'office chair',
+      'king size bed',
+      'wooden cabinet',
+      'leather sofa',
+      'study table',
+      'wardrobe',
+      'coffee table',
+      'recliner chair',
     ],
-    
+
     popular_searches: [
-      "sofa set", "dining table 6 seater", "office chair ergonomic",
-      "wooden bed", "glass table", "fabric sofa", "steel almirah",
-      "corner sofa", "folding table", "computer chair"
+      'sofa set',
+      'dining table 6 seater',
+      'office chair ergonomic',
+      'wooden bed',
+      'glass table',
+      'fabric sofa',
+      'steel almirah',
+      'corner sofa',
+      'folding table',
+      'computer chair',
     ],
-    
+
     furniture_types: [
-      "sofa", "chair", "table", "bed", "cabinet", "wardrobe",
-      "dining set", "office furniture", "bedroom furniture",
-      "living room furniture"
+      'sofa',
+      'chair',
+      'table',
+      'bed',
+      'cabinet',
+      'wardrobe',
+      'dining set',
+      'office furniture',
+      'bedroom furniture',
+      'living room furniture',
     ],
-    
+
     by_room: [
-      "living room furniture", "bedroom furniture", "office furniture",
-      "dining room furniture", "kitchen furniture", "study room furniture"
+      'living room furniture',
+      'bedroom furniture',
+      'office furniture',
+      'dining room furniture',
+      'kitchen furniture',
+      'study room furniture',
     ],
-    
+
     by_material: [
-      "wooden furniture", "metal furniture", "glass furniture",
-      "leather furniture", "fabric furniture", "plastic furniture"
-    ]
+      'wooden furniture',
+      'metal furniture',
+      'glass furniture',
+      'leather furniture',
+      'fabric furniture',
+      'plastic furniture',
+    ],
   };
 
   /**
@@ -39,9 +65,8 @@ export class SuggestionsHandler {
    */
   static shouldCallAPI(query) {
     if (!query || query.length < 3) return false;
-    if (query.length > 15) return true; // Complex queries need API
-    
-    // Simple queries can use client-side suggestions
+    if (query.length > 15) return true;
+
     const tokens = query.toLowerCase().split(/\s+/);
     return tokens.length > 3;
   }
@@ -52,58 +77,60 @@ export class SuggestionsHandler {
   static getInstantSuggestions(query) {
     try {
       const normalizedQuery = query.toLowerCase().trim();
-      
+
       if (normalizedQuery.length === 0) {
         return {
           type: 'trending',
-          suggestions: this.SUGGESTION_CATEGORIES.trending.slice(0, 8)
+          suggestions: this.SUGGESTION_CATEGORIES.trending.slice(0, 8),
         };
       }
-      
+
       if (normalizedQuery.length < 2) {
         return {
           type: 'popular',
           suggestions: this.SUGGESTION_CATEGORIES.popular_searches
-            .filter(s => s.toLowerCase().startsWith(normalizedQuery))
-            .slice(0, 6)
+            .filter((s) => s.toLowerCase().startsWith(normalizedQuery))
+            .slice(0, 6),
         };
       }
-      
-      // Match against all categories
+
       const matches = [];
-      
-      // Exact prefix matches get highest priority
-      Object.values(this.SUGGESTION_CATEGORIES).flat().forEach(suggestion => {
-        if (suggestion.toLowerCase().startsWith(normalizedQuery)) {
-          matches.push({ suggestion, score: 10, type: 'prefix' });
-        }
-      });
-      
-      // Partial matches
-      if (matches.length < 6) {
-        Object.values(this.SUGGESTION_CATEGORIES).flat().forEach(suggestion => {
-          if (suggestion.toLowerCase().includes(normalizedQuery) && 
-              !matches.some(m => m.suggestion === suggestion)) {
-            matches.push({ suggestion, score: 5, type: 'partial' });
+
+      Object.values(this.SUGGESTION_CATEGORIES)
+        .flat()
+        .forEach((suggestion) => {
+          if (suggestion.toLowerCase().startsWith(normalizedQuery)) {
+            matches.push({ suggestion, score: 10, type: 'prefix' });
           }
         });
+
+      if (matches.length < 6) {
+        Object.values(this.SUGGESTION_CATEGORIES)
+          .flat()
+          .forEach((suggestion) => {
+            if (
+              suggestion.toLowerCase().includes(normalizedQuery) &&
+              !matches.some((m) => m.suggestion === suggestion)
+            ) {
+              matches.push({ suggestion, score: 5, type: 'partial' });
+            }
+          });
       }
-      
-      // Sort by score and return top results
+
       const sortedSuggestions = matches
         .sort((a, b) => b.score - a.score)
         .slice(0, 8)
-        .map(m => m.suggestion);
-      
+        .map((m) => m.suggestion);
+
       return {
         type: 'instant',
-        suggestions: sortedSuggestions
+        suggestions: sortedSuggestions,
       };
     } catch (error) {
       console.error('Error in getInstantSuggestions:', error);
       return {
         type: 'trending',
-        suggestions: this.SUGGESTION_CATEGORIES.trending.slice(0, 5)
+        suggestions: this.SUGGESTION_CATEGORIES.trending.slice(0, 5),
       };
     }
   }
@@ -114,59 +141,55 @@ export class SuggestionsHandler {
   static getSmartSuggestions(query) {
     try {
       const normalizedQuery = query.toLowerCase().trim();
-      
+
       if (normalizedQuery.length === 0) {
         return {
           type: 'trending',
-          suggestions: this.SUGGESTION_CATEGORIES.trending
+          suggestions: this.SUGGESTION_CATEGORIES.trending,
         };
       }
-      
+
       const tokens = normalizedQuery.split(/\s+/);
       const suggestions = new Set();
-      
-      // Detect intent from query
+
       const intent = this.detectSuggestionIntent(tokens);
-      
-      // Generate contextual suggestions based on intent
+
       switch (intent.type) {
         case 'furniture_with_seater':
           this.addSeaterSuggestions(suggestions, intent.furniture, intent.seater);
           break;
-          
+
         case 'furniture_with_material':
           this.addMaterialSuggestions(suggestions, intent.furniture, intent.material);
           break;
-          
+
         case 'furniture_with_color':
           this.addColorSuggestions(suggestions, intent.furniture, intent.color);
           break;
-          
+
         case 'room_furniture':
           this.addRoomSuggestions(suggestions, intent.room);
           break;
-          
+
         case 'general_furniture':
           this.addGeneralSuggestions(suggestions, intent.furniture);
           break;
-          
+
         default:
-          // Fallback to instant suggestions
           return this.getInstantSuggestions(query);
       }
-      
-      // Add some trending suggestions if we don't have enough
+
       if (suggestions.size < 6) {
-        this.SUGGESTION_CATEGORIES.trending.forEach(trend => {
+        this.SUGGESTION_CATEGORIES.trending.forEach((trend) => {
           if (suggestions.size < 8) {
             suggestions.add(trend);
           }
         });
       }
-      
+
       return {
         type: intent.type,
-        suggestions: Array.from(suggestions).slice(0, 8)
+        suggestions: Array.from(suggestions).slice(0, 8),
       };
     } catch (error) {
       console.error('Error in getSmartSuggestions:', error);
@@ -183,37 +206,32 @@ export class SuggestionsHandler {
     let material = null;
     let color = null;
     let room = null;
-    
-    tokens.forEach(token => {
-      // Check for furniture type
+
+    tokens.forEach((token) => {
       if (['sofa', 'chair', 'table', 'bed', 'cabinet', 'wardrobe'].includes(token)) {
         furniture = token;
       }
-      
-      // Check for seater
-      const seaterMatch = token.match(/(\d+)seater?/) || 
-                          (token.match(/^\d+$/) && parseInt(token) <= 10 ? [null, token] : null);
+
+      const seaterMatch =
+        token.match(/(\d+)seater?/) ||
+        (token.match(/^\d+$/) && parseInt(token) <= 10 ? [null, token] : null);
       if (seaterMatch) {
         seater = parseInt(seaterMatch[1]);
       }
-      
-      // Check for materials
+
       if (['wood', 'wooden', 'metal', 'glass', 'leather', 'fabric'].includes(token)) {
         material = token === 'wooden' ? 'wood' : token;
       }
-      
-      // Check for colors
+
       if (['black', 'white', 'brown', 'gray', 'grey', 'blue', 'red'].includes(token)) {
         color = token;
       }
-      
-      // Check for rooms
+
       if (['living', 'dining', 'bedroom', 'office', 'kitchen'].includes(token)) {
         room = token;
       }
     });
-    
-    // Determine intent type
+
     if (furniture && seater) {
       return { type: 'furniture_with_seater', furniture, seater };
     } else if (furniture && material) {
@@ -225,7 +243,7 @@ export class SuggestionsHandler {
     } else if (furniture) {
       return { type: 'general_furniture', furniture };
     }
-    
+
     return { type: 'general' };
   }
 
@@ -233,9 +251,9 @@ export class SuggestionsHandler {
    * Add seater-specific suggestions
    */
   static addSeaterSuggestions(suggestions, furniture, seater) {
-    const seaterVariations = [seater - 1, seater, seater + 1].filter(s => s > 0 && s <= 8);
-    
-    seaterVariations.forEach(s => {
+    const seaterVariations = [seater - 1, seater, seater + 1].filter((s) => s > 0 && s <= 8);
+
+    seaterVariations.forEach((s) => {
       suggestions.add(`${s} seater ${furniture}`);
       suggestions.add(`${furniture} ${s} seater`);
       if (furniture === 'sofa') {
@@ -243,9 +261,8 @@ export class SuggestionsHandler {
         suggestions.add(`${s} seater sectional`);
       }
     });
-    
-    // Add material variations
-    ['leather', 'fabric', 'wooden'].forEach(material => {
+
+    ['leather', 'fabric', 'wooden'].forEach((material) => {
       suggestions.add(`${seater} seater ${material} ${furniture}`);
     });
   }
@@ -256,14 +273,14 @@ export class SuggestionsHandler {
   static addMaterialSuggestions(suggestions, furniture, material) {
     suggestions.add(`${material} ${furniture}`);
     suggestions.add(`${furniture} ${material}`);
-    
+
     if (furniture === 'sofa') {
       suggestions.add(`${material} sofa set`);
-      ['2', '3', '4'].forEach(s => {
+      ['2', '3', '4'].forEach((s) => {
         suggestions.add(`${s} seater ${material} sofa`);
       });
     }
-    
+
     if (furniture === 'table') {
       suggestions.add(`${material} dining table`);
       suggestions.add(`${material} coffee table`);
@@ -276,7 +293,7 @@ export class SuggestionsHandler {
   static addColorSuggestions(suggestions, furniture, color) {
     suggestions.add(`${color} ${furniture}`);
     suggestions.add(`${furniture} ${color}`);
-    
+
     if (furniture === 'sofa') {
       suggestions.add(`${color} sofa set`);
       suggestions.add(`${color} leather sofa`);
@@ -292,10 +309,10 @@ export class SuggestionsHandler {
       dining: ['dining table', 'dining chair', 'dining set'],
       bedroom: ['bed', 'wardrobe', 'dresser', 'nightstand'],
       office: ['office chair', 'desk', 'filing cabinet'],
-      kitchen: ['kitchen cabinet', 'dining table', 'bar stool']
+      kitchen: ['kitchen cabinet', 'dining table', 'bar stool'],
     };
-    
-    (roomFurniture[room] || []).forEach(item => {
+
+    (roomFurniture[room] || []).forEach((item) => {
       suggestions.add(item);
       suggestions.add(`${room} room ${item}`);
     });
@@ -305,13 +322,11 @@ export class SuggestionsHandler {
    * Add general furniture suggestions
    */
   static addGeneralSuggestions(suggestions, furniture) {
-    // Base furniture suggestions
     suggestions.add(furniture);
     suggestions.add(`${furniture} set`);
-    
-    // Furniture-specific suggestions
+
     if (furniture === 'sofa') {
-      ['2', '3', '4', '5'].forEach(s => {
+      ['2', '3', '4', '5'].forEach((s) => {
         suggestions.add(`${s} seater sofa`);
       });
       suggestions.add('sofa cum bed');
@@ -319,14 +334,14 @@ export class SuggestionsHandler {
       suggestions.add('leather sofa');
       suggestions.add('fabric sofa');
     }
-    
+
     if (furniture === 'table') {
       suggestions.add('dining table');
       suggestions.add('coffee table');
       suggestions.add('study table');
       suggestions.add('center table');
     }
-    
+
     if (furniture === 'chair') {
       suggestions.add('dining chair');
       suggestions.add('office chair');
@@ -335,7 +350,7 @@ export class SuggestionsHandler {
       suggestions.add('rocking chair');
       suggestions.add('folding chair');
     }
-    
+
     if (furniture === 'bed') {
       suggestions.add('king size bed');
       suggestions.add('queen size bed');
@@ -345,7 +360,6 @@ export class SuggestionsHandler {
       suggestions.add('storage bed');
       suggestions.add('bunk bed');
       suggestions.add('sofa cum bed');
-
     }
   }
 }

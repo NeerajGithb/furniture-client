@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useLayoutEffect } from "react";
-import ProductGrid from "@/components/product/ProductGrid";
-import ProductCard from "@/components/product/ProductCard";
-import ProductImageGallery from "@/components/product/ProductImageGallery";
-import ProductDetails from "@/components/product/ProductDetails";
-import ProductReviews from "@/components/product/ProductReviews";
-import { useParams, useRouter } from "next/navigation";
-import { X } from "lucide-react";
-import { toast } from "react-hot-toast";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useCartStore } from "@/stores/cartStore";
-import { useWishlistStore } from "@/stores/wishlistStore";
-import { useCheckoutStore } from "@/stores/checkoutStore";
-import { useProductStore } from "@/stores/productStore";
-import { Product } from "@/types/Product";
+import { useState, useEffect, useLayoutEffect } from 'react';
+import ProductGrid from '@/components/product/ProductGrid';
+import ProductCard from '@/components/product/ProductCard';
+import ProductImageGallery from '@/components/product/ProductImageGallery';
+import ProductDetails from '@/components/product/ProductDetails';
+import ProductReviews from '@/components/product/ProductReviews';
+import { useParams, useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useCartStore } from '@/stores/cartStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
+import { useCheckoutStore } from '@/stores/checkoutStore';
+import { useProductStore } from '@/stores/productStore';
+import { Product } from '@/types/Product';
 
 const SingleProductPage = () => {
   const params = useParams();
@@ -22,12 +22,7 @@ const SingleProductPage = () => {
   const { user } = useCurrentUser();
 
   // Store hooks
-  const {
-    isInCart,
-    addToCart,
-    getCartItem,
-    updatingItems: cartUpdatingItems,
-  } = useCartStore();
+  const { isInCart, addToCart, getCartItem, updatingItems: cartUpdatingItems } = useCartStore();
   const {
     isWishlisted,
     addToWishlist,
@@ -53,7 +48,7 @@ const SingleProductPage = () => {
   } = useProductStore();
 
   const slugWithId = params?.id as string | undefined;
-  const productId = slugWithId?.split("-").slice(-1)[0];
+  const productId = slugWithId?.split('-').slice(-1)[0];
 
   // Track fetch attempts to distinguish between loading and not found
   const [hasFetched, setHasFetched] = useState(false);
@@ -91,9 +86,9 @@ const SingleProductPage = () => {
     };
 
     handleResize(); // Apply immediately on mount
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -115,12 +110,12 @@ const SingleProductPage = () => {
 
   const handleAddToCart = async () => {
     if (!user?._id) {
-      toast.error("Please login to add items to cart");
+      toast.error('Please login to add items to cart');
       return;
     }
 
     if (!product || isOutOfStock) {
-      toast.error("Product is out of stock");
+      toast.error('Product is out of stock');
       return;
     }
 
@@ -128,8 +123,8 @@ const SingleProductPage = () => {
     try {
       await addToCart(product._id, quantity);
     } catch (error: any) {
-      console.error("Add to cart error:", error);
-      toast.error(error?.message || "Failed to add to cart");
+      console.error('Add to cart error:', error);
+      toast.error(error?.message || 'Failed to add to cart');
     } finally {
       setAddingToCart(false);
     }
@@ -137,12 +132,12 @@ const SingleProductPage = () => {
 
   const handleBuyNow = async () => {
     if (!user?._id) {
-      toast.error("Please login to purchase");
+      toast.error('Please login to purchase');
       return;
     }
 
     if (!product || isOutOfStock) {
-      toast.error("Product is out of stock");
+      toast.error('Product is out of stock');
       return;
     }
 
@@ -162,8 +157,8 @@ const SingleProductPage = () => {
       const checkoutData = {
         selectedItems: [product._id],
         insuranceEnabled: [],
-        selectedAddressId: "",
-        selectedPaymentMethod: "",
+        selectedAddressId: '',
+        selectedPaymentMethod: '',
         totals: {
           subtotal: subtotal,
           selectedQuantity: quantity,
@@ -179,7 +174,7 @@ const SingleProductPage = () => {
             itemTotal: subtotal,
             product: {
               _id: product._id,
-              name: product.name || "",
+              name: product.name || '',
               finalPrice: product.finalPrice,
               originalPrice: product.originalPrice,
               discountPercent: product.discountPercent,
@@ -191,10 +186,10 @@ const SingleProductPage = () => {
       };
 
       setCheckoutData(checkoutData);
-      router.push("/checkout");
+      router.push('/checkout');
     } catch (error: any) {
-      console.error("Buy now error:", error);
-      toast.error(error?.message || "Failed to proceed with purchase");
+      console.error('Buy now error:', error);
+      toast.error(error?.message || 'Failed to proceed with purchase');
       setAddingToCart(false);
     } finally {
       setBuyingNow(false);
@@ -203,7 +198,7 @@ const SingleProductPage = () => {
 
   const handleWishlistToggle = async () => {
     if (!user?._id) {
-      toast.error("Please login to add items to wishlist");
+      toast.error('Please login to add items to wishlist');
       return;
     }
 
@@ -213,10 +208,10 @@ const SingleProductPage = () => {
       setRemovingFromWishlist(true);
       try {
         await removeFromWishlist(product._id);
-        toast.success("Removed from wishlist");
+        toast.success('Removed from wishlist');
       } catch (error: any) {
-        console.error("Remove from wishlist error:", error);
-        toast.error(error?.message || "Failed to remove from wishlist");
+        console.error('Remove from wishlist error:', error);
+        toast.error(error?.message || 'Failed to remove from wishlist');
       } finally {
         setRemovingFromWishlist(false);
       }
@@ -224,10 +219,10 @@ const SingleProductPage = () => {
       setAddingToWishlist(true);
       try {
         await addToWishlist(product._id);
-        toast.success("Added to wishlist");
+        toast.success('Added to wishlist');
       } catch (error: any) {
-        console.error("Add to wishlist error:", error);
-        toast.error(error?.message || "Failed to add to wishlist");
+        console.error('Add to wishlist error:', error);
+        toast.error(error?.message || 'Failed to add to wishlist');
       } finally {
         setAddingToWishlist(false);
       }
@@ -235,7 +230,7 @@ const SingleProductPage = () => {
   };
 
   const cleanProductName = (name: string) => {
-    return name?.replace(/\s*\(Copy\)\s*/g, "").trim() || "";
+    return name?.replace(/\s*\(Copy\)\s*/g, '').trim() || '';
   };
 
   const getDisplayImages = () => {
@@ -254,7 +249,7 @@ const SingleProductPage = () => {
   const renderDesktopProductRow = (
     products: Product[],
     currentIndex: number,
-    setIndex: React.Dispatch<React.SetStateAction<number>>
+    setIndex: React.Dispatch<React.SetStateAction<number>>,
   ) => {
     if (!products || products.length === 0) return null;
 
@@ -297,12 +292,7 @@ const SingleProductPage = () => {
               disabled={currentIndex === 0}
               className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur border border-gray-300 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -317,12 +307,7 @@ const SingleProductPage = () => {
               disabled={currentIndex >= maxIndex}
               className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur border border-gray-300 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -345,13 +330,9 @@ const SingleProductPage = () => {
   const productInCart = product?._id ? isInCart(product._id) : false;
   const productWishlisted = product?._id ? isWishlisted(product._id) : false;
   const cartItem = product?._id ? getCartItem(product._id) : null;
-  const isUpdatingCart = product?._id
-    ? cartUpdatingItems.has(product._id) || addingToCart
-    : false;
+  const isUpdatingCart = product?._id ? cartUpdatingItems.has(product._id) || addingToCart : false;
   const isUpdatingWishlist = product?._id
-    ? wishlistUpdatingItems.has(product._id) ||
-      addingToWishlist ||
-      removingFromWishlist
+    ? wishlistUpdatingItems.has(product._id) || addingToWishlist || removingFromWishlist
     : false;
 
   // Show loading only if we're currently fetching and haven't fetched yet
@@ -365,10 +346,7 @@ const SingleProductPage = () => {
               <div className="w-full aspect-square bg-gray-200 animate-pulse rounded" />
               <div className="flex gap-3">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-16 h-16 bg-gray-200 animate-pulse rounded"
-                  />
+                  <div key={i} className="w-16 h-16 bg-gray-200 animate-pulse rounded" />
                 ))}
               </div>
             </div>
@@ -408,15 +386,12 @@ const SingleProductPage = () => {
           <div className="text-gray-400 mb-6">
             <X className="w-16 h-16 mx-auto mb-4" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Error Loading Product
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Product</h1>
           <p className="text-gray-600 mb-8">
-            {error ||
-              "An unexpected error occurred while fetching the product."}
+            {error || 'An unexpected error occurred while fetching the product.'}
           </p>
           <button
-            onClick={() => router.push("/products")}
+            onClick={() => router.push('/products')}
             className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors rounded"
           >
             Browse Products
@@ -434,14 +409,12 @@ const SingleProductPage = () => {
           <div className="text-gray-400 mb-6">
             <X className="w-16 h-16 mx-auto mb-4" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Product Not Found
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
           <p className="text-gray-600 mb-8">
             The product you are looking for does not exist or has been removed.
           </p>
           <button
-            onClick={() => router.push("/products")}
+            onClick={() => router.push('/products')}
             className="bg-black text-white px-6 py-3 font-medium hover:bg-gray-800 transition-colors rounded"
           >
             Browse Products
@@ -462,10 +435,7 @@ const SingleProductPage = () => {
   return (
     <div className="min-h-screen bg-white">
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <nav
-          className="text-xs text-gray-500 mb-2 max-md:p-2 md:py-2"
-          aria-label="Breadcrumb"
-        >
+        <nav className="text-xs text-gray-500 mb-2 max-md:p-2 md:py-2" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2">
             <li>
               <a href="/" className="hover:underline">
@@ -489,10 +459,10 @@ const SingleProductPage = () => {
 
             <li>
               <a
-                href={`/category/${product.categoryId?.slug || ""}`}
+                href={`/category/${product.categoryId?.slug || ''}`}
                 className="hover:underline capitalize"
               >
-                {product.categoryId?.name || "Category"}
+                {product.categoryId?.name || 'Category'}
               </a>
             </li>
 
@@ -500,10 +470,7 @@ const SingleProductPage = () => {
               <span>-&gt;</span>
             </li>
 
-            <li
-              aria-current="page"
-              className="font-medium text-gray-900 truncate max-w-xs"
-            >
+            <li aria-current="page" className="font-medium text-gray-900 truncate max-w-xs">
               {cleanedProductName}
             </li>
           </ol>
@@ -511,10 +478,7 @@ const SingleProductPage = () => {
 
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mb-16">
           <div className="md:w-[40%] md:min-w-[464px] lg:sticky lg:top-14 self-start">
-            <ProductImageGallery
-              images={displayImages}
-              productName={cleanedProductName}
-            />
+            <ProductImageGallery images={displayImages} productName={cleanedProductName} />
           </div>
 
           <div className="md:w-[60%] space-y-8">
@@ -537,36 +501,20 @@ const SingleProductPage = () => {
 
         {relatedProducts && relatedProducts.length > 0 && (
           <div className="border-t border-gray-200 pt-12 mb-16">
-            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">
-              Similar Products
-            </h2>
+            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">Similar Products</h2>
             {isDesktop ? (
-              renderDesktopProductRow(
-                relatedProducts,
-                relatedIndex,
-                setRelatedIndex
-              )
+              renderDesktopProductRow(relatedProducts, relatedIndex, setRelatedIndex)
             ) : (
-              <ProductGrid
-                products={relatedProducts}
-                loading={loadingMore}
-                error={null}
-              />
+              <ProductGrid products={relatedProducts} loading={loadingMore} error={null} />
             )}
           </div>
         )}
 
         {allProducts && allProducts.length > 0 && (
           <div className="border-t border-gray-200 pt-12">
-            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">
-              More Products
-            </h2>
+            <h2 className="text-2xl font-bold text-black mb-8 xl:pl-5">More Products</h2>
             {isDesktop ? (
-              renderDesktopProductRow(
-                allProducts,
-                allProductsIndex,
-                setAllProductsIndex
-              )
+              renderDesktopProductRow(allProducts, allProductsIndex, setAllProductsIndex)
             ) : (
               <ProductGrid
                 products={allProducts}

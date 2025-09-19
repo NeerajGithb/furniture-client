@@ -33,25 +33,28 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: 'furniture-store' },
-        (error: unknown, result: { secure_url: string; public_id: string } | undefined) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
+      cloudinary.uploader
+        .upload_stream(
+          { folder: 'furniture-store' },
+          (error: unknown, result: { secure_url: string; public_id: string } | undefined) => {
+            if (error) reject(error);
+            else resolve(result);
+          },
+        )
+        .end(buffer);
     });
 
-    const uploadResult = result as { secure_url: string, public_id: string };
+    const uploadResult = result as { secure_url: string; public_id: string };
 
     return NextResponse.json({
       url: uploadResult.secure_url,
       publicId: uploadResult.public_id,
     });
   } catch (error) {
-    const errorMessage = typeof error === 'object' && error !== null && 'message' in error
-      ? (error as { message: string }).message
-      : String(error);
+    const errorMessage =
+      typeof error === 'object' && error !== null && 'message' in error
+        ? (error as { message: string }).message
+        : String(error);
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

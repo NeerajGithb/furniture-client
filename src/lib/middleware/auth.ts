@@ -24,26 +24,26 @@ export async function authenticateUser(request: NextRequest): Promise<{
 }> {
   try {
     const accessToken = request.cookies.get('vf_access')?.value;
-    
+
     if (!accessToken) {
       return {
         user: null,
         error: NextResponse.json(
-          { error: 'Unauthorized - No access token', success: false }, 
-          { status: 401 }
-        )
+          { error: 'Unauthorized - No access token', success: false },
+          { status: 401 },
+        ),
       };
     }
 
     const decoded = verifyAccessToken(accessToken);
-    
+
     if (!decoded || !decoded.userId) {
       return {
         user: null,
         error: NextResponse.json(
-          { error: 'Unauthorized - Invalid access token', success: false }, 
-          { status: 401 }
-        )
+          { error: 'Unauthorized - Invalid access token', success: false },
+          { status: 401 },
+        ),
       };
     }
 
@@ -52,24 +52,21 @@ export async function authenticateUser(request: NextRequest): Promise<{
       return {
         user: null,
         error: NextResponse.json(
-          { error: 'Unauthorized - Token expired', success: false }, 
-          { status: 401 }
-        )
+          { error: 'Unauthorized - Token expired', success: false },
+          { status: 401 },
+        ),
       };
     }
 
     return {
       user: decoded as AuthenticatedUser,
-      error: null
+      error: null,
     };
   } catch (error) {
     console.error('❌ Authentication error:', error);
     return {
       user: null,
-      error: NextResponse.json(
-        { error: 'Authentication failed', success: false }, 
-        { status: 401 }
-      )
+      error: NextResponse.json({ error: 'Authentication failed', success: false }, { status: 401 }),
     };
   }
 }
@@ -80,30 +77,27 @@ export async function authenticateUser(request: NextRequest): Promise<{
  * @returns Wrapped handler with authentication
  */
 export function withAuth<T extends any[]>(
-  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>
+  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     try {
       const { user, error } = await authenticateUser(request);
-      
+
       if (error) {
         return error;
       }
-      
+
       if (!user) {
         return NextResponse.json(
-          { error: 'Authentication required', success: false }, 
-          { status: 401 }
+          { error: 'Authentication required', success: false },
+          { status: 401 },
         );
       }
 
       return handler(request, user, ...args);
     } catch (error) {
       console.error('❌ withAuth wrapper error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error', success: false }, 
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
     }
   };
 }
@@ -118,13 +112,13 @@ export async function optionalAuth(request: NextRequest): Promise<{
 }> {
   try {
     const accessToken = request.cookies.get('vf_access')?.value;
-    
+
     if (!accessToken) {
       return { user: null };
     }
 
     const decoded = verifyAccessToken(accessToken);
-    
+
     if (!decoded || !decoded.userId) {
       return { user: null };
     }
@@ -147,7 +141,11 @@ export async function optionalAuth(request: NextRequest): Promise<{
  * @returns Wrapped handler with optional authentication
  */
 export function withOptionalAuth<T extends any[]>(
-  handler: (request: NextRequest, user: AuthenticatedUser | null, ...args: T) => Promise<NextResponse>
+  handler: (
+    request: NextRequest,
+    user: AuthenticatedUser | null,
+    ...args: T
+  ) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     try {
@@ -155,10 +153,7 @@ export function withOptionalAuth<T extends any[]>(
       return handler(request, user, ...args);
     } catch (error) {
       console.error('❌ withOptionalAuth wrapper error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error', success: false }, 
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
     }
   };
 }
@@ -169,28 +164,24 @@ export function withOptionalAuth<T extends any[]>(
  * @returns Wrapped handler with admin checking
  */
 export function withAdminAuth<T extends any[]>(
-  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>
+  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>,
 ) {
   return withAuth(async (request: NextRequest, user: AuthenticatedUser, ...args: T) => {
     try {
       // Check if user email indicates admin status (customize as needed)
-      const isAdmin = user.email?.includes('admin') || 
-                     user.email?.endsWith('@yourdomain.com'); // Replace with your logic
-      
+      const isAdmin = user.email?.includes('admin') || user.email?.endsWith('@yourdomain.com'); // Replace with your logic
+
       if (!isAdmin) {
         return NextResponse.json(
-          { error: 'Admin access required', success: false }, 
-          { status: 403 }
+          { error: 'Admin access required', success: false },
+          { status: 403 },
         );
       }
-      
+
       return handler(request, user, ...args);
     } catch (error) {
       console.error('❌ withAdminAuth wrapper error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error', success: false }, 
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
     }
   });
 }
@@ -205,9 +196,9 @@ export function withAdminAuth<T extends any[]>(
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 export function checkRateLimit(
-  identifier: string, 
-  maxRequests: number = 100, 
-  windowMs: number = 15 * 60 * 1000 // 15 minutes
+  identifier: string,
+  maxRequests: number = 100,
+  windowMs: number = 15 * 60 * 1000, // 15 minutes
 ): boolean {
   const now = Date.now();
   const key = identifier;
@@ -241,26 +232,23 @@ export function checkRateLimit(
 export function withRateLimit<T extends any[]>(
   maxRequests: number,
   windowMs: number,
-  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>
+  handler: (request: NextRequest, user: AuthenticatedUser, ...args: T) => Promise<NextResponse>,
 ) {
   return withAuth(async (request: NextRequest, user: AuthenticatedUser, ...args: T) => {
     try {
       const identifier = user.userId;
-      
+
       if (!checkRateLimit(identifier, maxRequests, windowMs)) {
         return NextResponse.json(
-          { error: 'Rate limit exceeded. Please try again later.', success: false }, 
-          { status: 429 }
+          { error: 'Rate limit exceeded. Please try again later.', success: false },
+          { status: 429 },
         );
       }
-      
+
       return handler(request, user, ...args);
     } catch (error) {
       console.error('❌ withRateLimit wrapper error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error', success: false }, 
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error', success: false }, { status: 500 });
     }
   });
 }

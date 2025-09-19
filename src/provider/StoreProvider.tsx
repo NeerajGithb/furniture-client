@@ -1,4 +1,3 @@
-// components/StoreProvider.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -16,10 +15,8 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const { initializeWishlists, initialized: wishlistInitialized } = useWishlistStore();
 
   useEffect(() => {
-    // Only initialize stores after we know the user status
     if (!userLoading) {
       if (user?._id) {
-        // User is authenticated - initialize both stores
         if (!cartInitialized) {
           initializeCart();
         }
@@ -27,37 +24,38 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
           initializeWishlists();
         }
       } else {
-        // User is not authenticated - mark as initialized with empty state
-        // This is handled automatically in the store initialization
         if (!cartInitialized) {
-          initializeCart(); // Will handle unauthenticated case
+          initializeCart();
         }
         if (!wishlistInitialized) {
-          initializeWishlists(); // Will handle unauthenticated case
+          initializeWishlists();
         }
       }
     }
-  }, [user, userLoading, cartInitialized, wishlistInitialized, initializeCart, initializeWishlists]);
+  }, [
+    user,
+    userLoading,
+    cartInitialized,
+    wishlistInitialized,
+    initializeCart,
+    initializeWishlists,
+  ]);
 
   return <>{children}</>;
 };
 
-// Optional: Export a hook to check if stores are ready
 export const useStoresReady = () => {
   const { user, loading: userLoading } = useCurrentUser();
   const { initialized: cartInitialized } = useCartStore();
   const { initialized: wishlistInitialized } = useWishlistStore();
 
-  // Stores are ready when:
-  // 1. User loading is complete
-  // 2. Both stores are initialized
   const storesReady = !userLoading && cartInitialized && wishlistInitialized;
-  
+
   return {
     storesReady,
     userLoading,
     cartInitialized,
     wishlistInitialized,
-    isAuthenticated: !!user?._id
+    isAuthenticated: !!user?._id,
   };
 };

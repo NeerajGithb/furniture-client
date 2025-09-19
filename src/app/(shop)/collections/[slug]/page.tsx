@@ -58,8 +58,8 @@ const Page = () => {
     initialized,
   ]);
 
-  console.log("inspirationSlug : ",inspirationSlug);
-  console.log("currentInspiration : ",currentInspiration);
+  
+  
 
   if (inspirationLoading) {
     return (

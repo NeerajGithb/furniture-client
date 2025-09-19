@@ -103,7 +103,7 @@ export const setAuthCookies = (response, accessToken, refreshToken) => {
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
-    console.log("Auth cookies set successfully");
+    
   } catch (error) {
     console.error("Error setting auth cookies:", error);
   }
@@ -136,7 +136,7 @@ export const clearAuthCookies = (response) => {
       maxAge: 0,
     });
 
-    console.log("Auth cookies cleared successfully");
+    
   } catch (error) {
     console.error("Error clearing auth cookies:", error);
   }
@@ -158,7 +158,7 @@ export const setAuthCookiesViaHeaders = (response, accessToken, refreshToken) =>
       ].join(", ")
     );
     
-    console.log("Auth cookies set via headers successfully");
+    
   } catch (error) {
     console.error("Error setting auth cookies via headers:", error);
   }
@@ -177,7 +177,7 @@ export const clearAuthCookiesViaHeaders = (response) => {
       ].join(", ")
     );
     
-    console.log("Auth cookies cleared via headers successfully");
+    
   } catch (error) {
     console.error("Error clearing auth cookies via headers:", error);
   }

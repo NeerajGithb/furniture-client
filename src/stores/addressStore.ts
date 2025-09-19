@@ -101,7 +101,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
   initializeAddresses: async () => {
     if (get().initialized) return;
     
-    console.log('Initializing address store');
+    
     set({ initialized: true });
     await get().fetchAddresses();
   },
@@ -116,7 +116,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       if (!response.ok) {
         if (response.status === 401) {
           // User not authenticated - this is expected in some cases
-          console.log('User not authenticated, cannot fetch addresses');
+          
           set({ 
             addresses: [], 
             selectedAddressId: "",
@@ -151,7 +151,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         }
       }
       
-      console.log(`Loaded ${addresses.length} addresses`);
+      
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to fetch addresses";

@@ -142,13 +142,13 @@ const PaymentPage = () => {
 
     // Only redirect if we have no valid checkout data
     if (!hasValidCheckout()) {
-      console.log("No valid checkout data, redirecting to checkout");
+      
       return;
     }
 
     // Only redirect if we have checkout data but no address selected
     if (checkoutData && !checkoutData.selectedAddressId) {
-      console.log("No address selected, redirecting to checkout");
+      
       toast.error("Please select a delivery address");
       return;
     }
@@ -173,7 +173,7 @@ const PaymentPage = () => {
   // FIXED: Remove only ordered items from cart
   const removeOrderedItemsFromCart = useCallback(async (orderedItems: any[]) => {
     if (!orderedItems || orderedItems.length === 0) {
-      console.log("No items to remove from cart");
+      
       return;
     }
 
@@ -186,10 +186,10 @@ const PaymentPage = () => {
 
     const removePromises = orderedItems.map(async (item) => {
       try {
-        console.log(`Removing product ${item.productId} from cart`);
+        
         const success = await removeFromCart(item.productId);
         if (success) {
-          console.log(`Successfully removed ${item.productId} from cart`);
+          
         } else {
           console.warn(`Failed to remove ${item.productId} from cart`);
         }
@@ -206,7 +206,7 @@ const PaymentPage = () => {
       const failed = results.length - successful;
 
       if (successful > 0) {
-        console.log(`Successfully removed ${successful} items from cart`);
+        
       }
       if (failed > 0) {
         console.warn(`Failed to remove ${failed} items from cart`);
@@ -287,7 +287,7 @@ const PaymentPage = () => {
         throw new Error("Order created but no order number received");
       }
 
-      console.log("Order created successfully:", orderNumber);
+      
 
       // Handle Cash on Delivery vs Other Payment Methods
       if (checkoutData.selectedPaymentMethod === "cod") {
@@ -296,7 +296,7 @@ const PaymentPage = () => {
         try {
           // FIXED: Remove only the items that were ordered from cart
           await removeOrderedItemsFromCart(selectedCartItems);
-          console.log("Ordered items removed from cart successfully");
+          
         } catch (cartError) {
           console.error("Error removing ordered items from cart:", cartError);
           // Don't block order success if cart update fails
@@ -304,22 +304,22 @@ const PaymentPage = () => {
         }
         
         // Clear checkout data
-        console.log("checkoutData : ",checkoutData);
+        
         clearCheckout();
-        console.log("Checkout data cleared");
+        
 
         // Show success message
         toast.success("Order placed successfully!");
         
         // Navigate to success page
-        console.log("Navigating to order success page:", orderNumber);
+        
         router.push(`/order-success?orderNumber=${orderNumber}`);
         return;
         
       } else {
         // For other payment methods, initiate payment processing
         try {
-          console.log("Initiating payment for order:", orderData.order._id);
+          
 
           const paymentResponse = await fetchWithCredentials("/api/payment", {
             method: "POST",
@@ -343,7 +343,7 @@ const PaymentPage = () => {
             // FIXED: Remove only ordered items from cart
             try {
               await removeOrderedItemsFromCart(selectedCartItems);
-              console.log("Ordered items removed from cart after payment");
+              
             } catch (cartError) {
               console.error("Error removing ordered items from cart after payment:", cartError);
               toast.error("Payment successful but failed to update cart. Please refresh your cart.");

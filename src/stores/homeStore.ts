@@ -91,7 +91,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       await get().fetchInspirations();
       await get().fetchRelatedProducts("default", 20, "newest");
       await get().fetchCategoryProducts("default");
-      console.log('Home store initialized');
+      
     } catch (error) {
       console.error('Home store initialization error:', error);
     }
@@ -159,7 +159,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       }
 
       const inspiration: IInspiration = await handleApiResponse(res);
-      console.log("Fetched inspiration:", inspiration);
+      
       set(state => ({
         currentInspiration: inspiration,
         inspirationCache: {
@@ -261,7 +261,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
 
       const data = await handleApiResponse(res);
-      console.log("Related products fetched:", data);
+      
       const products = data.products || [];
 
       set(state => ({

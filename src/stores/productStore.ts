@@ -252,7 +252,7 @@ export const useProductStore = create<ProductStore>()(
         if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
         const data: ProductResponse = await handleApiResponse(response);
-        console.log('Fetched products data:', data);
+        
         set(state => {
           // For filtered results, use the pagination total as the source of truth
           const filteredTotal = data.pagination?.total || 0;

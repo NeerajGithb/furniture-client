@@ -62,7 +62,7 @@ const selectFallback = (state: any) => state.fallback;
 const selectNoResults = (state: any) => state.noResults;
 
 const SearchPage: React.FC = () => {
-  console.log("SearchPage rendered");
+  
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

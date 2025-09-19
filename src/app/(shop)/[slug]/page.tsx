@@ -89,7 +89,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     }
 
     const matchedCategory = categories.find((cat: any) => cat.slug === slug);
-    console.log("category m :", matchedCategory);
     if (matchedCategory) {
       return {
         type: "category",
@@ -110,7 +109,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             : matchedSubcategory.categoryId;
         return cat._id === categoryId;
       });
-      console.log("matched : ", matchedSubcategory);
       return {
         type: "subcategory",
         data: matchedSubcategory,

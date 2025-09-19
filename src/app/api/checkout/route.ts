@@ -168,7 +168,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       subtotal += itemTotal;
       insuranceCost += itemInsuranceCost;
       selectedQuantity += item.quantity;
-      console.log(`Item: ${product.name}, Quantity: ${item.quantity}, Item Total: ${itemTotal}, Insurance: ${itemInsuranceCost} `);
+      
       return {
         _id: item._id,
         productId: product._id.toString(),

@@ -214,7 +214,7 @@ const generateWelcomeEmailHTML = (order: any, user: any): string => {
 const sendWelcomeEmail = async (order: any, userEmail: string) => {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.log('Email configuration missing, skipping email');
+      
       return { success: false, error: 'Email not configured' };
     }
 
@@ -230,7 +230,7 @@ const sendWelcomeEmail = async (order: any, userEmail: string) => {
     };
 
     await transporter.sendMail(mailOptions);
-    console.log(`Welcome email sent successfully for order: ${order.orderNumber}`);
+    
     return { success: true };
   } catch (error) {
     console.error('Failed to send welcome email:', error);
@@ -241,8 +241,8 @@ const sendWelcomeEmail = async (order: any, userEmail: string) => {
 // GET - Fetch user's orders (UNCHANGED)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
-    console.log("Fetching orders for user:", user.userId);
-    console.log("Request URL:", request.url);
+    
+    
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -314,7 +314,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       couponCode: order.couponCode
     }));
 
-    console.log("Formatted orders:", formattedOrders);
+    
 
     return NextResponse.json({
       orders: formattedOrders,
@@ -339,7 +339,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
-    console.log("Body : ---------------------------> ",body);
+    
     const { 
       addressId, 
       paymentMethod,
@@ -398,7 +398,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     // Process only selected items instead of entire cart
     const orderItems = [];
     
-    console.log(`Processing ${selectedItems.length} selected items for order`);
+    
 
     for (const productId of selectedItems) {
       // Find the item in cartData
@@ -467,7 +467,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         }
       });
 
-      console.log(`Added ${cartItem.quantity}x ${product.name} to order`);
+      
     }
 
     // Use totals from frontend instead of recalculating
@@ -478,7 +478,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     // Fallback calculation if totals not provided
     if (!totals || totalAmount === 0) {
-      console.log('Totals not provided, calculating...');
+      
       subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       shippingCost = subtotal >= 500 ? 0 : 40; // Free shipping above ₹500
       
@@ -495,7 +495,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       totalAmount = subtotal + shippingCost + insuranceCost;
     }
 
-    console.log('Order totals:', { subtotal, shippingCost, insuranceCost, totalAmount });
+    
 
     // FIX: Generate orderNumber explicitly before creating order
     const timestamp = Date.now().toString();
@@ -531,12 +531,12 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       couponCode
     };
 
-    console.log(`Creating order with ${orderItems.length} items, total: ₹${totalAmount}`);
+    
 
     const order = new Order(orderData);
     await order.save();
 
-    console.log('Order created successfully, frontend will handle cart cleanup');
+    
 
     // Create payment record
     const payment = await Payment.create({

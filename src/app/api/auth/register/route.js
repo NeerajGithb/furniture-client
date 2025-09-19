@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 export async function POST(req) {
   try {
-    console.log("Incoming registration request");
+    
 
     const raw = await req.json();
     const { uid, photoURL } = raw;
@@ -64,7 +64,7 @@ export async function POST(req) {
 
     setAuthCookies(res, accessToken, refreshToken);
 
-    console.log(`✅ User ${email} registered successfully`);
+    
     return res;
 
   } catch (err) {

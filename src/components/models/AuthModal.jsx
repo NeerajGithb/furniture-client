@@ -170,7 +170,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
       const json = await handleApiResponse(res);
       if (!res.ok) throw { status: res.status, body: json };
-      console.log(`[Mongo] Success: ${url}`, json);
+      
       return json;
     };
 

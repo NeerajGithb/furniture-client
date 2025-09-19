@@ -80,7 +80,7 @@ export default function OrderTrackingPage() {
     });
   }, [orderNumber, fetchOrderByNumber, clearError]);
 
-  console.log("Order:", order);
+  
 
   // Redirect to login if user is not authenticated
   useEffect(() => {

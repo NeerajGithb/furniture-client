@@ -264,7 +264,7 @@ class CacheManager {
     // Log stats every 5 minutes in development
     if (process.env.NODE_ENV === 'development') {
       setInterval(() => {
-        console.log('Cache Stats:', this.getStats());
+        );
       }, 5 * 60 * 1000);
     }
   }
@@ -281,7 +281,7 @@ class CacheManager {
     
     // This could be called during app initialization
     // Implementation would depend on your specific needs
-    console.log('Cache warm-up completed for', commonSearches.length, 'common searches');
+    
   }
 
   /**

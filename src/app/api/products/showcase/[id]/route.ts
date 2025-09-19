@@ -61,7 +61,7 @@ export async function GET(
         }));
 
         const slug = await getInspirationSlugByCategory(categoryId);
-        console.log('Inspiration slug:', slug);
+        
 
         const showcaseProducts = selectDiverseProducts(categoryProducts, 50);
 

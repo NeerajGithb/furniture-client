@@ -436,7 +436,7 @@ const InspirationMegaMenu = memo(
 InspirationMegaMenu.displayName = "InspirationMegaMenu";
 
 const Header = () => {
-  console.log("Rendering Header");
+  
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
 

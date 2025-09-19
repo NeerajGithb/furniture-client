@@ -249,7 +249,7 @@ export const GET = withAuth(async (
 
     await connectDB();
 
-    console.log(`[GET] Fetching order by number: ${validatedOrderNumber} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       orderNumber: validatedOrderNumber,
@@ -260,7 +260,7 @@ export const GET = withAuth(async (
     });
 
     if (!order) {
-      console.log(`[GET] Order not found with number: ${validatedOrderNumber} for user: ${user.userId}`);
+      
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -272,7 +272,7 @@ export const GET = withAuth(async (
 
     const orderDetails = formatCompleteOrderResponse(order, payment);
 
-    console.log(`[GET] Successfully found order: ${orderDetails.orderNumber}`);
+    
 
     return NextResponse.json({
       success: true,
@@ -310,7 +310,7 @@ export const PUT = withAuth(async (
 
     await connectDB();
 
-    console.log(`[PUT] Updating order: ${validatedOrderNumber} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       orderNumber: validatedOrderNumber,
@@ -405,7 +405,7 @@ export const DELETE = withAuth(async (
 
     await connectDB();
 
-    console.log(`[DELETE] Attempting to delete order: ${validatedOrderNumber} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       orderNumber: validatedOrderNumber,

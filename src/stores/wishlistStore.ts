@@ -62,7 +62,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     if (get().initialized) return;
 
     try {
-      console.log('Wishlist initialization started');
+      
       set({ loading: true });
       const response = await fetchWithCredentials('/api/wishlist?limit=1000');
 
@@ -86,7 +86,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         loading: false,
       });
       
-      console.log('Wishlist initialized with', data.itemCount, 'items');
+      
     } catch (error) {
       console.error('Wishlist initialization error:', error);
       set({
@@ -103,7 +103,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       if (response.ok) {
         const data: WishlistData = await handleApiResponse(response);
         set({ wishlist: data });
-        console.log('Wishlist refreshed');
+        
       }
     } catch (error) {
       console.error('Wishlist refresh error:', error);
@@ -268,7 +268,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
       // Refresh to get accurate server data
       await get().refreshWishlist();
-      console.log(`Successfully removed ${removedCount} items from wishlist`);
+      
       return true;
     } catch (error) {
       console.error('Batch remove from wishlist error:', error);

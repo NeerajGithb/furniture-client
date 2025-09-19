@@ -36,7 +36,7 @@ export async function connectDB() {
       .connect(MONGODB_URI, options)
       .then((mongooseInstance) => {
         if (mongoose.connection.readyState === 1) {
-          console.log("✅ Securely connected to MongoDB");
+          
         }
         return mongooseInstance;
       })

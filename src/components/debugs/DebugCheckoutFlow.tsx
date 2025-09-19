@@ -17,19 +17,19 @@ const DebugCheckoutFlow = () => {
   const cartStore = useCartStore();
 
   useEffect(() => {
-    console.log("=== CHECKOUT FLOW DEBUG ===");
-    console.log("Current URL:", window.location.href);
-    console.log("Order Number from URL:", orderNumber);
-    console.log("User:", user ? { id: user._id, email: user.email } : "Not logged in");
+    
+    
+    
+    
     
     const checkoutData = checkoutStore.getCheckoutData();
-    console.log("Checkout Data:", checkoutData);
-    console.log("Has Valid Checkout:", checkoutStore.hasValidCheckout());
+    
+    );
     
     const cartData = cartStore.cart;
-    console.log("Cart Data:", cartData);
     
-    console.log("=== END DEBUG ===");
+    
+    
   }, [user, orderNumber, checkoutStore, cartStore]);
 
   return (

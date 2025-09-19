@@ -19,7 +19,7 @@ const NewArrivals = ({
   limit = 20,
   sort = "newest",
 }: NewArrivalsProps) => {
-  console.log("New arival : ", inspirationSlug, categoryName);
+  
   const {
     fetchRelatedProducts,
     relatedProducts,
@@ -32,7 +32,7 @@ const NewArrivals = ({
       fetchRelatedProducts(inspirationSlug, limit, sort);
     }
   }, [inspirationSlug, limit, sort, fetchRelatedProducts]);
-  console.log("fetchRelatedProducts : ", relatedProducts);
+  
 
   if (relatedProductsLoading) {
     return (

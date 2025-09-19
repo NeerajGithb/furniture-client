@@ -136,14 +136,14 @@ export const useCartStore = create<CartStore>()(
         if (get().initialized) return;
 
         try {
-          console.log('Cart initialization started');
+          
           set({ loading: true });
 
           const response = await fetchWithCredentials('/api/cart');
 
           if (!response.ok) {
             if (response.status === 401) {
-              console.log('User not authenticated, skipping cart initialization');
+              
               set({ cart: null, initialized: true, loading: false });
               return;
             }
@@ -230,7 +230,7 @@ export const useCartStore = create<CartStore>()(
 
             get().calculateCheckoutTotals();
           } else if (response.status === 401) {
-            console.log('Authentication expired during cart refresh');
+            
             set({ cart: null, checkout: { ...initialCheckoutState } });
           }
         } catch (error) {

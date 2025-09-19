@@ -270,7 +270,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Fixed processOrderData function
 const processOrderData = (order: any): Order => {
-  console.log("Order: in process:", order);
+  
 
   // Calculate item totals and savings
   const processedItems = (order.items || []).map((item: any) => {
@@ -457,7 +457,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      console.log("order data by id:", data);
+      
 
       const processedOrder = processOrderData(data.order);
       set({ order: processedOrder, loading: false, error: null });
@@ -487,7 +487,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      console.log("Order by number:", data);
+      
 
       const processedOrder = processOrderData(data.order);
       set({ order: processedOrder, loading: false, error: null });
@@ -583,7 +583,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      console.log("Data order created:", data);
+      
 
       const newOrder = processOrderData(data.order);
 

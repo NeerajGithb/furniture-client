@@ -340,7 +340,7 @@ export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderNumber = searchParams?.get("orderNumber") || "";
-  console.log("Order Number:", orderNumber);
+  
   const { order, fetchOrderByNumber, loading, error, clearError } = useOrderStore();
 
   useEffect(() => {

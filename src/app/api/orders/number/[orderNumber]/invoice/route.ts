@@ -12,7 +12,7 @@ export async function GET(
     await connectDB();
     const { orderNumber } = await params;
     const order = await Order.findOne({ orderNumber });
-    console.log('Fetched order:', order);
+    
     if (!order) {
       return new Response(JSON.stringify({ error: "Order not found" }), {
         status: 404,

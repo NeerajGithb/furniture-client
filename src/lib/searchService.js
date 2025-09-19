@@ -1155,7 +1155,7 @@ class PureSearchService {
           results.length === 0 &&
           (classified.primary.length > 0 || classified.regular.length > 0)
         ) {
-          console.log("No strict results, trying relaxed search...");
+          
 
           const relaxedPipeline = this.buildRelaxedPipeline(
             classified,

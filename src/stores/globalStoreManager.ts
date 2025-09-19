@@ -31,7 +31,7 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
     set({ isInitializing: true });
 
     try {
-      console.log('Global initialization started');
+      
       
       // Initialize all stores in parallel
       await Promise.all([

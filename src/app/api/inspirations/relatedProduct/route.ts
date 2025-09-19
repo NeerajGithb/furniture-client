@@ -21,7 +21,7 @@ interface InspirationDoc {
 }
 
 export async function GET(request: Request) {
-  console.log("Related search called : ");
+  
   try {
     await connectDB();
 

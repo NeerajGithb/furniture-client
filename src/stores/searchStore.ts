@@ -148,7 +148,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
         searchParams.set('page', (currentPage + 1).toString());
       }
 
-      console.log('Searching with params:', searchParams.toString());
+      );
 
       const response = await fetch(`/api/search?${searchParams.toString()}`);
       if (!response.ok) {
@@ -156,7 +156,7 @@ const useSearchStore = create<SearchState>((set, get) => ({
       }
 
       const data = await handleApiResponse(response);
-      console.log('Search response data:', data);
+      
 
       if (!data.ok) {
         throw new Error(data.error || 'Search failed');

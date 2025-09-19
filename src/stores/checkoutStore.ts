@@ -269,7 +269,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       // Clear all checkout data
       clearCheckout: () => {
-        console.log('Clearing checkout data');
+        
 
         if (typeof window !== 'undefined') {
           try {

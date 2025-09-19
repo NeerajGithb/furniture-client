@@ -11,7 +11,7 @@ interface RelatedProductsProps {
 }
 
 const RelatedProducts = ({ inspirationSlug, limit = 20 }: RelatedProductsProps) => {
-  console.log("related products : ",inspirationSlug)
+  
   const {
     fetchRelatedProducts,
     getRelatedProducts,

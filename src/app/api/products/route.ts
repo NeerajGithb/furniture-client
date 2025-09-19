@@ -124,8 +124,8 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    console.log(`[API] Query:`, JSON.stringify(query, null, 2));
-    console.log(`[API] Sort:`, sortQuery);
+    );
+    
 
     // Execute queries in parallel for better performance
     const [products, total] = await Promise.all([
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    console.log(`[API] Products fetched: ${products.length} / ${total} (${Date.now() - startTime}ms)`);
+     - startTime}ms)`);
     
     // Add cache headers for better performance
     const response = NextResponse.json(responseData);

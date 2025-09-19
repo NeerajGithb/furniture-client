@@ -157,7 +157,7 @@ export const GET = withAuth(async (
 
     await connectDB();
 
-    console.log(`[GET] Fetching order by ID: ${validatedId} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       _id: validatedId,
@@ -168,7 +168,7 @@ export const GET = withAuth(async (
     });
 
     if (!order) {
-      console.log(`[GET] Order not found with ID: ${validatedId} for user: ${user.userId}`);
+      
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -180,7 +180,7 @@ export const GET = withAuth(async (
 
     const orderDetails = formatCompleteOrderResponse(order, payment);
 
-    console.log(`[GET] Successfully found order: ${orderDetails.orderNumber}`);
+    
 
     return NextResponse.json({
       success: true,
@@ -214,14 +214,14 @@ export const PUT = withAuth(async (
     const { id } = await params;
     const body = await request.json();
 
-    console.log('[PUT] Request body:', JSON.stringify(body, null, 2));
+    );
 
     // Validate order ID
     const validatedId = orderIdSchema.parse(id);
 
     await connectDB();
 
-    console.log(`[PUT] Updating order: ${validatedId} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       _id: validatedId,
@@ -232,7 +232,7 @@ export const PUT = withAuth(async (
     });
 
     if (!order) {
-      console.log(`[PUT] Order not found with ID: ${validatedId} for user: ${user.userId}`);
+      
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -264,7 +264,7 @@ export const PUT = withAuth(async (
         });
       }
 
-      console.log(`[PUT] Order cancelled: ${order.orderNumber}`);
+      
     } else {
       // Update allowed fields
       const allowedUpdates = ['notes'];
@@ -277,7 +277,7 @@ export const PUT = withAuth(async (
       });
 
       if (Object.keys(updates).length === 0 && body.action !== 'cancel') {
-        console.log('[PUT] No valid updates provided. Body:', body, 'Updates:', updates);
+        
         return NextResponse.json(
           { error: 'No valid updates provided. Expected action: "cancel" or valid fields like "notes"' },
           { status: 400 }
@@ -295,7 +295,7 @@ export const PUT = withAuth(async (
 
     const orderDetails = formatCompleteOrderResponse(order, payment);
 
-    console.log(`[PUT] Successfully updated order: ${orderDetails.orderNumber}`);
+    
 
     return NextResponse.json({
       success: true,
@@ -337,7 +337,7 @@ export const DELETE = withAuth(async (
 
     await connectDB();
 
-    console.log(`[DELETE] Attempting to delete order: ${validatedId} for user: ${user.userId}`);
+    
 
     const order = await Order.findOne({
       _id: validatedId,
@@ -345,7 +345,7 @@ export const DELETE = withAuth(async (
     });
 
     if (!order) {
-      console.log(`[DELETE] Order not found with ID: ${validatedId} for user: ${user.userId}`);
+      
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -354,7 +354,7 @@ export const DELETE = withAuth(async (
 
     // Only allow deletion of cancelled or returned orders
     if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned') {
-      console.log(`[DELETE] Attempted to delete non-cancelled/returned order: ${validatedId}, status: ${order.orderStatus}`);
+      
       return NextResponse.json(
         { 
           error: 'Only cancelled or returned orders can be deleted',
@@ -366,11 +366,11 @@ export const DELETE = withAuth(async (
 
     // Delete related payment records
     await Payment.deleteMany({ orderId: order._id });
-    console.log(`[DELETE] Deleted payment records for order: ${order.orderNumber}`);
+    
 
     // Delete the order
     await Order.findByIdAndDelete(order._id);
-    console.log(`[DELETE] Successfully deleted order: ${order.orderNumber}`);
+    
 
     return NextResponse.json({
       success: true,

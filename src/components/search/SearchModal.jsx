@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SearchBar from "./SearchBar";
 
 export default function SearchModal({ isOpen, onClose, initialQuery = "" }) {
-  console.log("Rendering SearchModal");
+  
   
   const handleSearch = (searchText) => {
     try {

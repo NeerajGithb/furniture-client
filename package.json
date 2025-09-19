@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^1.2.0",
     "bcrypt": "^6.0.0",
     "canvas-confetti": "^1.9.3",
     "cloudinary": "^2.7.0",

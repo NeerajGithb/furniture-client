@@ -6,7 +6,7 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
-
+import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -27,7 +27,11 @@ export default function RootLayout({
               "var(--font-body), Inter, system-ui, -apple-system, sans-serif",
           }}
         >
-          <Suspense fallback={<div className="flex min-h-screen items-center justify-center h-full bg-white"></div>}>
+          <Suspense
+            fallback={
+              <div className="flex min-h-screen items-center justify-center h-full bg-white"></div>
+            }
+          >
             <Providers>
               <ToastProvider />
               <Header />
@@ -36,6 +40,7 @@ export default function RootLayout({
               </div>
             </Providers>
           </Suspense>
+          <SpeedInsights />
           <Footer />
         </div>
       </body>

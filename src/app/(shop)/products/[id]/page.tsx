@@ -477,7 +477,7 @@ const SingleProductPage = () => {
         </nav>
 
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mb-16">
-          <div className="md:w-[40%] md:min-w-[464px] lg:sticky lg:top-14 self-start">
+          <div className="md:w-[40%] sm:min-w-[300px] md:min-w-[464px] lg:sticky lg:top-14 md:self-start max-md:mx-auto ">
             <ProductImageGallery images={displayImages} productName={cleanedProductName} />
           </div>
 

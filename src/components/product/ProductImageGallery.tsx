@@ -170,7 +170,7 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
 
           {/* Main Image Carousel */}
           <div className="flex-1 order-1 md:order-2 md:pl-2 flex items-center justify-center border-l md:border-l-0 border-t md:border-t-0 border-gray-300">
-            <div className="relative w-full">
+            <div className="relative h-full w-full">
               <div
                 className="relative bg-white group overflow-hidden aspect-square cursor-crosshair md:border md:border-gray-200"
                 onMouseMove={handleMouseMove}

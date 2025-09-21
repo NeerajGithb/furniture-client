@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useHomeStore } from '@/stores/homeStore';
 import { motion } from 'framer-motion';
 import ProductCard from '../product/ProductCard';
+import { useRelatedProducts } from '@/hooks/homeQueries';
+import { Product } from '@/types/Product';
 
 interface RelatedProductsProps {
   inspirationSlug: string;
@@ -11,42 +11,17 @@ interface RelatedProductsProps {
 }
 
 const RelatedProducts = ({ inspirationSlug, limit = 20 }: RelatedProductsProps) => {
-  const { fetchRelatedProducts, getRelatedProducts, relatedProductsLoading, relatedProductsError } =
-    useHomeStore();
+  const { data, isLoading, isError } = useRelatedProducts(inspirationSlug, limit);
 
-  const relatedProducts = getRelatedProducts(inspirationSlug);
-
-  useEffect(() => {
-    if (inspirationSlug && relatedProducts.length === 0 && !relatedProductsLoading) {
-      fetchRelatedProducts(inspirationSlug, limit);
-    }
-  }, [
-    inspirationSlug,
-    limit,
-    relatedProducts.length,
-    relatedProductsLoading,
-    fetchRelatedProducts,
-  ]);
-
-  if (relatedProductsLoading) {
+  if (isLoading) {
     return (
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Related Products</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover products that complement this inspiration
-            </p>
-          </div>
-
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-sm">
                 <div className="aspect-square bg-gray-200 animate-pulse" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-                </div>
               </div>
             ))}
           </div>
@@ -55,24 +30,16 @@ const RelatedProducts = ({ inspirationSlug, limit = 20 }: RelatedProductsProps) 
     );
   }
 
-  if (relatedProductsError) {
+  if (isError) {
     return (
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Related Products</h2>
-            <p className="text-gray-600">
-              Unable to load related products. Please try again later.
-            </p>
-          </div>
-        </div>
+      <section className="py-16 bg-gray-50 text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-4">Related Products</h2>
+        <p className="text-gray-600">Unable to load related products.</p>
       </section>
     );
   }
 
-  if (!relatedProducts.length) {
-    return null;
-  }
+  if (!data?.length) return null;
 
   return (
     <section className="py-16 bg-gray-50">
@@ -84,20 +51,16 @@ const RelatedProducts = ({ inspirationSlug, limit = 20 }: RelatedProductsProps) 
           className="text-center mb-12"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Related Products</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Discover products that perfectly complement this inspiration
-          </p>
         </motion.div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {relatedProducts.map((product, index) => (
+          {data.map((product: Product, i: number) => (
             <motion.div
               key={product._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
+              transition={{ duration: 0.6, delay: i * 0.1 }}
             >
-              <ProductCard product={product} key={product._id} />
+              <ProductCard product={product} />
             </motion.div>
           ))}
         </div>

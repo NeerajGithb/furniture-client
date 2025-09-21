@@ -65,10 +65,10 @@ interface CartStore {
   initialized: boolean;
   loading: boolean;
   updatingItems: Set<string>;
-  
+
   // Cart selection state (for checkout preparation)
   checkout: CartCheckoutState;
-  
+
   // Cart actions
   initializeCart: () => Promise<void>;
   addToCart: (productId: string, quantity?: number, selectedVariant?: any) => Promise<boolean>;
@@ -84,7 +84,7 @@ interface CartStore {
   deselectAllItems: () => void;
   toggleInsurance: (productId: string) => void;
   calculateCheckoutTotals: () => void;
-  
+
   // Checkout data preparation
   getCheckoutData: () => {
     selectedItems: string[];
@@ -92,7 +92,7 @@ interface CartStore {
     totals: CheckoutTotals;
     cartItems: CartItem[];
   } | null;
-  
+
   // Getters
   isInCart: (productId: string) => boolean;
   getCartItem: (productId: string) => CartItem | undefined;
@@ -136,14 +136,12 @@ export const useCartStore = create<CartStore>()(
         if (get().initialized) return;
 
         try {
-          
           set({ loading: true });
 
           const response = await fetchWithCredentials('/api/cart');
 
           if (!response.ok) {
             if (response.status === 401) {
-              
               set({ cart: null, initialized: true, loading: false });
               return;
             }
@@ -151,7 +149,7 @@ export const useCartStore = create<CartStore>()(
           }
 
           const cartData: Cart = await handleApiResponse(response);
-          
+
           // Ensure cart data is valid
           if (!cartData || !Array.isArray(cartData.items)) {
             console.warn('Invalid cart data received:', cartData);
@@ -166,26 +164,26 @@ export const useCartStore = create<CartStore>()(
           });
 
           // Auto-select all items and enable insurance by default
-          const allItemIds = cartData.items.map(item => item.productId);
+          const allItemIds = cartData.items.map((item) => item.productId);
           if (allItemIds.length > 0) {
-            set(state => ({
+            set((state) => ({
               checkout: {
                 ...state.checkout,
                 selectedItems: new Set(allItemIds),
                 insuranceEnabled: new Set(allItemIds),
-              }
+              },
             }));
             get().calculateCheckoutTotals();
           }
         } catch (error) {
           console.error('Cart initialization error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-          
+
           // Don't show toast for auth errors
           if (!errorMessage.includes('401')) {
             toast.error('Failed to load cart');
           }
-          
+
           set({
             cart: null,
             initialized: true,
@@ -201,36 +199,35 @@ export const useCartStore = create<CartStore>()(
 
           if (response.ok) {
             const cartData: Cart = await handleApiResponse(response);
-            
+
             if (!cartData || !Array.isArray(cartData.items)) {
               console.warn('Invalid cart data received during refresh:', cartData);
               return;
             }
 
             set({ cart: cartData });
-            
+
             // Update selected items if some items were removed
-            const currentItemIds = new Set(cartData.items.map(item => item.productId));
+            const currentItemIds = new Set(cartData.items.map((item) => item.productId));
             const { checkout } = get();
-            
+
             const validSelectedItems = new Set(
-              Array.from(checkout.selectedItems).filter(id => currentItemIds.has(id))
+              Array.from(checkout.selectedItems).filter((id) => currentItemIds.has(id)),
             );
             const validInsuranceItems = new Set(
-              Array.from(checkout.insuranceEnabled).filter(id => currentItemIds.has(id))
+              Array.from(checkout.insuranceEnabled).filter((id) => currentItemIds.has(id)),
             );
 
-            set(state => ({
+            set((state) => ({
               checkout: {
                 ...state.checkout,
                 selectedItems: validSelectedItems,
                 insuranceEnabled: validInsuranceItems,
-              }
+              },
             }));
 
             get().calculateCheckoutTotals();
           } else if (response.status === 401) {
-            
             set({ cart: null, checkout: { ...initialCheckoutState } });
           }
         } catch (error) {
@@ -242,11 +239,11 @@ export const useCartStore = create<CartStore>()(
       // Add to cart with optimistic updates
       addToCart: async (productId, quantity = 1, selectedVariant = null): Promise<boolean> => {
         const { updatingItems, cart } = get();
-        
+
         if (updatingItems.has(productId)) return false;
 
         // Check if item already exists
-        const existingItem = cart?.items.find(item => item.productId === productId);
+        const existingItem = cart?.items.find((item) => item.productId === productId);
         if (existingItem) {
           return await get().updateQuantity(productId, existingItem.quantity + quantity);
         }
@@ -285,12 +282,12 @@ export const useCartStore = create<CartStore>()(
         });
 
         // Auto-select and enable insurance for new item
-        set(state => ({
+        set((state) => ({
           checkout: {
             ...state.checkout,
             selectedItems: new Set([...state.checkout.selectedItems, productId]),
             insuranceEnabled: new Set([...state.checkout.insuranceEnabled, productId]),
-          }
+          },
         }));
 
         try {
@@ -327,10 +324,10 @@ export const useCartStore = create<CartStore>()(
       // Update quantity with optimistic updates
       updateQuantity: async (productId, quantity): Promise<boolean> => {
         const { updatingItems, cart } = get();
-        
+
         if (updatingItems.has(productId) || !cart) return false;
 
-        const existingItem = cart.items.find(item => item.productId === productId);
+        const existingItem = cart.items.find((item) => item.productId === productId);
         if (!existingItem) {
           toast.error('Item not found in cart');
           return false;
@@ -342,11 +339,12 @@ export const useCartStore = create<CartStore>()(
         // Optimistic update
         const optimisticCart: Cart = {
           ...cart,
-          items: quantity === 0 
-            ? cart.items.filter(item => item.productId !== productId)
-            : cart.items.map(item =>
-                item.productId === productId ? { ...item, quantity } : item
-              ),
+          items:
+            quantity === 0
+              ? cart.items.filter((item) => item.productId !== productId)
+              : cart.items.map((item) =>
+                  item.productId === productId ? { ...item, quantity } : item,
+                ),
           itemCount: quantity === 0 ? cart.itemCount - 1 : cart.itemCount,
           totalQuantity: Math.max(0, cart.totalQuantity + quantityDiff),
           updatedAt: new Date().toISOString(),
@@ -359,12 +357,16 @@ export const useCartStore = create<CartStore>()(
 
         // Remove from checkout if quantity becomes 0
         if (quantity === 0) {
-          set(state => ({
+          set((state) => ({
             checkout: {
               ...state.checkout,
-              selectedItems: new Set(Array.from(state.checkout.selectedItems).filter(id => id !== productId)),
-              insuranceEnabled: new Set(Array.from(state.checkout.insuranceEnabled).filter(id => id !== productId)),
-            }
+              selectedItems: new Set(
+                Array.from(state.checkout.selectedItems).filter((id) => id !== productId),
+              ),
+              insuranceEnabled: new Set(
+                Array.from(state.checkout.insuranceEnabled).filter((id) => id !== productId),
+              ),
+            },
           }));
         }
 
@@ -382,7 +384,7 @@ export const useCartStore = create<CartStore>()(
 
           // Refresh to get accurate server data
           await get().refreshCart();
-          
+
           if (quantity === 0) {
             toast.success('Item removed from cart');
           } else {
@@ -461,21 +463,21 @@ export const useCartStore = create<CartStore>()(
 
       // Cart selection actions
       setSelectedItems: (items: string[]) => {
-        set(state => ({
+        set((state) => ({
           checkout: {
             ...state.checkout,
             selectedItems: new Set(items),
             insuranceEnabled: new Set(items),
-          }
+          },
         }));
         get().calculateCheckoutTotals();
       },
 
       toggleItemSelection: (productId: string) => {
-        set(state => {
+        set((state) => {
           const newSelectedItems = new Set(state.checkout.selectedItems);
           const newInsuranceEnabled = new Set(state.checkout.insuranceEnabled);
-          
+
           if (newSelectedItems.has(productId)) {
             newSelectedItems.delete(productId);
             newInsuranceEnabled.delete(productId);
@@ -483,13 +485,13 @@ export const useCartStore = create<CartStore>()(
             newSelectedItems.add(productId);
             newInsuranceEnabled.add(productId);
           }
-          
+
           return {
             checkout: {
               ...state.checkout,
               selectedItems: newSelectedItems,
               insuranceEnabled: newInsuranceEnabled,
-            }
+            },
           };
         });
         get().calculateCheckoutTotals();
@@ -498,25 +500,25 @@ export const useCartStore = create<CartStore>()(
       selectAllItems: () => {
         const { cart } = get();
         if (cart?.items) {
-          const allItemIds = cart.items.map(item => item.productId);
-          set(state => ({
+          const allItemIds = cart.items.map((item) => item.productId);
+          set((state) => ({
             checkout: {
               ...state.checkout,
               selectedItems: new Set(allItemIds),
               insuranceEnabled: new Set(allItemIds),
-            }
+            },
           }));
           get().calculateCheckoutTotals();
         }
       },
 
       deselectAllItems: () => {
-        set(state => ({
+        set((state) => ({
           checkout: {
             ...state.checkout,
             selectedItems: new Set<string>(),
             insuranceEnabled: new Set<string>(),
-          }
+          },
         }));
         get().calculateCheckoutTotals();
       },
@@ -525,19 +527,19 @@ export const useCartStore = create<CartStore>()(
         const { checkout } = get();
         if (!checkout.selectedItems.has(productId)) return;
 
-        set(state => {
+        set((state) => {
           const newInsuranceEnabled = new Set(state.checkout.insuranceEnabled);
           if (newInsuranceEnabled.has(productId)) {
             newInsuranceEnabled.delete(productId);
           } else {
             newInsuranceEnabled.add(productId);
           }
-          
+
           return {
             checkout: {
               ...state.checkout,
               insuranceEnabled: newInsuranceEnabled,
-            }
+            },
           };
         });
         get().calculateCheckoutTotals();
@@ -545,24 +547,24 @@ export const useCartStore = create<CartStore>()(
 
       calculateCheckoutTotals: () => {
         const { cart, checkout } = get();
-        
+
         if (!cart?.items || checkout.selectedItems.size === 0) {
-          set(state => ({
+          set((state) => ({
             checkout: {
               ...state.checkout,
-              totals: { ...initialCheckoutTotals }
-            }
+              totals: { ...initialCheckoutTotals },
+            },
           }));
           return;
         }
 
-        const selectedItems = cart.items.filter(item => 
-          checkout.selectedItems.has(item.productId)
+        const selectedItems = cart.items.filter((item) =>
+          checkout.selectedItems.has(item.productId),
         );
 
         const subtotal = selectedItems.reduce((sum, item) => sum + item.itemTotal, 0);
         const selectedQuantity = selectedItems.reduce((sum, item) => sum + item.quantity, 0);
-        
+
         const totalDiscount = selectedItems.reduce((sum, item) => {
           if (item.product?.originalPrice) {
             return sum + (item.product.originalPrice - item.product.finalPrice) * item.quantity;
@@ -580,7 +582,7 @@ export const useCartStore = create<CartStore>()(
         const shippingCost = subtotal >= 10000 ? 0 : 40;
         const totalAmount = subtotal + shippingCost + insuranceCost;
 
-        set(state => ({
+        set((state) => ({
           checkout: {
             ...state.checkout,
             totals: {
@@ -590,21 +592,21 @@ export const useCartStore = create<CartStore>()(
               shippingCost,
               totalAmount,
               totalDiscount,
-            }
-          }
+            },
+          },
         }));
       },
 
       // Get checkout data for navigation to checkout
       getCheckoutData: () => {
         const { cart, checkout } = get();
-        
+
         if (!cart?.items || checkout.selectedItems.size === 0) {
           return null;
         }
 
-        const selectedItems = cart.items.filter(item => 
-          checkout.selectedItems.has(item.productId)
+        const selectedItems = cart.items.filter((item) =>
+          checkout.selectedItems.has(item.productId),
         );
 
         return {
@@ -653,7 +655,7 @@ export const useCartStore = create<CartStore>()(
         if (!cart?.items || checkout.selectedItems.size === 0) {
           return [];
         }
-        return cart.items.filter(item => checkout.selectedItems.has(item.productId));
+        return cart.items.filter((item) => checkout.selectedItems.has(item.productId));
       },
 
       isItemSelected: (productId) => {
@@ -685,6 +687,6 @@ export const useCartStore = create<CartStore>()(
           }
         }
       },
-    }
-  )
+    },
+  ),
 );

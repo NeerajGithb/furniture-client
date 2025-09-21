@@ -164,6 +164,31 @@ export interface ProductFilters {
     name: string;
     slug: string;
   }>;
+  subcategories: Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    categoryId: string;
+  }>;
+  materialTypes: string[];
+  maxMinPrice: {
+    minPrice: number;
+    maxPrice: number;
+  };
+  maxPrice: number;
+  minPrice: number;
+  inStock: boolean;
+  onSale: boolean;
+  sortOptions: string[];
+  sort: string;
+  page: number;
+  limit: number;
+  material: string | null;
+  brand: string | null;
+  color: string | null;
+  seater: number | null;
+  style: string | null;
+  room: string | null;
   materials: string[];
   brands: string[];
   colors: string[];

@@ -562,7 +562,7 @@ const Header = () => {
     return (
       <div className="h-12 flex items-center justify-center overflow-hidden">
         <div className="w-full overflow-x-auto scrollbar-hide">
-          <ul className="flex items-center justify-start lg:justify-center gap-1 px-2 lg:px-0 list-none min-w-max">
+          <ul className="flex items-center justify-start md:justify-center gap-1 px-2 md:px-0 list-none min-w-max">
             {transformedInspirations.map((inspiration) => (
               <InspirationItem
                 key={inspiration.name}
@@ -640,13 +640,13 @@ const Header = () => {
     <>
       <header className="relative z-50 bg-white border-b border-gray-100">
         <div className={headerClasses}>
-          <div className="px-3 sm:px-4 lg:px-6 w-full max-w-[1600px] mx-auto">
+          <div className="px-3 sm:px-4 md:px-6 w-full max-w-[1600px] mx-auto">
             <div className="flex items-center justify-between h-full gap-2 sm:gap-4">
               {/* Left section */}
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
                 <motion.button
                   onClick={openSidebar}
-                  className="sm:hidden p-1 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+                  className="md:hidden p-1 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
                   aria-label="Open menu"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -673,7 +673,7 @@ const Header = () => {
               </div>
 
               {/* Center search - hidden on mobile */}
-              <div className="hidden md:flex flex-1 max-w-[600px] mx-4 lg:mx-6">
+              <div className="hidden md:flex flex-1 max-w-[600px] mx-4 md:mx-6">
                 <SearchBar className="w-full" />
               </div>
 
@@ -794,22 +794,11 @@ const Header = () => {
                         aria-label="Login"
                       >
                         <User size={18} />
-                        <span className="hidden lg:inline ml-1.5 text-xs whitespace-nowrap">
+                        <span className="hidden md:inline ml-1.5 text-xs whitespace-nowrap">
                           Login
                         </span>
                       </motion.button>
                     )}
-
-                    {/* Mobile/Tablet menu button */}
-                    <motion.button
-                      onClick={openSidebar}
-                      className="hidden sm:flex xl:hidden p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
-                      aria-label="Open menu"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Menu size={20} />
-                    </motion.button>
                   </motion.div>
 
                   {/* Search button - positioned absolutely for overlay effect */}
@@ -868,12 +857,9 @@ const Header = () => {
                 },
               }}
             >
-              <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6">
+              <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6">
                 {/* Desktop sticky navigation */}
-                <nav className="hidden lg:block">{InspirationNavigation}</nav>
-
-                {/* Tablet sticky navigation */}
-                <nav className="hidden md:block lg:hidden">{TabletInspirations}</nav>
+                <nav className="hidden md:block">{InspirationNavigation}</nav>
               </div>
 
               {/* Sticky mega menu dropdown */}
@@ -898,19 +884,10 @@ const Header = () => {
           className="relative bg-white md:border-t md:border-gray-100 max-md:mt-[52px] max-md:px-1"
           onMouseLeave={handleInspirationLeave}
         >
-          <div className="max-w-[1600px] mx-auto px-2 lg:px-6">
+          <div className="max-w-[1600px] mx-auto px-2 md:px-6">
             {/* Desktop navigation - Hide when sticky header is visible */}
-            <nav className={`lg:block ${scrolled && !isMdDown ? 'hidden' : 'hidden lg:block'}`}>
+            <nav className={`md:block ${scrolled && !isMdDown ? 'hidden' : 'hidden md:block'}`}>
               {InspirationNavigation}
-            </nav>
-
-            {/* Tablet navigation - Hide when sticky header is visible */}
-            <nav
-              className={`md:block lg:hidden ${
-                scrolled && !isMdDown ? 'hidden' : 'hidden md:block lg:hidden'
-              }`}
-            >
-              {TabletInspirations}
             </nav>
 
             {/* Mobile search bar */}

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import { useQueryClient } from '@tanstack/react-query';
 import { Category, Product, SubCategory } from '@/types/Product';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
+import React from 'react';
 
 interface ProductFilters {
   category?: string;
@@ -130,6 +132,59 @@ interface ProductStore {
   resetFilters: () => void;
 }
 
+// React Query cache keys
+const QUERY_KEYS = {
+  product: (id: string) => ['product', id],
+  products: (filters: ProductFilters) => ['products', filters],
+  categories: () => ['categories'],
+  subcategories: () => ['subcategories'],
+  category: (slug: string) => ['category', slug],
+  relatedProducts: (category?: string, excludeId?: string) => [
+    'relatedProducts',
+    category,
+    excludeId,
+  ],
+  allProducts: (excludeId?: string) => ['allProducts', excludeId],
+};
+
+// Enhanced fetch functions with React Query integration
+const createEnhancedFetcher = () => {
+  let queryClient: any = null;
+
+  const setQueryClient = (client: any) => {
+    queryClient = client;
+  };
+
+  const fetchWithQuery = async <T>(
+    key: any[],
+    fetchFn: () => Promise<T>,
+    staleTime = 5 * 60 * 1000,
+  ): Promise<T> => {
+    if (queryClient) {
+      const cachedData = queryClient.getQueryData(key);
+      if (cachedData) return cachedData;
+
+      const data = await queryClient.fetchQuery({
+        queryKey: key,
+        queryFn: fetchFn,
+        staleTime,
+      });
+      return data;
+    }
+    return fetchFn();
+  };
+
+  const invalidateQuery = (key: any[]) => {
+    if (queryClient) {
+      queryClient.invalidateQueries({ queryKey: key });
+    }
+  };
+
+  return { fetchWithQuery, invalidateQuery, setQueryClient };
+};
+
+const { fetchWithQuery, invalidateQuery, setQueryClient } = createEnhancedFetcher();
+
 export const useProductStore = create<ProductStore>()(
   subscribeWithSelector((set, get) => ({
     // Initial Data
@@ -190,7 +245,7 @@ export const useProductStore = create<ProductStore>()(
     categoriesInitialized: false,
     subcategoriesInitialized: false,
 
-    // Initialize store - fetch categories and subcategories once
+    // Initialize store
     initializeProducts: async () => {
       const state = get();
       if (state.initialized) return;
@@ -205,16 +260,18 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch single product
+    // Fetch single product with React Query caching
     fetchProduct: async (productId: string) => {
       if (!productId) return;
       set({ loading: true, error: null });
 
       try {
-        const response = await fetchWithCredentials(`/api/products/${productId}`);
-        if (!response.ok) throw new Error(`Failed to fetch product: ${response.status}`);
+        const productData = await fetchWithQuery(QUERY_KEYS.product(productId), async () => {
+          const response = await fetchWithCredentials(`/api/products/${productId}`);
+          if (!response.ok) throw new Error(`Failed to fetch product: ${response.status}`);
+          return handleApiResponse(response);
+        });
 
-        const productData = await handleApiResponse(response);
         set({ product: productData, loading: false });
 
         // Background fetch related products
@@ -231,11 +288,8 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch products with improved parameter handling and state management
-    // Replace the entire fetchProducts method in your store with this:
-
+    // Fetch products with React Query caching
     fetchProducts: async (queryParams?: string, reset: boolean = false) => {
-      // Set loading states
       set({
         loadingProducts: reset ? true : false,
         loadingMore: !reset ? true : false,
@@ -244,14 +298,19 @@ export const useProductStore = create<ProductStore>()(
 
       try {
         const url = queryParams ? `/api/products?${queryParams}` : '/api/products';
-        const response = await fetchWithCredentials(url);
+        const filters = get().appliedFilters;
 
-        if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
-
-        const data: ProductResponse = await handleApiResponse(response);
+        const data: ProductResponse = await fetchWithQuery(
+          QUERY_KEYS.products(filters),
+          async () => {
+            const response = await fetchWithCredentials(url);
+            if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
+            return handleApiResponse(response);
+          },
+          2 * 60 * 1000, // 2 minutes stale time
+        );
 
         set((state) => {
-          // For filtered results, use the pagination total as the source of truth
           const filteredTotal = data.pagination?.total || 0;
           const currentPage = data.pagination?.page || 1;
           const totalPages = data.pagination?.pages || 0;
@@ -280,7 +339,7 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Load more products (pagination)
+    // Load more products with caching
     loadMoreProducts: async () => {
       const { pagination, appliedFilters, loadingMore, hasMore } = get();
 
@@ -307,59 +366,61 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch related products
+    // Fetch related products with caching
     fetchRelatedProducts: async (categoryName?: string, excludeId?: string) => {
       set({ loadingMore: true });
 
       try {
-        const params = new URLSearchParams({ page: '1', limit: '8', sort: 'newest' });
-        if (categoryName) params.append('category', categoryName.toLowerCase());
+        const productsArray = await fetchWithQuery(
+          QUERY_KEYS.relatedProducts(categoryName, excludeId),
+          async () => {
+            const params = new URLSearchParams({ page: '1', limit: '8', sort: 'newest' });
+            if (categoryName) params.append('category', categoryName.toLowerCase());
 
-        const response = await fetchWithCredentials(`/api/products?${params}`);
-        if (!response.ok) throw new Error(`Failed to fetch related products: ${response.status}`);
+            const response = await fetchWithCredentials(`/api/products?${params}`);
+            if (!response.ok)
+              throw new Error(`Failed to fetch related products: ${response.status}`);
 
-        const data: ProductResponse = await handleApiResponse(response);
-        const productsArray: Product[] = data.products || [];
+            const data: ProductResponse = await handleApiResponse(response);
+            return (data.products || [])
+              .filter((p) => p._id !== excludeId)
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 8);
+          },
+        );
 
-        set({
-          relatedProducts: productsArray
-            .filter((p) => p._id !== excludeId)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 8),
-          loadingMore: false,
-        });
+        set({ relatedProducts: productsArray, loadingMore: false });
       } catch (err) {
         console.error('Failed to fetch related products:', err);
         set({ relatedProducts: [], loadingMore: false });
       }
     },
 
-    // Fetch all products (general listing)
+    // Fetch all products with caching
     fetchAllProducts: async (excludeId?: string) => {
       set({ loadingAll: true });
 
       try {
-        const params = new URLSearchParams({ page: '1', limit: '12', sort: 'newest' });
-        const response = await fetchWithCredentials(`/api/products?${params}`);
-        if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
+        const productsArray = await fetchWithQuery(QUERY_KEYS.allProducts(excludeId), async () => {
+          const params = new URLSearchParams({ page: '1', limit: '12', sort: 'newest' });
+          const response = await fetchWithCredentials(`/api/products?${params}`);
+          if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
 
-        const data: ProductResponse = await handleApiResponse(response);
-        const productsArray: Product[] = data.products || [];
-
-        set({
-          allProducts: productsArray
+          const data: ProductResponse = await handleApiResponse(response);
+          return (data.products || [])
             .filter((p) => p._id !== excludeId)
             .sort(() => Math.random() - 0.5)
-            .slice(0, 12),
-          loadingAll: false,
+            .slice(0, 12);
         });
+
+        set({ allProducts: productsArray, loadingAll: false });
       } catch (err) {
         console.error('Failed to fetch all products:', err);
         set({ allProducts: [], loadingAll: false });
       }
     },
 
-    // Fetch all categories - only once
+    // Fetch categories with caching
     fetchCategories: async () => {
       const state = get();
       if (state.categoriesInitialized || state.loadingCategories) return;
@@ -367,10 +428,16 @@ export const useProductStore = create<ProductStore>()(
       set({ loadingCategories: true, error: null });
 
       try {
-        const response = await fetchWithCredentials('/api/categories');
-        if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+        const categories = await fetchWithQuery(
+          QUERY_KEYS.categories(),
+          async () => {
+            const response = await fetchWithCredentials('/api/categories');
+            if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
+            return handleApiResponse(response);
+          },
+          15 * 60 * 1000, // 15 minutes stale time
+        );
 
-        const categories = await handleApiResponse(response);
         set({ categories, loadingCategories: false, categoriesInitialized: true });
       } catch (err) {
         console.error('Failed to fetch categories:', err);
@@ -382,20 +449,24 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch category by slug
+    // Fetch category by slug with caching
     fetchCategoryBySlug: async (slug: string) => {
       set({ loadingCategory: true, error: null });
 
       try {
-        const response = await fetchWithCredentials(`/api/categories/${slug}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error(`Category '${slug}' not found`);
-          }
-          throw new Error(`Failed to fetch category: ${response.status}`);
-        }
+        const categoryData = await fetchWithQuery(
+          QUERY_KEYS.category(slug),
+          async () => {
+            const response = await fetchWithCredentials(`/api/categories/${slug}`);
+            if (!response.ok) {
+              if (response.status === 404) throw new Error(`Category '${slug}' not found`);
+              throw new Error(`Failed to fetch category: ${response.status}`);
+            }
+            return handleApiResponse(response);
+          },
+          15 * 60 * 1000,
+        );
 
-        const categoryData = await handleApiResponse(response);
         set({ loadingCategory: false });
         return categoryData;
       } catch (err) {
@@ -408,7 +479,7 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch all subcategories - only once
+    // Fetch subcategories with caching
     fetchSubcategories: async () => {
       const state = get();
       if (state.subcategoriesInitialized || state.loadingSubcategories) return;
@@ -416,10 +487,16 @@ export const useProductStore = create<ProductStore>()(
       set({ loadingSubcategories: true, error: null });
 
       try {
-        const response = await fetchWithCredentials('/api/subcategories');
-        if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+        const subcategories = await fetchWithQuery(
+          QUERY_KEYS.subcategories(),
+          async () => {
+            const response = await fetchWithCredentials('/api/subcategories');
+            if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
+            return handleApiResponse(response);
+          },
+          15 * 60 * 1000,
+        );
 
-        const subcategories = await handleApiResponse(response);
         set({ subcategories, loadingSubcategories: false, subcategoriesInitialized: true });
       } catch (err) {
         console.error('Failed to fetch subcategories:', err);
@@ -443,16 +520,15 @@ export const useProductStore = create<ProductStore>()(
         }
       });
 
+      // Invalidate products cache when filters change
+      invalidateQuery(['products']);
       get().fetchProducts(params.toString(), true);
     },
 
     clearFilters: () => {
-      const defaultFilters = {
-        page: 1,
-        limit: 24,
-        sort: 'newest',
-      };
+      const defaultFilters = { page: 1, limit: 24, sort: 'newest' };
       set({ appliedFilters: defaultFilters });
+      invalidateQuery(['products']);
       get().fetchProducts('', true);
     },
 
@@ -471,8 +547,13 @@ export const useProductStore = create<ProductStore>()(
     setBuyingNow: (isBuying) => set({ buyingNow: isBuying }),
     setAddingToWishlist: (isAdding) => set({ addingToWishlist: isAdding }),
 
-    // Reset functions - FIXED: Clear products state properly
-    resetProductState: () =>
+    // Reset functions
+    resetProductState: () => {
+      // Clear React Query cache
+      invalidateQuery(['products']);
+      invalidateQuery(['relatedProducts']);
+      invalidateQuery(['allProducts']);
+
       set({
         products: [],
         product: null,
@@ -497,14 +578,13 @@ export const useProductStore = create<ProductStore>()(
           total: 0,
           pages: 0,
         },
-      }),
+      });
+    },
 
     resetFilters: () => {
-      const defaultFilters = {
-        page: 1,
-        limit: 24,
-        sort: 'newest',
-      };
+      const defaultFilters = { page: 1, limit: 24, sort: 'newest' };
+      invalidateQuery(['products']);
+
       set({
         appliedFilters: defaultFilters,
         products: [],
@@ -521,3 +601,13 @@ export const useProductStore = create<ProductStore>()(
     },
   })),
 );
+
+// Hook to initialize React Query client
+export const useInitializeProductStore = () => {
+  const queryClient = useQueryClient();
+
+  // Set query client on first render
+  React.useEffect(() => {
+    setQueryClient(queryClient);
+  }, [queryClient]);
+};

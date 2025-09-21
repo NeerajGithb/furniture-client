@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCartStore } from '@/stores/cartStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
+import { useInitializeProductStore } from '@/stores/productStore';
 
 interface StoreProviderProps {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   const { user, loading: userLoading } = useCurrentUser();
   const { initializeCart, initialized: cartInitialized } = useCartStore();
   const { initializeWishlists, initialized: wishlistInitialized } = useWishlistStore();
-
+  useInitializeProductStore();
   useEffect(() => {
     if (!userLoading) {
       if (user?._id) {

@@ -4,21 +4,33 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ProductCard from '../product/ProductCard';
 import { Product } from '@/types/Product';
-import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
+import { useProductStore } from '@/stores/productStore';
+import PrevLeft from '../ui/PrevLeft';
+import PrevRight from '../ui/PrevRight';
 
 interface ProductShowcaseProps {
   productsData?: Product[];
+  title?: string;
+  description?: string;
 }
 
-const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
-  const [products, setProducts] = useState<Product[]>(productsData || []);
-  const [loading, setLoading] = useState(!productsData);
-  const [error, setError] = useState<string | null>(null);
+const ProductShowcase = ({
+  productsData,
+  title = 'Our Top Picks',
+  description = ' Showcasing our finest designs, crafted to perfection',
+}: ProductShowcaseProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Use store state
+  const { showcaseProducts, loadingShowcase, error, fetchShowcaseProducts } = useProductStore();
+
+  // Use provided data or store data
+  const products = productsData || showcaseProducts;
+  const loading = !productsData ? loadingShowcase : false;
 
   const getItemsPerView = () => {
     if (typeof window === 'undefined') return 4;
@@ -73,30 +85,12 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return () => clearInterval(interval);
   }, [isMobile, isUserInteracting, products.length, itemsPerView]);
 
+  // Fetch showcase products if not provided and store is empty
   useEffect(() => {
-    if (!productsData) {
-      const fetchShowcaseProducts = async () => {
-        try {
-          setError(null);
-          const res = await fetchWithCredentials('/api/products/showcase');
-
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
-
-          const data = await handleApiResponse(res);
-          setProducts(data.products || []);
-        } catch (err) {
-          console.error('Failed to fetch showcase products:', err);
-          setError(err instanceof Error ? err.message : 'Failed to load products');
-          setProducts([]);
-        } finally {
-          setLoading(false);
-        }
-      };
+    if (!productsData && showcaseProducts.length === 0 && !loadingShowcase) {
       fetchShowcaseProducts();
     }
-  }, [productsData]);
+  }, [productsData, showcaseProducts.length, loadingShowcase, fetchShowcaseProducts]);
 
   const midPoint = Math.ceil(products.length / 2);
   const row1Products = products.slice(0, midPoint);
@@ -144,14 +138,10 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
 
   const renderSkeletonRow = () => (
     <div className="max-w-6xl mx-auto">
-      {' '}
-      {/* Add max-width and center container */}
       <div className="relative mb-8 overflow-hidden p-2">
-        {' '}
-        {/* Add padding like product rows */}
         <div
           className={`grid gap-2 sm:gap-3 md:gap-4 ${
-            itemsPerView === 2 ? 'grid-cols-2' : itemsPerView === 3 ? 'grid-cols-3' : 'grid-cols-4' // Change from grid-cols-5 to grid-cols-4 to match product rows
+            itemsPerView === 2 ? 'grid-cols-2' : itemsPerView === 3 ? 'grid-cols-3' : 'grid-cols-4'
           }`}
         >
           {Array.from({ length: itemsPerView }).map((_, i) => (
@@ -259,7 +249,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
               }
 
               return (
-                <div key={(item as Product)._id} className=" max-md:max-h-[270px]">
+                <div key={(item as Product)._id} className="max-md:max-h-[270px]">
                   <ProductCard product={item as Product} />
                 </div>
               );
@@ -274,61 +264,28 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             ))}
           </div>
 
-          {!isAtStart && showViewMoreButton && (
-            <button
-              onClick={prevSlide}
-              className={`rounded-full absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur border border-gray-300 flex items-center justify-center hover:bg-white transition-all shadow-lg ${
-                isMobile ? 'touch-manipulation' : ''
-              }`}
-            >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
+          {!isAtStart && showViewMoreButton && <PrevLeft isMobile={isMobile} onClick={prevSlide} />}
 
-          {!isAtEnd && showViewMoreButton && (
-            <button
-              onClick={nextSlide}
-              className={`rounded-full absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-white/90 backdrop-blur border border-gray-300 flex items-center justify-center hover:bg-white transition-all shadow-lg ${
-                isMobile ? 'touch-manipulation' : ''
-              }`}
-            >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
+          {!isAtEnd && showViewMoreButton && <PrevRight isMobile={isMobile} onClick={nextSlide} />}
         </div>
       </div>
     );
+  };
+
+  // Handle retry action through store
+  const handleRetry = () => {
+    if (!productsData) {
+      fetchShowcaseProducts();
+    } else {
+      window.location.reload();
+    }
   };
 
   if (loading) {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">{title}</h2>
           <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
             Handpicked pieces for discerning taste
           </p>
@@ -345,10 +302,8 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
-            Handpicked pieces for discerning taste
-          </p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">{title}</h2>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">{description}</p>
         </div>
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">
@@ -369,7 +324,7 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
             <p className="text-xs text-gray-400 mt-1">Please try again later</p>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleRetry}
             className="border border-black text-black px-6 py-2 text-sm font-medium hover:bg-black hover:text-white transition-colors"
           >
             Retry
@@ -383,10 +338,8 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
     return (
       <section className="px-4 mx-auto">
         <div className="text-center mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Featured Products</h2>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
-            Handpicked pieces for discerning taste
-          </p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-light">{title}</h2>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">{description}</p>
         </div>
         <div className="text-center py-12">
           <div className="text-gray-500">
@@ -413,10 +366,8 @@ const ProductShowcase = ({ productsData }: ProductShowcaseProps) => {
   return (
     <section className="px-4 mx-auto">
       <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">Our Top Picks</h2>
-        <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">
-          Showcasing our finest designs, crafted to perfection
-        </p>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-light">{title}</h2>
+        <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2">{description}</p>
       </div>
 
       <div className="md:space-y-4">

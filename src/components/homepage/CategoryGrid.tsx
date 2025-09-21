@@ -1,9 +1,11 @@
 'use client';
-import { memo, useRef } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useProductStore } from '@/stores/productStore';
+import PrevRight from '../ui/PrevRight';
+import PrevLeft from '../ui/PrevLeft';
 
 const selectResetProductState = (state: any) => state.resetProductState;
 
@@ -23,15 +25,38 @@ const CategoryGrid = () => {
   const showSkeletons = loading || (!loading && categories.length === 0 && !error);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth);
+  };
+
+  const handleScrollLeft = () => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+  };
 
   const handleScrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: 200,
-        behavior: 'smooth',
-      });
-    }
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    updateScrollButtons(); // initial check
+    const onScroll = () => updateScrollButtons();
+    container.addEventListener('scroll', onScroll);
+    window.addEventListener('resize', updateScrollButtons);
+
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', updateScrollButtons);
+    };
+  }, []);
 
   if (error) {
     return (
@@ -60,64 +85,56 @@ const CategoryGrid = () => {
         <p className="text-gray-500 text-xs md:text-sm">Explore our most popular categories</p>
       </motion.div>
 
-      {/* Mobile: Horizontal scroll + Scroll button */}
-      <div className="block md:hidden">
-        <div className="relative">
-          <div className="overflow-x-auto scrollbar-hide" ref={scrollRef}>
-            <div
-              className="grid grid-rows-2 grid-flow-col gap-4 pb-2"
-              style={{ width: 'max-content' }}
-            >
-              {showSkeletons
-                ? Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="animate-pulse flex-shrink-0">
-                      <div className="w-30 h-30 bg-gray-200 mb-2"></div>
-                      <div className="h-3 bg-gray-200 w-20 mx-auto"></div>
-                    </div>
-                  ))
-                : categories.slice(0, 12).map((category, index) => (
-                    <motion.div
-                      key={category._id}
-                      className="flex-shrink-0"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4, delay: index * 0.03 }}
+      {/* Mobile: Horizontal scroll + Scroll buttons */}
+      <div className="block md:hidden relative">
+        <div className="overflow-x-auto scrollbar-hide" ref={scrollRef}>
+          <div
+            className="grid grid-rows-2 grid-flow-col gap-4 pb-2"
+            style={{ width: 'max-content' }}
+          >
+            {showSkeletons
+              ? Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="animate-pulse flex-shrink-0">
+                    <div className="w-30 h-30 bg-gray-200 mb-2"></div>
+                    <div className="h-3 bg-gray-200 w-20 mx-auto"></div>
+                  </div>
+                ))
+              : categories.slice(0, 12).map((category, index) => (
+                  <motion.div
+                    key={category._id}
+                    className="flex-shrink-0"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4, delay: index * 0.03 }}
+                  >
+                    <Link
+                      onClick={() => resetProductState()}
+                      href={`/${category.slug}`}
+                      className="block text-center group"
                     >
-                      <Link
-                        onClick={() => resetProductState()}
-                        href={`/${category.slug}`}
-                        className="block text-center group"
-                      >
-                        <div className="relative w-30 h-30 mb-2 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-105">
-                          <Image
-                            src={category.mainImage?.url || '/placeholder.png'}
-                            alt={category.mainImage?.alt || category.name}
-                            fill
-                            className="object-cover"
-                            loading="lazy"
-                          />
-                        </div>
-                        <h3 className="text-xs font-medium text-black w-28 truncate">
-                          {category.name}
-                        </h3>
-                      </Link>
-                    </motion.div>
-                  ))}
-            </div>
+                      <div className="relative w-30 h-30 mb-2 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-105">
+                        <Image
+                          src={category.mainImage?.url || '/placeholder.png'}
+                          alt={category.mainImage?.alt || category.name}
+                          fill
+                          className="object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <h3 className="text-xs font-medium text-black w-28 truncate">
+                        {category.name}
+                      </h3>
+                    </Link>
+                  </motion.div>
+                ))}
           </div>
-
-          {/* Scroll Right Button */}
-          <button type="button" onClick={handleScrollRight} className="absolute top-10 -right-3">
-            <svg
-              className="w-4 h-4 text-gray-800"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
         </div>
+
+        {/* Left Scroll Button */}
+        {canScrollLeft && <PrevLeft onClick={handleScrollLeft} isMobile={true} />}
+
+        {/* Right Scroll Button */}
+        {canScrollRight && <PrevRight onClick={handleScrollRight} isMobile={true} />}
       </div>
 
       {/* Desktop: Grid layout */}

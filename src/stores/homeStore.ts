@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/types/Product';
 import { handleApiResponse } from '@/utils/fetchWithCredentials';
+
 export interface IInspiration {
   _id: string;
   title: string;
@@ -46,7 +48,6 @@ interface HomeStore {
   categoryErrors: Record<string, string | null>;
   initialized: boolean;
   initializeHome: () => Promise<void>;
-  // Actions
   fetchInspirations: () => Promise<void>;
   fetchInspirationBySlug: (slug: string) => Promise<IInspiration | null>;
   fetchCategoryProducts: (
@@ -55,7 +56,7 @@ interface HomeStore {
   fetchRelatedProducts: (
     inspirationSlug: string,
     limit?: number,
-    sort?: 'newest' | 'oldest' | 'popular',
+    sort?: 'newest' | 'oldest' | 'popular' | 'rating' | '',
   ) => Promise<Product[]>;
   getCategoryProducts: (categoryId: string) => CategoryProducts | null;
   getRelatedProducts: (inspirationSlug: string) => Product[];
@@ -69,6 +70,14 @@ interface HomeStore {
 }
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Internal query client for store operations
+let queryClient: any = null;
+
+// Set query client reference
+export const setQueryClient = (client: any) => {
+  queryClient = client;
+};
 
 export const useHomeStore = create<HomeStore>((set, get) => ({
   inspirations: [],
@@ -101,22 +110,33 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
     }
   },
 
-  // Actions
-
   fetchInspirations: async () => {
     const { initialized, loading } = get();
     if (initialized || loading) return;
 
+    // Try React Query first if available
+    if (queryClient) {
+      const cachedData = queryClient.getQueryData(['inspirations']);
+      if (cachedData) {
+        set({
+          inspirations: cachedData,
+          initialized: true,
+          loading: false,
+          error: null,
+        });
+        return;
+      }
+    }
+
     let hasDefault = false;
     let defaultInspirations: IInspiration[] = [];
 
-    // 1️⃣ Try to load default inspirations
     try {
       const resDefault = await fetch('/inspirations.json');
       if (resDefault.ok) {
         defaultInspirations = await resDefault.json();
         if (defaultInspirations.length > 0) {
-          set({ inspirations: defaultInspirations }); // show defaults immediately
+          set({ inspirations: defaultInspirations });
           hasDefault = true;
         }
       }
@@ -124,11 +144,9 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       console.warn('No default inspirations found.');
     }
 
-    // 2️⃣ Only set loading true if there’s no default data
     if (!hasDefault) set({ loading: true, error: null });
 
     try {
-      // 3️⃣ Fetch new inspirations from API
       const res = await fetch('/api/inspirations', { credentials: 'include' });
       const data = await handleApiResponse(res);
 
@@ -136,12 +154,17 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       if (Array.isArray(data)) inspirations = data;
       else if (Array.isArray(data.inspirations)) inspirations = data.inspirations;
 
-      // 3️⃣ Save to default file only if it’s empty
+      // Cache in React Query if available
+      if (queryClient) {
+        queryClient.setQueryData(['inspirations'], inspirations);
+      }
+
       await fetch('api/saveDefault/insparation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inspirations),
       });
+
       set({
         inspirations,
         loading: false,
@@ -160,8 +183,17 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
   fetchInspirationBySlug: async (slug: string) => {
     const state = get();
-    const cached = state.inspirationCache[slug];
 
+    // Try React Query cache first
+    if (queryClient) {
+      const cachedData = queryClient.getQueryData(['inspiration', slug]);
+      if (cachedData) {
+        set({ currentInspiration: cachedData as IInspiration });
+        return cachedData as IInspiration;
+      }
+    }
+
+    const cached = state.inspirationCache[slug];
     if (cached && Date.now() - cached.fetchedAt < CACHE_DURATION) {
       set({ currentInspiration: cached.inspiration });
       return cached.inspiration;
@@ -183,6 +215,11 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       }
 
       const inspiration: IInspiration = await handleApiResponse(res);
+
+      // Cache in React Query if available
+      if (queryClient) {
+        queryClient.setQueryData(['inspiration', slug], inspiration);
+      }
 
       set((state) => ({
         currentInspiration: inspiration,
@@ -213,6 +250,25 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
   fetchCategoryProducts: async (categoryId: string) => {
     const state = get();
+
+    // Try React Query cache first
+    if (queryClient) {
+      const cachedData = queryClient.getQueryData(['categoryProducts', categoryId]);
+      if (cachedData) {
+        const result = cachedData as { products: Product[]; slug: string | null };
+        set((state) => ({
+          categoryProducts: {
+            ...state.categoryProducts,
+            [categoryId]: {
+              ...result,
+              fetchedAt: Date.now(),
+            },
+          },
+        }));
+        return result;
+      }
+    }
+
     const cached = state.categoryProducts[categoryId];
     const isLoading = state.categoryLoading[categoryId];
 
@@ -236,6 +292,12 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       const data = await handleApiResponse(res);
       const products = data.products || [];
       const slug = data.slug || null;
+      const result = { products, slug };
+
+      // Cache in React Query if available
+      if (queryClient) {
+        queryClient.setQueryData(['categoryProducts', categoryId], result);
+      }
 
       set((state) => ({
         categoryProducts: {
@@ -249,7 +311,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
         categoryLoading: { ...state.categoryLoading, [categoryId]: false },
       }));
 
-      return { products, slug };
+      return result;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load products';
 
@@ -262,10 +324,33 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
     }
   },
 
-  fetchRelatedProducts: async (inspirationSlug: string, limit = 20, sort = 'newest') => {
+  fetchRelatedProducts: async (inspirationSlug: string, limit = 20, sort = '') => {
     const state = get();
-    const cached = state.relatedProducts[inspirationSlug];
 
+    // Try React Query cache first
+    if (queryClient) {
+      const cachedData = queryClient.getQueryData([
+        'relatedProducts',
+        inspirationSlug,
+        limit,
+        sort,
+      ]);
+      if (cachedData) {
+        const products = cachedData as Product[];
+        set((state) => ({
+          relatedProducts: {
+            ...state.relatedProducts,
+            [inspirationSlug]: {
+              products,
+              fetchedAt: Date.now(),
+            },
+          },
+        }));
+        return products;
+      }
+    }
+
+    const cached = state.relatedProducts[inspirationSlug];
     if (cached && Date.now() - cached.fetchedAt < CACHE_DURATION) {
       return cached.products;
     }
@@ -285,8 +370,12 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
 
       const data = await handleApiResponse(res);
-
       const products = data.products || [];
+
+      // Cache in React Query if available
+      if (queryClient) {
+        queryClient.setQueryData(['relatedProducts', inspirationSlug, limit, sort], products);
+      }
 
       set((state) => ({
         relatedProducts: {
@@ -342,3 +431,59 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
     }));
   },
 }));
+
+// Track connected query clients
+const connectedClients = new WeakSet();
+
+// Hook to connect React Query with the store
+export const useHomeStoreWithReactQuery = () => {
+  const queryClient = useQueryClient();
+
+  // Set the query client reference for the store
+  if (queryClient && !connectedClients.has(queryClient)) {
+    setQueryClient(queryClient);
+    connectedClients.add(queryClient);
+  }
+
+  // Prefetch queries for better performance
+  useQuery({
+    queryKey: ['inspirations'],
+    queryFn: async () => {
+      const store = useHomeStore.getState();
+      if (store.inspirations.length > 0) {
+        return store.inspirations;
+      }
+
+      let defaultInspirations: IInspiration[] = [];
+      try {
+        const resDefault = await fetch('/inspirations.json');
+        if (resDefault.ok) {
+          defaultInspirations = await resDefault.json();
+        }
+      } catch (err) {
+        console.warn('No default inspirations found.');
+      }
+
+      try {
+        const res = await fetch('/api/inspirations', { credentials: 'include' });
+        const data = await handleApiResponse(res);
+
+        let inspirations: IInspiration[] = [];
+        if (Array.isArray(data)) inspirations = data;
+        else if (Array.isArray(data.inspirations)) inspirations = data.inspirations;
+
+        return inspirations;
+      } catch (error) {
+        if (defaultInspirations.length > 0) {
+          return defaultInspirations;
+        }
+        throw error;
+      }
+    },
+    staleTime: CACHE_DURATION,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  return useHomeStore();
+};

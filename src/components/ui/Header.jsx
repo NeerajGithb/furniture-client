@@ -419,8 +419,14 @@ const Header = () => {
   const loadingCategories = useProductStore(loadingCategoriesSelector);
   const { inspirations, loading: loadingInspirations, fetchInspirations } = useHomeStore();
 
+  // Fix hydration by tracking client mount
+  const [isMounted, setIsMounted] = useState(false);
+
   const initializeRef = useRef(false);
   useEffect(() => {
+    // Set mounted to true after client hydration
+    setIsMounted(true);
+    
     if (!initializeRef.current) {
       useProductStore.getState().initializeProducts();
       fetchInspirations();
@@ -497,7 +503,6 @@ const Header = () => {
   const openDropdown = useCallback(() => setIsDropdownOpen(true), []);
   const [currentQuery, setCurrentQuery] = useState('');
 
-  // Add this useEffect to Header component to sync with localStorage
   useEffect(() => {
     const syncQuery = () => {
       try {
@@ -510,13 +515,9 @@ const Header = () => {
       }
     };
 
-    // Sync on mount
     syncQuery();
-
-    // Listen for storage changes (when search happens in modal)
     window.addEventListener('storage', syncQuery);
 
-    // Custom event listener for same-tab updates
     const handleQueryUpdate = (event) => {
       if (event.detail?.query) {
         setCurrentQuery(event.detail.query);
@@ -531,12 +532,12 @@ const Header = () => {
     };
   }, []);
 
-  // Clear query when navigating away from search
   useEffect(() => {
     if (pathname !== '/search') {
       setCurrentQuery('');
     }
   }, [pathname]);
+  
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -584,6 +585,56 @@ const Header = () => {
     handleInspirationEnter,
     handleGetTabPosition,
   ]);
+
+  // Render auth section with hydration safety
+  const renderAuthSection = () => {
+    // Show consistent loading state during hydration
+    if (!isMounted || authLoading) {
+      return (
+        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+          <User size={18} className="text-gray-800" />
+        </div>
+      );
+    }
+
+    // After hydration, show actual auth state
+    if (user) {
+      return (
+        <div className="relative flex-shrink-0">
+          <motion.button
+            onClick={toggleDropdown}
+            onMouseEnter={openDropdown}
+            data-dropdown-trigger="true"
+            className="p-1 rounded hover:bg-gray-50 transition-colors duration-150"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Avatar
+              src={user?.photoURL || ''}
+              alt="User Avatar"
+              fallbackText={user?.name?.[0]?.toUpperCase() || 'U'}
+            />
+          </motion.button>
+          <UserDropdown isOpen={isDropdownOpen} onClose={closeDropdown} />
+        </div>
+      );
+    }
+
+    return (
+      <motion.button
+        onClick={openAuth}
+        className="flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label="Login"
+      >
+        <User size={18} />
+        <span className="hidden md:inline ml-1.5 text-xs whitespace-nowrap">
+          Login
+        </span>
+      </motion.button>
+    );
+  };
 
   const fixedHeaderClasses = 'fixed top-0 left-0 right-0 z-50 shadow-[0_2px_1px_rgba(0,0,0,0.15)]';
   const headerClasses = `h-[52px] md:h-14 flex items-center bg-white md:shadow-xs ${
@@ -716,41 +767,9 @@ const Header = () => {
                         </motion.span>
                       )}
                     </Link>
-                    {/* User section */}
-                    {authLoading ? (
-                      <User size={18} />
-                    ) : user ? (
-                      <div className="relative flex-shrink-0">
-                        <motion.button
-                          onClick={toggleDropdown}
-                          onMouseEnter={openDropdown}
-                          data-dropdown-trigger="true"
-                          className="p-1 rounded hover:bg-gray-50 transition-colors duration-150"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Avatar
-                            src={user?.photoURL || ''}
-                            alt="User Avatar"
-                            fallbackText={user?.name?.[0]?.toUpperCase() || 'U'}
-                          />
-                        </motion.button>
-                        <UserDropdown isOpen={isDropdownOpen} onClose={closeDropdown} />
-                      </div>
-                    ) : (
-                      <motion.button
-                        onClick={openAuth}
-                        className="flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        aria-label="Login"
-                      >
-                        <User size={18} />
-                        <span className="hidden md:inline ml-1.5 text-xs whitespace-nowrap">
-                          Login
-                        </span>
-                      </motion.button>
-                    )}
+                    
+                    {/* User section - Fixed hydration */}
+                    {renderAuthSection()}
                   </motion.div>
 
                   {/* Search button - positioned absolutely for overlay effect */}

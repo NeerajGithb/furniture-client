@@ -1,9 +1,12 @@
 'use client';
 
-import { Category, IInspiration } from '@/types/Product';
+import { Category } from '@/types/Product';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
+import PrevLeft from '../ui/PrevLeft';
+import PrevRight from '../ui/PrevRight';
 
 interface CategoryGridProps {
   inspiration: any;
@@ -24,8 +27,9 @@ const categoryImages: Record<string, string> = {
   default: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
 };
 
-const CARD_WIDTH = 'w-[220px]';
-const CARD_HEIGHT = 'h-[260px]';
+// Default card size for desktop
+const CARD_WIDTH = 'w-[220px] md:w-[220px]';
+const CARD_HEIGHT = 'h-[260px] md:h-[260px]';
 
 const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
   const categories: Category[] = (inspiration.categories || []).map((c: any) =>
@@ -49,6 +53,36 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
         },
   );
 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollButtons = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+  };
+
+  const handleScrollLeft = () => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
+  const handleScrollRight = () => {
+    if (scrollRef.current) scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    if (!scrollRef.current) return;
+    scrollRef.current.addEventListener('scroll', updateScrollButtons);
+    window.addEventListener('resize', updateScrollButtons);
+    return () => {
+      if (scrollRef.current) scrollRef.current.removeEventListener('scroll', updateScrollButtons);
+      window.removeEventListener('resize', updateScrollButtons);
+    };
+  }, [categories]);
+
   if (loading) {
     return (
       <section className="px-4 py-8 max-w-6xl mx-auto">
@@ -57,8 +91,7 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
             Shop by Category
           </h2>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-8 justify-items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center">
           {[...Array(8)].map((_, idx) => (
             <div
               key={idx}
@@ -86,11 +119,59 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
         <p className="text-gray-500 text-xs tracking-wider uppercase">Find what suits your space</p>
       </motion.div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-4 gap-y-8 justify-items-center">
+      {/* Mobile horizontal scroll with two rows */}
+      <div className="block md:hidden relative">
+        {canScrollLeft && <PrevLeft onClick={handleScrollLeft} isMobile={true} />}
+
+        {canScrollRight && <PrevRight onClick={handleScrollRight} isMobile={true} />}
+
+        <div className="overflow-x-auto scrollbar-hide" ref={scrollRef}>
+          <div
+            className="grid grid-rows-2 grid-flow-col gap-3 pb-2"
+            style={{ width: 'max-content' }}
+          >
+            {categories.map((category, idx) => {
+              const imageUrl =
+                category.mainImage?.url ||
+                categoryImages[category.slug] ||
+                categoryImages['default'];
+              return (
+                <motion.div
+                  key={category._id}
+                  className="w-[160px] h-[200px] flex-shrink-0 sm:w-[180px] sm:h-[230px]"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: idx * 0.03 }}
+                >
+                  <Link href={`/${category.slug}`}>
+                    <div className="group cursor-pointer w-full h-full flex flex-col">
+                      <div className="relative w-full h-[140px] sm:h-[170px] overflow-hidden bg-gray-50 rounded-sm">
+                        <Image
+                          src={imageUrl}
+                          alt={category.mainImage?.alt || `${category.name} category`}
+                          fill
+                          className="object-cover grayscale-[1%] contrast-110 transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="flex-1 flex items-center justify-center mt-2">
+                        <h3 className="text-xs sm:text-sm font-light text-black tracking-wide uppercase group-hover:text-gray-600 transition-colors duration-500 text-center">
+                          {category.name}
+                        </h3>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop grid */}
+      <div className="hidden md:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-items-center mt-6">
         {categories.map((category, idx) => {
           const imageUrl =
             category.mainImage?.url || categoryImages[category.slug] || categoryImages['default'];
-
           return (
             <motion.div
               key={category._id}
@@ -101,7 +182,6 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
             >
               <Link href={`/${category.slug}`}>
                 <div className="group cursor-pointer w-full h-full flex flex-col">
-                  {/* Image Box */}
                   <div className="relative w-full h-[210px] overflow-hidden bg-gray-50 rounded-sm">
                     <Image
                       src={imageUrl}
@@ -109,23 +189,7 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
                       fill
                       className="object-cover grayscale-[1%] contrast-110 transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-500 flex items-center justify-center">
-                      <motion.div
-                        className="opacity-0 group-hover:opacity-100"
-                        initial={{ opacity: 0 }}
-                        whileHover={{ opacity: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="border border-white/70 bg-black/20 backdrop-blur-sm px-3 py-1.5">
-                          <span className="text-white text-[10px] font-light tracking-widest uppercase">
-                            Explore
-                          </span>
-                        </div>
-                      </motion.div>
-                    </div>
                   </div>
-
-                  {/* Title */}
                   <div className="flex-1 flex items-center justify-center mt-2">
                     <h3 className="text-sm font-light text-black tracking-wide uppercase group-hover:text-gray-600 transition-colors duration-500 text-center">
                       {category.name}

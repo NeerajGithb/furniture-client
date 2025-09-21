@@ -95,11 +95,14 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     if (matchedSubcategory) {
       const parentCategory = categories.find((cat: any) => {
         const categoryId =
-          typeof matchedSubcategory.categoryId === 'object'
+          matchedSubcategory.categoryId && typeof matchedSubcategory.categoryId === 'object'
             ? matchedSubcategory.categoryId._id
             : matchedSubcategory.categoryId;
-        return cat._id === categoryId;
+
+        // only compare if categoryId exists
+        return categoryId != null && cat._id === categoryId;
       });
+
       return {
         type: 'subcategory',
         data: matchedSubcategory,

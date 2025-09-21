@@ -23,8 +23,14 @@ import { resetApp } from '@/stores/globalStoreManager';
 
 const Avatar = ({ src, alt, fallbackText }) => {
   const [imageError, setImageError] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!src || imageError) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render image until mounted to avoid hydration mismatch
+  if (!mounted || !src || imageError) {
     return (
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
@@ -58,13 +64,19 @@ const Avatar = ({ src, alt, fallbackText }) => {
 
 export default function UserDropdown({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
-  const { user, setUser } = useAuth();
+  const { user, setUser, storesInitialized } = useAuth();
   const router = useRouter();
   const [loadingStates, setLoadingStates] = useState({});
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { orders, fetchOrders } = useOrderStore();
   const pathname = usePathname();
   const [navigatingTo, setNavigatingTo] = useState(null);
+
+  // Initialize mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const userMenuItems = [
     {
@@ -79,7 +91,7 @@ export default function UserDropdown({ isOpen, onClose }) {
       icon: ShoppingBag,
       href: '/orders',
       badge:
-        orders.length > 0 && orders.some((order) => order.status !== 'completed')
+        mounted && orders.length > 0 && orders.some((order) => order.status !== 'completed')
           ? orders.filter((order) => order.status !== 'completed').length
           : undefined,
     },
@@ -110,7 +122,7 @@ export default function UserDropdown({ isOpen, onClose }) {
   ];
 
   const allMenuItems =
-    user?.role === 'admin'
+    mounted && user?.role === 'admin'
       ? [
           ...userMenuItems,
           {
@@ -144,6 +156,8 @@ export default function UserDropdown({ isOpen, onClose }) {
 
   // Enhanced outside click detection with multiple event types
   useEffect(() => {
+    if (!mounted) return;
+
     const handleOutsideInteraction = (event) => {
       // Check if dropdown exists and is open
       if (!dropdownRef.current || !isOpen) return;
@@ -204,9 +218,11 @@ export default function UserDropdown({ isOpen, onClose }) {
       window.removeEventListener('scroll', handleScroll, true);
       window.removeEventListener('resize', handleResize);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const handleEscape = (event) => {
       if (event.key === 'Escape' && isOpen) {
         onClose();
@@ -215,7 +231,7 @@ export default function UserDropdown({ isOpen, onClose }) {
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, mounted]);
 
   const handleMenuClick = async (item) => {
     if (isActiveItem(item)) {
@@ -311,8 +327,15 @@ export default function UserDropdown({ isOpen, onClose }) {
   };
 
   useEffect(() => {
-    if (user?._id) fetchOrders(1, 100);
-  }, [user, fetchOrders]);
+    if (mounted && storesInitialized && user?._id) {
+      fetchOrders(1, 100);
+    }
+  }, [user, fetchOrders, mounted, storesInitialized]);
+
+  // Don't render dropdown content until mounted
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="relative">

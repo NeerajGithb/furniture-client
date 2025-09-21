@@ -1,0 +1,189 @@
+[
+  {
+    "_id": "68c019f399d694abf22739aa",
+    "name": "Executive Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "subCategoryId": {
+      "_id": "68b6f08e96af6e3fedb9611d",
+      "name": "Executive Desk",
+      "slug": "executive-desk"
+    },
+    "itemId": "executive-desk-101",
+    "sku": "EXECUTIVE-DESK-7HDBWM3JSGH",
+    "originalPrice": 24999,
+    "finalPrice": 19999,
+    "description": "Elevate your workspace with this sophisticated executive desk, designed for both style and functionality. Crafted with a durable engineered wood top and a robust metal frame, this desk offers a stable and expansive surface for all your professional needs. The integrated cable management system keeps your workspace clutter-free, promoting focus and efficiency. Its sleek design enhances any office décor, while the generous storage options, including drawers and cabinets, provide ample space for files and supplies. Experience the perfect blend of elegance and practicality with this essential piece for any executive office. Its sturdy construction ensures years of reliable use.",
+    "emiPrice": 999,
+    "discountPercent": 20,
+    "inStockQuantity": 73,
+    "colorOptions": [
+      "Walnut",
+      "Black",
+      "White"
+    ],
+    "size": [
+      "Large"
+    ],
+    "material": "Engineered Wood & Metal",
+    "tags": [
+      "Executive",
+      "Desk",
+      "Office",
+      "Furniture",
+      "Study",
+      "Workstation",
+      "Storage",
+      "Modern",
+      "Wood",
+      "Metal",
+      "Ergonomic",
+      "Home Office"
+    ],
+    "galleryImages": [
+      {
+        "url": "https://i.pinimg.com/originals/06/41/f6/0641f6b0ed9a45175f5beceb287c563c.jpg",
+        "alt": "0641f6b0ed9a45175f5beceb287c563c.jpg",
+        "publicId": "0641f6b0ed9a45175f5beceb287c563c",
+        "_id": "68c019f399d694abf22739ab"
+      },
+      {
+        "url": "https://i.pinimg.com/originals/8d/d1/9b/8dd19b960f326eeb70ba78b8e2515b32.jpg",
+        "alt": "8dd19b960f326eeb70ba78b8e2515b32.jpg",
+        "publicId": "8dd19b960f326eeb70ba78b8e2515b32",
+        "_id": "68c019f399d694abf22739ac"
+      },
+      {
+        "url": "https://i.pinimg.com/originals/00/51/de/0051defbc705c542bbb9aee7703f162d.jpg",
+        "alt": "0051defbc705c542bbb9aee7703f162d.jpg",
+        "publicId": "0051defbc705c542bbb9aee7703f162d",
+        "_id": "68c019f399d694abf22739ad"
+      },
+      {
+        "url": "https://i.pinimg.com/originals/c4/50/25/c450251248c6df73bc3903cecea7301a.jpg",
+        "alt": "c450251248c6df73bc3903cecea7301a.jpg",
+        "publicId": "c450251248c6df73bc3903cecea7301a",
+        "_id": "68c019f399d694abf22739ae"
+      },
+      {
+        "url": "https://i.pinimg.com/originals/fb/8b/56/fb8b56ff82f0de1b8488c174bd10f6e4.jpg",
+        "alt": "fb8b56ff82f0de1b8488c174bd10f6e4.jpg",
+        "publicId": "fb8b56ff82f0de1b8488c174bd10f6e4",
+        "_id": "68c019f399d694abf22739af"
+      },
+      {
+        "url": "https://i.pinimg.com/originals/ee/fc/60/eefc60df7ab4db5691166996e7c6f549.jpg",
+        "alt": "eefc60df7ab4db5691166996e7c6f549.jpg",
+        "publicId": "eefc60df7ab4db5691166996e7c6f549",
+        "_id": "68c019f399d694abf22739b0"
+      }
+    ],
+    "mainImage": {
+      "url": "https://i.pinimg.com/originals/08/28/e6/0828e6e2f17f8bab981785a69f6eadd1.jpg",
+      "alt": "0828e6e2f17f8bab981785a69f6eadd1.jpg",
+      "publicId": "0828e6e2f17f8bab981785a69f6eadd1"
+    },
+    "badge": "Best Seller",
+    "dimensions": {
+      "length": 150,
+      "width": 75,
+      "height": 75
+    },
+    "weight": 45.5,
+    "isPublished": true,
+    "isActive": true,
+    "ratings": 0,
+    "reviews": {
+      "average": 0,
+      "count": 0,
+      "breakdown": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      }
+    },
+    "isFeatured": false,
+    "isNewArrival": false,
+    "isBestSeller": false,
+    "shippingInfo": {
+      "freeShipping": false,
+      "estimatedDays": 0,
+      "shippingCost": 0
+    },
+    "variants": [],
+    "slug": "executive-desk",
+    "metaTitle": "Executive Desk | Office Furniture",
+    "metaDescription": "Shop premium executive desks for your office. Modern designs with storage and cable management. Enhance your workspace!",
+    "keywords": [
+      "executive desk",
+      "office desk",
+      "writing desk",
+      "study desk",
+      "workstation",
+      "computer desk",
+      "large desk",
+      "modern desk",
+      "contemporary desk",
+      "wooden desk",
+      "metal frame desk",
+      "storage desk",
+      "drawers desk",
+      "cable management desk",
+      "ergonomic desk",
+      "professional desk",
+      "home office desk",
+      "corporate desk",
+      "manager desk",
+      "director desk",
+      "executive workstation",
+      "luxury desk",
+      "premium desk",
+      "furniture",
+      "office furniture"
+    ],
+    "bulletPoints": [
+      "Spacious desktop for ample workspace",
+      "Integrated cable management system",
+      "Durable engineered wood construction",
+      "Sturdy metal frame for stability",
+      "Generous storage with drawers and cabinets"
+    ],
+    "highlights": [
+      "Modern Design",
+      "Ample Storage",
+      "Durable Construction",
+      "Cable Management"
+    ],
+    "faq": [
+      {
+        "question": "What is the weight capacity of the desk?",
+        "answer": "The desk can safely support up to 80 kg.",
+        "_id": "68c019f399d694abf22739b1"
+      },
+      {
+        "question": "Is assembly required?",
+        "answer": "Yes, basic assembly is required. All necessary hardware and instructions are included.",
+        "_id": "68c019f399d694abf22739b2"
+      },
+      {
+        "question": "Does this desk have cable management?",
+        "answer": "Yes, this desk features an integrated cable management system to keep your cords organized.",
+        "_id": "68c019f399d694abf22739b3"
+      }
+    ],
+    "totalSold": 0,
+    "viewCount": 0,
+    "wishlistCount": 0,
+    "brand": "vfurniture",
+    "warranty": "1 Year Limited Warranty",
+    "returnPolicy": "30 days return",
+    "createdAt": "2025-09-09T12:13:39.527Z",
+    "updatedAt": "2025-09-09T12:13:39.527Z",
+    "__v": 0
+  }
+]

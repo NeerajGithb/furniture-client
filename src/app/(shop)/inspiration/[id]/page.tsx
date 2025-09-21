@@ -1,4 +1,3 @@
-// 1. Main InspirationDetailPage Component
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,6 +10,7 @@ import NewArrivals from '@/components/inspiration/NewArrivals';
 import MoreInspirationIdeas from '@/components/inspiration/MoreInspirationIdeas';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Loading from '@/components/ui/Loader';
 
 const InspirationDetailPage = () => {
   const params = useParams();
@@ -28,6 +28,7 @@ const InspirationDetailPage = () => {
   } = useHomeStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false); // track fetch completion
 
   useEffect(() => {
     const initializePage = async () => {
@@ -44,6 +45,8 @@ const InspirationDetailPage = () => {
         await fetchInspirationBySlug(inspirationSlug);
       } catch (error) {
         console.error('Error initializing inspiration page:', error);
+      } finally {
+        setHasFetched(true); // mark fetch attempt completed
       }
     };
 
@@ -57,22 +60,12 @@ const InspirationDetailPage = () => {
     initialized,
   ]);
 
+  // Loading state
   if (inspirationLoading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="min-h-screen flex items-center justify-center">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-gray-900 mx-auto mb-6"></div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Inspiration</h2>
-              <p className="text-gray-600">Discovering beautiful design ideas for you...</p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading fullScreen variant="spinner" size="lg" />;
   }
 
+  // Show explicit error UI
   if (inspirationError) {
     return (
       <div className="min-h-screen bg-white">
@@ -99,19 +92,16 @@ const InspirationDetailPage = () => {
                     />
                   </svg>
                 </div>
-
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
                   {inspirationError === 'Inspiration not found'
                     ? 'Inspiration Not Found'
                     : 'Something Went Wrong'}
                 </h1>
-
                 <p className="text-gray-600 mb-8">
                   {inspirationError === 'Inspiration not found'
                     ? "The inspiration you're looking for doesn't exist or has been moved."
                     : 'We encountered an error while loading this inspiration. Please try again.'}
                 </p>
-
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
                     onClick={() => router.back()}
@@ -134,7 +124,8 @@ const InspirationDetailPage = () => {
     );
   }
 
-  if (!currentInspiration && !inspirationLoading) {
+  // Show "Not Found" only after fetch attempt
+  if (hasFetched && !currentInspiration) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -173,6 +164,7 @@ const InspirationDetailPage = () => {
     );
   }
 
+  // Render the actual inspiration content
   return (
     <div className="min-h-screen bg-white">
       {currentInspiration && (

@@ -2,9 +2,8 @@
 
 import { useEffect } from 'react';
 import { useHomeStore } from '@/stores/homeStore';
-import { motion } from 'framer-motion';
-import ProductCard from '../product/ProductCard';
-import { Product } from '@/types/Product';
+import ProductShowcase from '../homepage/ProductShowcase';
+import Loading from '../ui/Loader';
 
 interface NewArrivalsProps {
   inspirationSlug: string;
@@ -19,83 +18,61 @@ const NewArrivals = ({
   limit = 20,
   sort = 'newest',
 }: NewArrivalsProps) => {
-  const { fetchRelatedProducts, relatedProducts, relatedProductsLoading, relatedProductsError } =
+  const { fetchRelatedProducts, getRelatedProducts, relatedProductsLoading, relatedProductsError } =
     useHomeStore();
 
+  // ✅ use selector for array instead of full object
+  const newArrivalProducts = getRelatedProducts(inspirationSlug);
+
   useEffect(() => {
-    if (inspirationSlug) {
+    if (inspirationSlug && newArrivalProducts.length === 0 && !relatedProductsLoading) {
       fetchRelatedProducts(inspirationSlug, limit, sort);
     }
-  }, [inspirationSlug, limit, sort, fetchRelatedProducts]);
+  }, [
+    inspirationSlug,
+    limit,
+    sort,
+    newArrivalProducts.length,
+    relatedProductsLoading,
+    fetchRelatedProducts,
+  ]);
 
-  if (relatedProductsLoading) {
+  if (relatedProductsLoading && newArrivalProducts.length === 0) {
+    return (
+      <section className="py-16 bg-white">
+        <Loading fullScreen title="" message="" />
+      </section>
+    );
+  }
+
+  if (relatedProductsError) {
     return (
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">New Arrivals</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              {categoryName
-                ? `Latest products in ${categoryName}`
-                : 'Discover our newest additions'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg overflow-hidden shadow-sm">
-                <div className="aspect-square bg-gray-200 animate-pulse" />
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
-                </div>
-              </div>
-            ))}
+            <p className="text-gray-600">Unable to load new arrivals. Please try again later.</p>
           </div>
         </div>
       </section>
     );
   }
 
-  // If relatedProducts is an array, use it directly; if it's an object, get the array using the inspirationSlug as key
-  const productsArray = Array.isArray(relatedProducts)
-    ? relatedProducts
-    : relatedProducts && Array.isArray(relatedProducts[inspirationSlug])
-    ? relatedProducts[inspirationSlug]
-    : [];
-
-  if (relatedProductsError || !productsArray.length) {
+  if (!newArrivalProducts.length) {
     return null;
   }
 
   return (
     <section className="py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">New Arrivals</h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {categoryName ? `Latest products in ${categoryName}` : 'Discover our newest additions'}
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productsArray.map((product: Product, index: number) => (
-            <motion.div
-              key={product._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-            >
-              <ProductCard product={product} key={product._id} />
-            </motion.div>
-          ))}
-        </div>
-      </div>
+      <ProductShowcase
+        title="New Arrivals"
+        description={
+          categoryName
+            ? `Latest products in ${categoryName}. Discover our newest additions.`
+            : 'Discover our newest additions.'
+        }
+        productsData={newArrivalProducts}
+      />
     </section>
   );
 };

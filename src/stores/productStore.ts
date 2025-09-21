@@ -100,8 +100,11 @@ interface ProductStore {
   fetchProduct: (productId: string) => Promise<void>;
   fetchProducts: (queryParams?: string, reset?: boolean) => Promise<void>;
   fetchRelatedProducts: (categoryName?: string, excludeId?: string) => Promise<void>;
+  fetchShowcaseProducts: () => Promise<void>;
   fetchAllProducts: (excludeId?: string) => Promise<void>;
 
+  showcaseProducts: Product[];
+  loadingShowcase: boolean;
   // Category Actions
   fetchCategories: () => Promise<void>;
   fetchCategoryBySlug: (slug: string) => Promise<Category | null>;
@@ -199,7 +202,8 @@ export const useProductStore = create<ProductStore>()(
     hasMore: false,
     currentPage: 1,
     totalProducts: 0,
-
+    showcaseProducts: [],
+    loadingShowcase: false,
     // Initial Loading States
     loading: false,
     loadingProducts: false,
@@ -239,7 +243,6 @@ export const useProductStore = create<ProductStore>()(
     addingToCart: false,
     buyingNow: false,
     addingToWishlist: false,
-
     // Initialization flags
     initialized: false,
     categoriesInitialized: false,
@@ -253,7 +256,11 @@ export const useProductStore = create<ProductStore>()(
       set({ initialized: true });
 
       try {
-        await Promise.all([get().fetchCategories(), get().fetchSubcategories()]);
+        await Promise.all([
+          get().fetchCategories(),
+          get().fetchSubcategories(),
+          get().fetchShowcaseProducts(),
+        ]);
       } catch (error) {
         console.error('Error during initialization:', error);
         set({ error: 'Failed to initialize store' });
@@ -393,6 +400,34 @@ export const useProductStore = create<ProductStore>()(
       } catch (err) {
         console.error('Failed to fetch related products:', err);
         set({ relatedProducts: [], loadingMore: false });
+      }
+    },
+
+    // Add this method in the store
+    fetchShowcaseProducts: async () => {
+      set({ loadingShowcase: true, error: null });
+
+      try {
+        const productsArray = await fetchWithQuery(
+          ['showcaseProducts'],
+          async () => {
+            const response = await fetchWithCredentials('/api/products/showcase');
+            if (!response.ok)
+              throw new Error(`Failed to fetch showcase products: ${response.status}`);
+            const data = await handleApiResponse(response);
+            return data.products || [];
+          },
+          5 * 60 * 1000, // 5 minutes cache
+        );
+
+        set({ showcaseProducts: productsArray, loadingShowcase: false });
+      } catch (err) {
+        console.error('Failed to fetch showcase products:', err);
+        set({
+          error: err instanceof Error ? err.message : 'Failed to load showcase products',
+          showcaseProducts: [],
+          loadingShowcase: false,
+        });
       }
     },
 
@@ -583,12 +618,15 @@ export const useProductStore = create<ProductStore>()(
       // Clear React Query cache
       invalidateQuery(['products']);
       invalidateQuery(['relatedProducts']);
+      invalidateQuery(['showcaseProducts']);
       invalidateQuery(['allProducts']);
 
       set({
         products: [],
         product: null,
         relatedProducts: [],
+        showcaseProducts: [],
+        loadingShowcase: false,
         allProducts: [],
         selectedImageIndex: 0,
         quantity: 1,

@@ -10,6 +10,7 @@ import MoreInspirationIdeas from '@/components/inspiration/MoreInspirationIdeas'
 import Link from 'next/link';
 
 import { ArrowLeft, Home, Search } from 'lucide-react';
+import Loading from '@/components/ui/Loader';
 
 const Page = () => {
   const params = useParams();
@@ -27,12 +28,18 @@ const Page = () => {
   } = useHomeStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initializePage = async () => {
-      if (!inspirationSlug || isInitialized) return;
+      if (!inspirationSlug) return;
+
+      // Prevent multiple initializations
+      if (isInitialized) return;
 
       try {
+        setIsLoading(true);
         setIsInitialized(true);
         clearInspirationError();
 
@@ -45,36 +52,22 @@ const Page = () => {
         await fetchInspirationBySlug(inspirationSlug);
       } catch (error) {
         console.error('Error initializing inspiration page:', error);
+      } finally {
+        setHasAttemptedFetch(true);
+        setIsLoading(false);
       }
     };
 
     initializePage();
-  }, [
-    inspirationSlug,
-    fetchInspirationBySlug,
-    fetchInspirations,
-    isInitialized,
-    clearInspirationError,
-    initialized,
-  ]);
+  }, [inspirationSlug]);
 
-  if (inspirationLoading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 border-t-black mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-black mb-2">Loading Collection</h2>
-              <p className="text-gray-600">Please wait...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // Show loading while fetching or haven't finished initial load
+  if (isLoading || inspirationLoading || !hasAttemptedFetch) {
+    return <Loading fullScreen />;
   }
 
-  if (inspirationError) {
+  // Show error only after fetch attempt is complete and there's an actual error
+  if (inspirationError && hasAttemptedFetch && !inspirationLoading) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -117,7 +110,8 @@ const Page = () => {
     );
   }
 
-  if (!currentInspiration && !inspirationLoading && isInitialized) {
+  // Show not available only if we've attempted fetch, not loading, no error, but no data
+  if (!currentInspiration && !inspirationLoading && !inspirationError && hasAttemptedFetch) {
     return (
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -160,6 +154,7 @@ const Page = () => {
     );
   }
 
+  // Show content only when we have data
   return (
     <div className="min-h-screen bg-white">
       {currentInspiration && (

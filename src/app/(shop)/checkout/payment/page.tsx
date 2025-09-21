@@ -131,6 +131,13 @@ const PaymentPage = () => {
     };
   }, [checkoutData]);
 
+  useEffect(() => {
+    if (!hasValidCheckout()) {
+      router.replace('/'); // redirect if checkout data missing
+      return;
+    }
+  }, [hasValidCheckout, router]);
+
   // FIXED: Improved redirect checks with better error handling
   useEffect(() => {
     if (!user?._id) {
@@ -300,12 +307,7 @@ const PaymentPage = () => {
 
         clearCheckout();
 
-        // Show success message
-        toast.success('Order placed successfully!');
-
-        // Navigate to success page
-
-        router.push(`/order-success?orderNumber=${orderNumber}`);
+        window.location.href = `/order-success?orderNumber=${orderNumber}`;
         return;
       } else {
         // For other payment methods, initiate payment processing
@@ -340,7 +342,7 @@ const PaymentPage = () => {
             clearCheckout();
 
             toast.success('Payment successful! Order placed.');
-            router.push(`/order-success?orderNumber=${orderNumber}`);
+            window.location.href = `/order-success?orderNumber=${orderNumber}`;
           } else {
             const errorData = await paymentResponse.json().catch(() => ({}));
             throw new Error(errorData.error || `Payment failed: ${paymentResponse.status}`);

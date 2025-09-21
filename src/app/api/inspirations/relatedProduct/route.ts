@@ -1,74 +1,264 @@
-// app/api/inspiration/relatedProduct/route.ts
+// app/api/inspirations/relatedProduct/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import Inspiration from '@/models/Inspiration';
-import product from '@/models/product';
+import Product from '@/models/product';
+import Category from '@/models/category';
+import SubCategory from '@/models/subcategory';
 import { SortOrder } from 'mongoose';
 
-// Define a minimal Category type (only the fields you populated)
+// ------------------ Interfaces ------------------
 interface PopulatedCategory {
   _id: string;
   name: string;
   slug: string;
 }
-
-// Define Inspiration doc shape after populate
+interface PopulatedSubCategory {
+  _id: string;
+  name: string;
+  slug: string;
+}
 interface InspirationDoc {
   _id: string;
   slug: string;
   title: string;
   categories: PopulatedCategory[];
 }
+interface CategoryDoc {
+  _id: string;
+  name: string;
+  slug: string;
+}
+interface SubCategoryDoc {
+  _id: string;
+  name: string;
+  slug: string;
+}
+interface ProductDoc {
+  _id: string;
+  name: string;
+  description?: string;
+  material?: string;
+  tags?: string[];
+  finalPrice: number;
+  categoryId: PopulatedCategory;
+  subCategoryId?: PopulatedSubCategory;
+  isPublished?: boolean;
+  createdAt: Date;
+}
 
+// ------------------ Handler ------------------
 export async function GET(request: Request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
+    console.log(
+      'GET relatedProduct called with params:',
+      Object.fromEntries(searchParams.entries()),
+    );
     const slug = searchParams.get('slug');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const sort = searchParams.get('sort') || 'newest';
+    const sort = searchParams.get('sort'); // no default
 
     if (!slug) {
-      return NextResponse.json({ error: 'Missing inspiration slug' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     }
 
-    // 1️⃣ Fetch the inspiration with populated categories
-    const inspiration = (await Inspiration.findOne({ slug })
-      .populate('categories', 'name slug _id')
-      .lean()) as InspirationDoc | null;
-
-    if (!inspiration) {
-      return NextResponse.json({ error: 'Inspiration not found' }, { status: 404 });
+    // ------------------ Sort Option ------------------
+    let sortOption: Record<string, SortOrder> | null = null;
+    if (sort) {
+      switch (sort) {
+        case 'newest':
+          sortOption = { createdAt: -1 };
+          break;
+        case 'oldest':
+          sortOption = { createdAt: 1 };
+          break;
+        case 'price-low':
+          sortOption = { finalPrice: 1 };
+          break;
+        case 'price-high':
+          sortOption = { finalPrice: -1 };
+          break;
+        default:
+          sortOption = { name: 1 };
+      }
     }
 
-    const categories = inspiration.categories || [];
-    if (!categories.length) {
-      return NextResponse.json({ products: [] });
+    let products: ProductDoc[] = [];
+    let searchStrategy = 'unknown';
+
+    // ------------------ Strategy 1: By Inspiration ------------------
+    try {
+      const inspiration = await Inspiration.findOne({ slug })
+        .populate<{ categories: PopulatedCategory[] }>('categories', 'name slug _id')
+        .lean<InspirationDoc>();
+
+      if (inspiration?.categories?.length) {
+        searchStrategy = 'inspiration';
+        const categoryIds = inspiration.categories.map((c) => c._id);
+        const perCategoryLimit = Math.ceil(limit / categoryIds.length);
+
+        const productsByCategory = await Promise.all(
+          categoryIds.map(async (categoryId) => {
+            if (sortOption) {
+              return await Product.find({ categoryId, isPublished: { $ne: false } })
+                .populate('categoryId', 'name slug')
+                .populate('subCategoryId', 'name slug')
+                .sort(sortOption)
+                .limit(perCategoryLimit)
+                .lean<ProductDoc[]>();
+            } else {
+              return await Product.aggregate([
+                { $match: { categoryId, isPublished: { $ne: false } } },
+                { $sample: { size: perCategoryLimit } },
+              ]);
+            }
+          }),
+        );
+
+        products = productsByCategory.flat().slice(0, limit);
+      }
+    } catch (err) {
+      console.warn('Inspiration lookup failed:', err);
     }
 
-    // 2️⃣ Calculate products per category
-    const perCategoryLimit = Math.ceil(limit / categories.length);
-    const sortOption: Record<string, SortOrder> =
-      sort === 'newest'
-        ? { createdAt: -1 as SortOrder }
-        : sort === 'oldest'
-        ? { createdAt: 1 as SortOrder }
-        : { name: 1 as SortOrder };
+    // ------------------ Strategy 2: By Category ------------------
+    if (!products.length) {
+      try {
+        const category = await Category.findOne({ slug }).lean<CategoryDoc>();
+        if (category) {
+          searchStrategy = 'category';
 
-    // 4️⃣ Fetch products from each category
-    const productsPromises = categories.map((cat) =>
-      product.find({ 'categoryId._id': cat._id }).sort(sortOption).limit(perCategoryLimit).lean(),
-    );
+          if (sortOption) {
+            products = await Product.find({ categoryId: category._id, isPublished: { $ne: false } })
+              .populate('categoryId', 'name slug')
+              .populate('subCategoryId', 'name slug')
+              .sort(sortOption)
+              .limit(limit)
+              .lean<ProductDoc[]>();
+          } else {
+            products = await Product.aggregate([
+              { $match: { categoryId: category._id, isPublished: { $ne: false } } },
+              { $sample: { size: limit } },
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn('Category lookup failed:', err);
+      }
+    }
 
-    const productsByCategory = await Promise.all(productsPromises);
+    // ------------------ Strategy 3: By SubCategory ------------------
+    if (!products.length) {
+      try {
+        const subcategory = await SubCategory.findOne({ slug }).lean<SubCategoryDoc>();
+        if (subcategory) {
+          searchStrategy = 'subcategory';
 
-    // 5️⃣ Flatten and trim to overall limit
-    const products = productsByCategory.flat().slice(0, limit);
+          if (sortOption) {
+            products = await Product.find({
+              subCategoryId: subcategory._id,
+              isPublished: { $ne: false },
+            })
+              .populate('categoryId', 'name slug')
+              .populate('subCategoryId', 'name slug')
+              .sort(sortOption)
+              .limit(limit)
+              .lean<ProductDoc[]>();
+          } else {
+            products = await Product.aggregate([
+              { $match: { subCategoryId: subcategory._id, isPublished: { $ne: false } } },
+              { $sample: { size: limit } },
+            ]);
+          }
+        }
+      } catch (err) {
+        console.warn('Subcategory lookup failed:', err);
+      }
+    }
 
-    return NextResponse.json({ products });
+    // ------------------ Strategy 4: Fuzzy Search ------------------
+    if (!products.length) {
+      try {
+        searchStrategy = 'fuzzy';
+        const searchTerms = slug.replace(/-/g, ' ').split(' ');
+        const searchRegex = new RegExp(searchTerms.join('|'), 'i');
+
+        if (sortOption) {
+          products = await Product.find({
+            $or: [
+              { name: searchRegex },
+              { description: searchRegex },
+              { material: searchRegex },
+              { tags: { $in: searchTerms } },
+            ],
+            isPublished: { $ne: false },
+          })
+            .populate('categoryId', 'name slug')
+            .populate('subCategoryId', 'name slug')
+            .sort(sortOption)
+            .limit(limit)
+            .lean<ProductDoc[]>();
+        } else {
+          products = await Product.aggregate([
+            {
+              $match: {
+                $or: [
+                  { name: searchRegex },
+                  { description: searchRegex },
+                  { material: searchRegex },
+                  { tags: { $in: searchTerms } },
+                ],
+                isPublished: { $ne: false },
+              },
+            },
+            { $sample: { size: limit } },
+          ]);
+        }
+      } catch (err) {
+        console.warn('Fuzzy search failed:', err);
+      }
+    }
+
+    // ------------------ Strategy 5: Random fallback ------------------
+    if (!products.length) {
+      searchStrategy = 'random_fallback';
+
+      if (sortOption) {
+        products = await Product.find({ isPublished: { $ne: false } })
+          .populate('categoryId', 'name slug')
+          .populate('subCategoryId', 'name slug')
+          .sort(sortOption)
+          .limit(limit)
+          .lean<ProductDoc[]>();
+      } else {
+        products = await Product.aggregate([
+          { $match: { isPublished: { $ne: false } } },
+          { $sample: { size: limit } },
+        ]);
+      }
+    }
+
+    return NextResponse.json({
+      products,
+      meta: {
+        searchStrategy,
+        slug,
+        totalFound: products.length,
+        limit,
+        sortApplied: !!sortOption,
+      },
+    });
   } catch (err) {
     console.error('GET relatedProduct error:', err);
-    return NextResponse.json({ error: 'Failed to fetch related products' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch related products',
+        details: err instanceof Error ? err.message : 'Unknown error',
+      },
+      { status: 500 },
+    );
   }
 }

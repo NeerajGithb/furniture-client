@@ -585,52 +585,6 @@ const Header = () => {
     handleGetTabPosition,
   ]);
 
-  const TabletInspirations = useMemo(() => {
-    if (loadingInspirations) {
-      return (
-        <div className="h-12 flex items-center justify-center gap-2 px-3 overflow-hidden">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className="w-20 h-3 bg-gray-200 rounded animate-pulse flex-shrink-0"></div>
-          ))}
-        </div>
-      );
-    }
-
-    return (
-      <div className="h-12 flex items-center justify-center px-3 overflow-hidden">
-        <div className="flex items-center justify-start md:justify-center gap-2 text-sm overflow-x-auto scrollbar-hide w-full">
-          {transformedInspirations.slice(0, 5).map((inspiration) => {
-            const displayName =
-              inspiration.name.length > 15
-                ? `${inspiration.name.slice(0, 15)}...`
-                : inspiration.name;
-            return (
-              <div key={inspiration.name} className="flex-shrink-0">
-                <Link
-                  href={`/inspirations/${inspiration.slug}`}
-                  className="text-gray-800 hover:text-black font-normal transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 capitalize whitespace-nowrap block"
-                  title={inspiration.name}
-                >
-                  {displayName}
-                </Link>
-              </div>
-            );
-          })}
-          {transformedInspirations.length > 5 && (
-            <div className="flex-shrink-0">
-              <Link
-                href="/inspirations"
-                className="text-gray-600 hover:text-black text-sm transition-colors duration-150 py-2.5 px-3 whitespace-nowrap block"
-              >
-                More
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }, [loadingInspirations, JSON.stringify(transformedInspirations)]);
-
   const fixedHeaderClasses = 'fixed top-0 left-0 right-0 z-50 shadow-[0_2px_1px_rgba(0,0,0,0.15)]';
   const headerClasses = `h-[52px] md:h-14 flex items-center bg-white md:shadow-xs ${
     isMdDown ? fixedHeaderClasses : ''
@@ -764,9 +718,7 @@ const Header = () => {
                     </Link>
                     {/* User section */}
                     {authLoading ? (
-                      <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                      </div>
+                      <User size={18} />
                     ) : user ? (
                       <div className="relative flex-shrink-0">
                         <motion.button

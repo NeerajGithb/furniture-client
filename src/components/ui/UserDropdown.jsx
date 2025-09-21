@@ -327,7 +327,10 @@ export default function UserDropdown({ isOpen, onClose }) {
             className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg border border-gray-200 rounded-xs overflow-hidden z-[60]"
           >
             {/* User Profile Section */}
-            <motion.div variants={itemVariants} className="p-3 border-b border-gray-100 bg-gray-50">
+            <motion.div
+              variants={itemVariants}
+              className="px-3 py-1 border-b border-gray-100 bg-gray-50"
+            >
               <div className="flex items-center gap-3">
                 <Avatar
                   src={user?.photoURL || user?.avatar}

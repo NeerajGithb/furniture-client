@@ -425,9 +425,28 @@ export const useProductStore = create<ProductStore>()(
       const state = get();
       if (state.categoriesInitialized || state.loadingCategories) return;
 
-      set({ loadingCategories: true, error: null });
+      let hasDefault = false;
+      let defaultCategories: any[] = [];
+
+      // 1️⃣ Try to load default categories
+      try {
+        const resDefault = await fetch('/categories.json');
+        if (resDefault.ok) {
+          defaultCategories = await resDefault.json();
+          if (defaultCategories.length > 0) {
+            set({ categories: defaultCategories });
+            hasDefault = true;
+          }
+        }
+      } catch (err) {
+        console.warn('No default categories found.');
+      }
+
+      // 2️⃣ Only show loading if no default
+      if (!hasDefault) set({ loadingCategories: true, error: null });
 
       try {
+        // 3️⃣ Fetch from API
         const categories = await fetchWithQuery(
           QUERY_KEYS.categories(),
           async () => {
@@ -435,16 +454,28 @@ export const useProductStore = create<ProductStore>()(
             if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
             return handleApiResponse(response);
           },
-          15 * 60 * 1000, // 15 minutes stale time
+          15 * 60 * 1000, // 15 minutes stale
         );
 
-        set({ categories, loadingCategories: false, categoriesInitialized: true });
+        // 4️⃣ Save to default file only if empty
+        await fetch('/api/saveDefault/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(categories),
+        });
+
+        // 5️⃣ Update store
+        set({
+          categories,
+          loadingCategories: false,
+          categoriesInitialized: true,
+        });
       } catch (err) {
         console.error('Failed to fetch categories:', err);
         set({
+          categories: defaultCategories,
           error: err instanceof Error ? err.message : 'Failed to load categories',
           loadingCategories: false,
-          categories: [],
         });
       }
     },

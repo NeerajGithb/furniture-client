@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { Product } from '@/types/Product';
 import { handleApiResponse } from '@/utils/fetchWithCredentials';
-
 export interface IInspiration {
   _id: string;
   title: string;
@@ -106,23 +105,43 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
   fetchInspirations: async () => {
     const { initialized, loading } = get();
-
     if (initialized || loading) return;
 
-    set({ loading: true, error: null });
+    let hasDefault = false;
+    let defaultInspirations: IInspiration[] = [];
+
+    // 1️⃣ Try to load default inspirations
+    try {
+      const resDefault = await fetch('/inspirations.json');
+      if (resDefault.ok) {
+        defaultInspirations = await resDefault.json();
+        if (defaultInspirations.length > 0) {
+          set({ inspirations: defaultInspirations }); // show defaults immediately
+          hasDefault = true;
+        }
+      }
+    } catch (err) {
+      console.warn('No default inspirations found.');
+    }
+
+    // 2️⃣ Only set loading true if there’s no default data
+    if (!hasDefault) set({ loading: true, error: null });
 
     try {
+      // 3️⃣ Fetch new inspirations from API
       const res = await fetch('/api/inspirations', { credentials: 'include' });
       const data = await handleApiResponse(res);
 
       let inspirations: IInspiration[] = [];
+      if (Array.isArray(data)) inspirations = data;
+      else if (Array.isArray(data.inspirations)) inspirations = data.inspirations;
 
-      if (Array.isArray(data)) {
-        inspirations = data;
-      } else if (Array.isArray(data.inspirations)) {
-        inspirations = data.inspirations;
-      }
-
+      // 3️⃣ Save to default file only if it’s empty
+      await fetch('api/saveDefault/insparation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inspirations),
+      });
       set({
         inspirations,
         loading: false,
@@ -131,7 +150,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       });
     } catch (error) {
       set({
-        inspirations: [],
+        inspirations: defaultInspirations,
         loading: false,
         error: error instanceof Error ? error.message : 'Failed to fetch inspirations',
         initialized: true,

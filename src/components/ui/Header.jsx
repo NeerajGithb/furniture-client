@@ -3,16 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import {
-  Search,
-  ShoppingCart,
-  User,
-  Menu,
-  ChevronDown,
-  Heart,
-  Plus,
-  DivideIcon,
-} from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, ChevronDown, Heart, Plus } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo, useCallback, memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
@@ -419,19 +410,43 @@ const Header = () => {
   const loadingCategories = useProductStore(loadingCategoriesSelector);
   const { inspirations, loading: loadingInspirations, fetchInspirations } = useHomeStore();
 
-  // Fix hydration by tracking client mount
   const [isMounted, setIsMounted] = useState(false);
-
+  const [dataLoaded, setDataLoaded] = useState(false);
   const initializeRef = useRef(false);
+
+  // Critical: Fix hydration and data loading
   useEffect(() => {
-    // Set mounted to true after client hydration
     setIsMounted(true);
-    
-    if (!initializeRef.current) {
-      useProductStore.getState().initializeProducts();
-      fetchInspirations();
+
+    const initializeData = async () => {
+      if (initializeRef.current) return;
       initializeRef.current = true;
-    }
+
+      try {
+        // Initialize in proper sequence
+        await useProductStore.getState().initializeProducts();
+        await fetchInspirations();
+
+        // Wait for categories and subcategories to load
+        await new Promise((resolve) => {
+          const checkData = () => {
+            const state = useProductStore.getState();
+            if (state.categories.length > 0 && state.subcategories.length > 0) {
+              setDataLoaded(true);
+              resolve();
+            } else {
+              setTimeout(checkData, 100);
+            }
+          };
+          checkData();
+        });
+      } catch (error) {
+        console.error('Initialization error:', error);
+        setDataLoaded(true); // Set to true to prevent infinite loading
+      }
+    };
+
+    initializeData();
   }, [fetchInspirations]);
 
   const [activeInspiration, setActiveInspiration] = useState(null);
@@ -447,14 +462,28 @@ const Header = () => {
 
   const timeoutRef = useRef();
 
+  // Only create transformedInspirations when data is actually loaded
   const transformedInspirations = useMemo(() => {
-    if (!inspirations?.length) return [];
-    return inspirations.map((insp) => ({
-      name: insp.title,
-      slug: insp.slug,
-      categories: insp.categories || [],
-    }));
-  }, [JSON.stringify(inspirations)]);
+    if (!dataLoaded || !inspirations?.length || !categories?.length) return [];
+
+    return inspirations.map((insp) => {
+      // Match inspiration categories with actual category data
+      const matchedCategories = (insp.categories || [])
+        .map((catId) => {
+          return (
+            categories.find((cat) => cat._id === catId) ||
+            categories.find((cat) => cat._id === catId._id)
+          );
+        })
+        .filter(Boolean);
+
+      return {
+        name: insp.title,
+        slug: insp.slug,
+        categories: matchedCategories,
+      };
+    });
+  }, [dataLoaded, inspirations, categories]);
 
   const activeInspirationData = useMemo(
     () => transformedInspirations.find((i) => i.name === activeInspiration),
@@ -537,7 +566,7 @@ const Header = () => {
       setCurrentQuery('');
     }
   }, [pathname]);
-  
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -547,7 +576,8 @@ const Header = () => {
   }, []);
 
   const InspirationNavigation = useMemo(() => {
-    if (loadingInspirations) {
+    // Show loading only when not mounted or data is still loading
+    if (!isMounted || !dataLoaded || loadingInspirations) {
       return (
         <div className="flex items-center justify-center gap-3 py-2 h-12 overflow-hidden">
           {Array.from({ length: 5 }, (_, i) => (
@@ -556,6 +586,15 @@ const Header = () => {
               <div className="w-3 h-3 bg-gray-200 rounded animate-pulse"></div>
             </div>
           ))}
+        </div>
+      );
+    }
+
+    // Show navigation only when we have actual data
+    if (transformedInspirations.length === 0) {
+      return (
+        <div className="h-12 flex items-center justify-center">
+          <p className="text-sm text-gray-500">No categories available</p>
         </div>
       );
     }
@@ -579,16 +618,16 @@ const Header = () => {
       </div>
     );
   }, [
+    isMounted,
+    dataLoaded,
     loadingInspirations,
-    JSON.stringify(transformedInspirations),
+    transformedInspirations,
     activeInspiration,
     handleInspirationEnter,
     handleGetTabPosition,
   ]);
 
-  // Render auth section with hydration safety
   const renderAuthSection = () => {
-    // Show consistent loading state during hydration
     if (!isMounted || authLoading) {
       return (
         <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
@@ -597,7 +636,6 @@ const Header = () => {
       );
     }
 
-    // After hydration, show actual auth state
     if (user) {
       return (
         <div className="relative flex-shrink-0">
@@ -629,9 +667,7 @@ const Header = () => {
         aria-label="Login"
       >
         <User size={18} />
-        <span className="hidden md:inline ml-1.5 text-xs whitespace-nowrap">
-          Login
-        </span>
+        <span className="hidden md:inline ml-1.5 text-xs whitespace-nowrap">Login</span>
       </motion.button>
     );
   };
@@ -647,7 +683,6 @@ const Header = () => {
         <div className={headerClasses}>
           <div className="px-3 sm:px-4 md:px-6 w-full max-w-[1600px] mx-auto">
             <div className="flex items-center justify-between h-full gap-2 sm:gap-4">
-              {/* Left section */}
               <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
                 <motion.button
                   onClick={openSidebar}
@@ -677,14 +712,11 @@ const Header = () => {
                 </Link>
               </div>
 
-              {/* Center search - hidden on mobile */}
               <div className="hidden md:flex flex-1 max-w-[600px] mx-4 md:mx-6">
                 <SearchBar className="w-full" />
               </div>
 
-              {/* Right section */}
               <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                {/* Desktop navigation */}
                 <nav className="hidden xl:flex items-center gap-1 mr-2">
                   {NAV_ITEMS.map(({ href, label }) => {
                     const isActive = pathname === href;
@@ -710,7 +742,6 @@ const Header = () => {
                 </nav>
 
                 <div className="flex items-center gap-1 sm:gap-2 relative max-md:w-full">
-                  {/* Static icons container with smooth transform */}
                   <motion.div
                     className="flex items-center gap-1 sm:gap-2"
                     animate={{
@@ -723,7 +754,6 @@ const Header = () => {
                       duration: 0.3,
                     }}
                   >
-                    {/* Wishlist */}
                     <Link
                       href="/wishlist"
                       className="relative p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
@@ -767,12 +797,10 @@ const Header = () => {
                         </motion.span>
                       )}
                     </Link>
-                    
-                    {/* User section - Fixed hydration */}
+
                     {renderAuthSection()}
                   </motion.div>
 
-                  {/* Search button - positioned absolutely for overlay effect */}
                   <AnimatePresence>
                     {scrolled && isMdDown && (
                       <motion.div
@@ -829,11 +857,9 @@ const Header = () => {
               }}
             >
               <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6">
-                {/* Desktop sticky navigation */}
                 <nav className="hidden md:block">{InspirationNavigation}</nav>
               </div>
 
-              {/* Sticky mega menu dropdown */}
               <AnimatePresence>
                 {activeInspirationData && (
                   <InspirationMegaMenu
@@ -850,18 +876,15 @@ const Header = () => {
           )}
         </AnimatePresence>
 
-        {/* Secondary navigation bar */}
         <div
           className="relative bg-white md:border-t md:border-gray-100 max-md:mt-[52px] max-md:px-1"
           onMouseLeave={handleInspirationLeave}
         >
           <div className="max-w-[1600px] mx-auto px-2 md:px-6">
-            {/* Desktop navigation - Hide when sticky header is visible */}
             <nav className={`md:block ${scrolled && !isMdDown ? 'hidden' : 'hidden md:block'}`}>
               {InspirationNavigation}
             </nav>
 
-            {/* Mobile search bar */}
             <div className="md:hidden h-[60px] py-[10px] flex items-center">
               <AnimatePresence>
                 {!isSearchOpen && (
@@ -894,7 +917,6 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Mega menu dropdown - Only show when sticky header is NOT visible */}
           <AnimatePresence>
             {activeInspirationData && (!scrolled || isMdDown) && (
               <InspirationMegaMenu
@@ -910,7 +932,6 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Modals and overlays */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
       <SearchModal isOpen={isSearchOpen} onClose={closeSearch} initialQuery={currentQuery} />
       <AuthModal isOpen={isAuthOpen} onClose={closeAuth} />

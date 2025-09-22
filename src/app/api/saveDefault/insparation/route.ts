@@ -1,36 +1,42 @@
 // app/api/saveDefaultInspirations/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    let inspirations: any[] = Array.isArray(data) ? data : data.inspirations || [];
+    const inspirations: any[] = Array.isArray(data) ? data : data.inspirations || [];
 
     const publicFolder = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicFolder)) fs.mkdirSync(publicFolder, { recursive: true });
-
     const filePath = path.join(publicFolder, 'inspirations.json');
 
-    // Only write if file does not exist or is empty
-    let writeFile = false;
-    if (!fs.existsSync(filePath)) {
-      writeFile = true;
-    } else {
-      const fileData = fs.readFileSync(filePath, 'utf-8');
-      if (!fileData || fileData.trim() === '[]') writeFile = true;
+    // Ensure /public exists
+    await fs.mkdir(publicFolder, { recursive: true });
+
+    let shouldSave = false;
+
+    try {
+      const existing = await fs.readFile(filePath, 'utf-8');
+      const parsed = existing.trim() ? JSON.parse(existing) : [];
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        shouldSave = true;
+      }
+    } catch {
+      // File doesn't exist or invalid JSON → save new
+      shouldSave = true;
     }
 
-    if (writeFile) {
-      fs.writeFileSync(filePath, JSON.stringify(inspirations, null, 2), 'utf-8');
+    if (shouldSave) {
+      await fs.writeFile(filePath, JSON.stringify(inspirations, null, 2), 'utf-8');
+      return NextResponse.json({ message: 'Default inspirations saved successfully' });
     }
 
-    return NextResponse.json({ message: 'Default inspirations saved if empty' });
-  } catch (err) {
-    console.error(err);
+    return NextResponse.json({ message: 'Inspirations file already has data. Skipped saving.' });
+  } catch (err: any) {
+    console.error('Error saving inspirations:', err);
     return NextResponse.json(
-      { message: 'Failed to save default inspirations', error: err },
+      { message: 'Failed to save default inspirations', error: err.message },
       { status: 500 },
     );
   }

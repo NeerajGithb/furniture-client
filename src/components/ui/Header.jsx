@@ -413,23 +413,8 @@ const Header = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const initializeRef = useRef(false);
-  console.log(
-    'Header render - dataLoaded:',
-    dataLoaded,
-    'isMounted:',
-    isMounted,
-    'categories:',
-    categories,
-    'subcategories:',
-    subcategories,
-    'inspirations:',
-    inspirations,
-    'loadingCategories:',
-    loadingCategories,
-    'loadingInspirations:',
-    loadingInspirations,
-  );
-  // Critical: Fix hydration and data loading
+
+  // Initialize data with immediate default display
   useEffect(() => {
     setIsMounted(true);
 
@@ -438,26 +423,23 @@ const Header = () => {
       initializeRef.current = true;
 
       try {
-        // Initialize in proper sequence
+        // Initialize products store (this loads defaults immediately)
         await useProductStore.getState().initializeProducts();
+
+        // Check if we have default data immediately after initialization
+        const state = useProductStore.getState();
+        if (state.categories.length > 0 && state.subcategories.length > 0) {
+          setDataLoaded(true); // Set immediately when default data exists
+        }
+
+        // Fetch inspirations
         await fetchInspirations();
 
-        // Wait for categories and subcategories to load
-        await new Promise((resolve) => {
-          const checkData = () => {
-            const state = useProductStore.getState();
-            if (state.categories.length > 0 && state.subcategories.length > 0) {
-              setDataLoaded(true);
-              resolve();
-            } else {
-              setTimeout(checkData, 100);
-            }
-          };
-          checkData();
-        });
+        // Always ensure dataLoaded is true after initialization
+        setDataLoaded(true);
       } catch (error) {
         console.error('Initialization error:', error);
-        setDataLoaded(true); // Set to true to prevent infinite loading
+        setDataLoaded(true);
       }
     };
 
@@ -477,12 +459,11 @@ const Header = () => {
 
   const timeoutRef = useRef();
 
-  // Only create transformedInspirations when data is actually loaded
+  // Only create transformedInspirations when data is loaded
   const transformedInspirations = useMemo(() => {
-    if (!dataLoaded || !inspirations?.length || !categories?.length) return [];
+    if (!inspirations?.length || !categories?.length) return [];
 
     return inspirations.map((insp) => {
-      // Match inspiration categories with actual category data
       const matchedCategories = (insp.categories || [])
         .map((catId) => {
           return (
@@ -498,7 +479,7 @@ const Header = () => {
         categories: matchedCategories,
       };
     });
-  }, [dataLoaded, inspirations, categories]);
+  }, [inspirations, categories]);
 
   const activeInspirationData = useMemo(
     () => transformedInspirations.find((i) => i.name === activeInspiration),
@@ -591,11 +572,15 @@ const Header = () => {
   }, []);
 
   const InspirationNavigation = useMemo(() => {
-    // Show loading only when not mounted or data is still loading
-    if (!isMounted || !dataLoaded || loadingInspirations) {
+    // Show navigation immediately if we have categories and inspirations
+    const hasCategories = categories?.length > 0;
+    const hasInspirations = inspirations?.length > 0;
+
+    // Only show loading if we don't have any data at all
+    if ((!hasCategories && loadingCategories) || (!hasInspirations && loadingInspirations)) {
       return (
         <div className="flex items-center justify-center gap-3 py-2 h-12 overflow-hidden">
-          {Array.from({ length: 5 }, (_, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="flex items-center gap-1 flex-shrink-0">
               <div className="w-16 h-3 bg-gray-200 rounded animate-pulse"></div>
               <div className="w-3 h-3 bg-gray-200 rounded animate-pulse"></div>
@@ -604,16 +589,6 @@ const Header = () => {
         </div>
       );
     }
-
-    // Show navigation only when we have actual data
-    if (transformedInspirations.length === 0) {
-      return (
-        <div className="h-12 flex items-center justify-center">
-          <p className="text-sm text-gray-500">No categories available</p>
-        </div>
-      );
-    }
-
     return (
       <div className="h-12 flex items-center justify-center overflow-hidden">
         <div className="w-full overflow-x-auto scrollbar-hide">
@@ -633,8 +608,9 @@ const Header = () => {
       </div>
     );
   }, [
-    isMounted,
-    dataLoaded,
+    categories,
+    inspirations,
+    loadingCategories,
     loadingInspirations,
     transformedInspirations,
     activeInspiration,

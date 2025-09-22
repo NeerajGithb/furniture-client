@@ -1,0 +1,2590 @@
+[
+  {
+    "_id": "68b69e9f96b29ea167663ff0",
+    "name": "4 Seater Dining Table",
+    "categoryId": {
+      "_id": "68b57a200629cfb9f4f378c0",
+      "name": "Dining Table",
+      "slug": "dining-table"
+    },
+    "slug": "4-seater-dining-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798621/subcategories/mloq5nglnlybxthizkrb.jpg",
+      "alt": "4 Seater Dining Table",
+      "publicId": "subcategories/mloq5nglnlybxthizkrb"
+    },
+    "keywords": [
+      "4 seater dining table",
+      "small dining table",
+      "compact dining set",
+      "wooden 4 chair dining table",
+      "modern dining table for 4",
+      "affordable dining table set"
+    ],
+    "description": "A 4 seater dining table is the most common choice for small to medium families, offering comfort and style while saving space. Available in wood, glass, and modern designs.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:37:03.331Z",
+    "updatedAt": "2025-09-02T07:37:03.331Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69f0796b29ea167663ff6",
+    "name": "6 Seater Dining Table",
+    "categoryId": {
+      "_id": "68b57a200629cfb9f4f378c0",
+      "name": "Dining Table",
+      "slug": "dining-table"
+    },
+    "slug": "6-seater-dining-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798725/subcategories/tyggmbdfln2oiwtgqlun.jpg",
+      "alt": "6 Seater Dining Table",
+      "publicId": "subcategories/tyggmbdfln2oiwtgqlun"
+    },
+    "keywords": [
+      "6 seater dining table",
+      "wooden dining set for 6",
+      "family dining table",
+      "modern 6 seater dining set",
+      "best dining table designs",
+      "large dining table online"
+    ],
+    "description": "Perfect for medium to large families, a 6 seater dining table balances style and practicality. Popular in wooden, marble, and glass finishes.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:38:47.374Z",
+    "updatedAt": "2025-09-02T07:38:47.374Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eea996af6e3fedb9609b",
+    "name": "Accent Armchair",
+    "categoryId": {
+      "_id": "68b57b1e0629cfb9f4f3790b",
+      "name": "Armchair",
+      "slug": "armchair"
+    },
+    "slug": "accent-armchair",
+    "mainImage": {
+      "alt": "Stylish accent armchair for modern interiors"
+    },
+    "keywords": [
+      "accent armchair",
+      "decorative armchair",
+      "living room chair",
+      "bedroom accent chair",
+      "modern stylish chair",
+      "designer armchair"
+    ],
+    "description": "Stylish accent armchairs to enhance the décor of your living room or bedroom. Available in various colors and designs.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:18:33.449Z",
+    "updatedAt": "2025-09-02T13:18:33.449Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6edfb96af6e3fedb9607d",
+    "name": "Accent Chair",
+    "categoryId": {
+      "_id": "68b57a390629cfb9f4f378c5",
+      "name": "Chair",
+      "slug": "chair"
+    },
+    "slug": "accent-chair",
+    "mainImage": {
+      "alt": "Stylish accent chair for dining or living space"
+    },
+    "keywords": [
+      "accent chair",
+      "designer accent chair",
+      "modern accent seating",
+      "living room chair",
+      "decorative chair",
+      "statement chair for home"
+    ],
+    "description": "Accent chairs provide a stylish pop to dining or living areas. Available in modern, classic, and designer options to enhance interior décor.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:15:39.245Z",
+    "updatedAt": "2025-09-02T13:15:39.245Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6edfb96af6e3fedb96077",
+    "name": "Armchair",
+    "categoryId": {
+      "_id": "68b57a390629cfb9f4f378c5",
+      "name": "Chair",
+      "slug": "chair"
+    },
+    "slug": "armchair",
+    "mainImage": {
+      "alt": "Elegant upholstered armchair for dining or lounge"
+    },
+    "keywords": [
+      "armchair",
+      "dining armchair",
+      "stylish armchair",
+      "comfortable armchair for home",
+      "modern armchair",
+      "luxury seating"
+    ],
+    "description": "Armchairs add elegance and comfort to dining rooms or lounge areas. Perfect for reading corners or statement seating at dining tables.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:15:39.085Z",
+    "updatedAt": "2025-09-02T13:15:39.085Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6edfb96af6e3fedb96079",
+    "name": "Bar Stool",
+    "categoryId": {
+      "_id": "68b57a390629cfb9f4f378c5",
+      "name": "Chair",
+      "slug": "chair"
+    },
+    "slug": "bar-stool",
+    "mainImage": {
+      "alt": "Modern adjustable bar stool for kitchen island"
+    },
+    "keywords": [
+      "bar stool",
+      "adjustable bar stool",
+      "wooden bar stool",
+      "modern bar seating",
+      "kitchen counter stool",
+      "high table chair"
+    ],
+    "description": "Bar stools are ideal for kitchen islands, breakfast counters, or high tables. Available in adjustable, wooden, and modern styles.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:15:39.139Z",
+    "updatedAt": "2025-09-02T13:15:39.139Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eef796af6e3fedb960a5",
+    "name": "Bedside Drawer",
+    "categoryId": null,
+    "slug": "bedside-drawer",
+    "mainImage": {
+      "alt": "Compact bedside drawer for bedroom"
+    },
+    "keywords": [
+      "bedside drawer",
+      "nightstand drawer",
+      "bedroom storage drawer",
+      "small bedside cabinet",
+      "modern bedside drawer",
+      "wooden bedside drawer"
+    ],
+    "description": "Compact bedside drawer for storing essentials next to your bed. Available in wood, metal, and modern designs.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:19:51.642Z",
+    "updatedAt": "2025-09-02T13:19:51.642Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef2796af6e3fedb960bd",
+    "name": "Bench with Backrest",
+    "categoryId": {
+      "_id": "68b57b050629cfb9f4f37901",
+      "name": "Bench",
+      "slug": "bench"
+    },
+    "slug": "bench-with-backrest",
+    "mainImage": {
+      "alt": "Elegant bench with backrest for added comfort"
+    },
+    "keywords": [
+      "bench with backrest",
+      "comfortable bench seating",
+      "hallway bench with back",
+      "dining bench with backrest",
+      "modern seating bench",
+      "stylish bedroom bench"
+    ],
+    "description": "Elegant bench with backrest for added comfort. Suitable for dining areas, hallways, or bedroom seating.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:20:39.639Z",
+    "updatedAt": "2025-09-02T13:20:39.639Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eef796af6e3fedb960a7",
+    "name": "Chest of Drawers",
+    "categoryId": null,
+    "slug": "chest-of-drawers",
+    "mainImage": {
+      "alt": "Spacious chest of drawers for bedroom storage"
+    },
+    "keywords": [
+      "chest of drawers",
+      "wardrobe drawer chest",
+      "bedroom storage chest",
+      "clothes storage drawer",
+      "modern chest of drawers",
+      "wooden chest of drawers"
+    ],
+    "description": "Multi-drawer chest providing ample storage for clothes, accessories, and linens. Stylish and functional for any bedroom.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:19:51.685Z",
+    "updatedAt": "2025-09-02T13:19:51.685Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69e0296b29ea167663fea",
+    "name": "Chesterfield Sofa",
+    "categoryId": {
+      "_id": "68b579620629cfb9f4f378b6",
+      "name": "Sofa",
+      "slug": "sofa"
+    },
+    "slug": "chesterfield-sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798464/subcategories/ecz6wcoz11xriossjf3y.jpg",
+      "alt": "Chesterfield Sofa",
+      "publicId": "subcategories/ecz6wcoz11xriossjf3y"
+    },
+    "keywords": [
+      "chesterfield sofa",
+      "tufted sofa",
+      "luxury chesterfield couch",
+      "classic sofa design",
+      "leather chesterfield",
+      "vintage chesterfield sofa"
+    ],
+    "description": "A timeless and luxurious sofa style, Chesterfield sofas bring elegance with tufted design and rolled arms. Perfect for premium interiors.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:34:26.579Z",
+    "updatedAt": "2025-09-02T07:34:26.579Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f08e96af6e3fedb96119",
+    "name": "Computer Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "slug": "computer-desk",
+    "mainImage": {
+      "alt": "Modern computer desk with storage and ergonomic design"
+    },
+    "keywords": [
+      "computer desk",
+      "office computer table",
+      "ergonomic computer desk",
+      "modern computer workstation",
+      "desk with storage for PC",
+      "study desk with shelves"
+    ],
+    "description": "Modern computer desk designed for desktops and laptops with cable management, storage, and ergonomic workspace for productivity.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:26:38.607Z",
+    "updatedAt": "2025-09-02T13:26:38.607Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f12e96af6e3fedb9615f",
+    "name": "Corner Bookshelf",
+    "categoryId": {
+      "_id": "68b57a590629cfb9f4f378cf",
+      "name": "Bookshelf",
+      "slug": "bookshelf"
+    },
+    "slug": "corner-bookshelf",
+    "mainImage": {
+      "alt": "Corner bookshelf with compact design for small rooms"
+    },
+    "keywords": [
+      "corner bookshelf",
+      "space saving bookshelf",
+      "compact bookshelf",
+      "corner bookcase",
+      "bookshelf for small spaces",
+      "smart storage shelf"
+    ],
+    "description": "Space-saving corner bookshelf designed to fit snugly in room corners while maximizing storage.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:18.054Z",
+    "updatedAt": "2025-09-02T13:29:18.054Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef7996af6e3fedb960dd",
+    "name": "Corner Cabinet",
+    "categoryId": {
+      "_id": "68b57ae80629cfb9f4f378f7",
+      "name": "Cabinet",
+      "slug": "cabinet"
+    },
+    "slug": "corner-cabinet",
+    "mainImage": {
+      "alt": "Space-saving corner cabinet for living room or bedroom"
+    },
+    "keywords": [
+      "corner cabinet",
+      "space-saving cabinet",
+      "living room corner storage",
+      "bedroom corner cabinet",
+      "compact corner furniture",
+      "modern corner cabinet"
+    ],
+    "description": "Space-saving corner cabinet designed to fit perfectly in room corners while offering stylish storage options.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:01.817Z",
+    "updatedAt": "2025-09-02T13:22:01.817Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f08e96af6e3fedb96121",
+    "name": "Corner Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "slug": "corner-desk",
+    "mainImage": {
+      "alt": "L-shaped corner desk for home office"
+    },
+    "keywords": [
+      "corner desk",
+      "L-shaped desk",
+      "space saving desk",
+      "home office corner desk",
+      "modern L desk",
+      "functional corner workstation"
+    ],
+    "description": "Space-saving corner desk with L-shaped design, perfect for maximizing office or study space while keeping everything within reach.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:26:38.831Z",
+    "updatedAt": "2025-09-02T13:26:38.831Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0b296af6e3fedb9612d",
+    "name": "Corner TV Stand",
+    "categoryId": {
+      "_id": "68b57a8d0629cfb9f4f378de",
+      "name": "TV Stand",
+      "slug": "tv-stand"
+    },
+    "slug": "corner-tv-stand",
+    "mainImage": {
+      "alt": "Compact corner TV stand with shelves"
+    },
+    "keywords": [
+      "corner TV stand",
+      "space saving TV unit",
+      "small room TV furniture",
+      "compact TV stand",
+      "corner entertainment center",
+      "functional TV cabinet"
+    ],
+    "description": "Space-saving corner TV stand with multiple storage compartments, ideal for maximizing small living spaces.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:27:14.307Z",
+    "updatedAt": "2025-09-02T13:27:14.307Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eac996af6e3fedb96062",
+    "name": "Dining Chair",
+    "categoryId": {
+      "_id": "68b57a390629cfb9f4f378c5",
+      "name": "Chair",
+      "slug": "chair"
+    },
+    "slug": "dining-chair",
+    "mainImage": {
+      "alt": "Dining Chair"
+    },
+    "keywords": [
+      "dining chair",
+      "wooden dining chair",
+      "upholstered dining chair",
+      "modern dining chair",
+      "stylish chair for dining table",
+      "comfortable dining seating"
+    ],
+    "description": "Dining chairs are essential for any dining space, combining comfort, style, and functionality. Available in wood, metal, and upholstered designs to complement all table types.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:02:01.666Z",
+    "updatedAt": "2025-09-02T13:02:01.666Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6993396b29ea167663fc6",
+    "name": "Double Bed",
+    "categoryId": {
+      "_id": "68b579320629cfb9f4f378b1",
+      "name": "Bed",
+      "slug": "bed"
+    },
+    "slug": "double-bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756797233/subcategories/pyqd2rjwaelz3ztidn5u.jpg",
+      "alt": "Double Bed",
+      "publicId": "subcategories/pyqd2rjwaelz3ztidn5u"
+    },
+    "keywords": [
+      "double bed",
+      "standard double bed",
+      "couple bed",
+      "wooden double bed",
+      "modern double bed design",
+      "space efficient beds"
+    ],
+    "description": "A double bed balances comfort and functionality, making it a great choice for couples and small bedrooms. Available in wood, metal, and upholstered designs to suit any décor.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:13:55.236Z",
+    "updatedAt": "2025-09-02T07:13:55.236Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef9a96af6e3fedb960ef",
+    "name": "Drawer Side Table",
+    "categoryId": null,
+    "slug": "drawer-side-table",
+    "mainImage": {
+      "alt": "Side table with built-in drawer for convenient storage"
+    },
+    "keywords": [
+      "drawer side table",
+      "side table with storage",
+      "bedroom drawer table",
+      "living room drawer table",
+      "functional side table",
+      "modern drawer table"
+    ],
+    "description": "Side table with built-in drawer for convenient storage of essentials like remotes, books, or stationery.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:34.122Z",
+    "updatedAt": "2025-09-02T13:22:34.122Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eef796af6e3fedb960ad",
+    "name": "Dresser Drawer",
+    "categoryId": null,
+    "slug": "dresser-drawer",
+    "mainImage": {
+      "alt": "Elegant dresser drawer unit for bedroom"
+    },
+    "keywords": [
+      "dresser drawer",
+      "bedroom dresser",
+      "clothing storage drawer",
+      "modern dresser unit",
+      "stylish dresser drawers",
+      "bedroom organization furniture"
+    ],
+    "description": "Elegant dresser drawer unit for bedroom organization. Combines style with functionality for clothing and accessory storage.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:19:51.857Z",
+    "updatedAt": "2025-09-02T13:19:51.857Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0e096af6e3fedb9613d",
+    "name": "Dresser with Mirror",
+    "categoryId": {
+      "_id": "68b57a7c0629cfb9f4f378d9",
+      "name": "Dresser",
+      "slug": "dresser"
+    },
+    "slug": "dresser-with-mirror",
+    "mainImage": {
+      "alt": "Bedroom dresser with attached mirror and storage drawers"
+    },
+    "keywords": [
+      "dresser with mirror",
+      "bedroom dresser with mirror",
+      "makeup dresser cabinet",
+      "dresser with storage and mirror",
+      "functional dresser unit",
+      "dresser vanity combo"
+    ],
+    "description": "Functional dresser with an attached mirror and multiple storage drawers, ideal for daily grooming and bedroom décor.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:00.496Z",
+    "updatedAt": "2025-09-02T13:28:00.496Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef2796af6e3fedb960b9",
+    "name": "Entryway Bench",
+    "categoryId": {
+      "_id": "68b57b050629cfb9f4f37901",
+      "name": "Bench",
+      "slug": "bench"
+    },
+    "slug": "entryway-bench",
+    "mainImage": {
+      "alt": "Practical entryway bench with seating and storage"
+    },
+    "keywords": [
+      "entryway bench",
+      "hallway bench",
+      "shoe storage bench",
+      "entry seating bench",
+      "modern entryway furniture",
+      "compact hallway bench"
+    ],
+    "description": "Practical bench for entryways with or without storage. Provides seating while organizing shoes or bags.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:20:39.548Z",
+    "updatedAt": "2025-09-02T13:20:39.548Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f08e96af6e3fedb9611d",
+    "name": "Executive Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "slug": "executive-desk",
+    "mainImage": {
+      "alt": "Premium executive office desk with drawers"
+    },
+    "keywords": [
+      "executive desk",
+      "luxury office desk",
+      "wooden executive table",
+      "large professional office desk",
+      "premium executive workstation",
+      "classic office furniture"
+    ],
+    "description": "Premium executive desk with spacious surface, elegant design, and multiple drawers, ideal for professional and luxury offices.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:26:38.714Z",
+    "updatedAt": "2025-09-02T13:26:38.714Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69fc596b29ea167663ffc",
+    "name": "Extendable Dining Table",
+    "categoryId": {
+      "_id": "68b57a200629cfb9f4f378c0",
+      "name": "Dining Table",
+      "slug": "dining-table"
+    },
+    "slug": "extendable-dining-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798915/subcategories/tbxlwjvpiwlpsuetztrw.jpg",
+      "alt": "Extendable Dining Table",
+      "publicId": "subcategories/tbxlwjvpiwlpsuetztrw"
+    },
+    "keywords": [
+      "extendable dining table",
+      "expandable dining table",
+      "folding dining set",
+      "space saving dining table",
+      "modern extendable dining table",
+      "multifunctional dining set"
+    ],
+    "description": "Extendable dining tables are versatile, allowing you to expand seating capacity when needed. Ideal for compact homes and families who host guests often.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:41:57.367Z",
+    "updatedAt": "2025-09-02T07:41:57.367Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6efda96af6e3fedb960fb",
+    "name": "Fabric Ottoman",
+    "categoryId": null,
+    "slug": "fabric-ottoman",
+    "mainImage": {
+      "alt": "Fabric upholstered ottoman for cozy interiors"
+    },
+    "keywords": [
+      "fabric ottoman",
+      "upholstered ottoman",
+      "cozy ottoman",
+      "living room fabric ottoman",
+      "bedroom fabric ottoman",
+      "modern fabric ottoman"
+    ],
+    "description": "Soft fabric ottoman that brings comfort and texture to interiors, available in versatile colors and designs.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:23:38.493Z",
+    "updatedAt": "2025-09-02T13:23:38.493Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f00b96af6e3fedb96109",
+    "name": "Fabric Recliner",
+    "categoryId": null,
+    "slug": "fabric-recliner",
+    "mainImage": {
+      "alt": "Comfortable fabric recliner for cozy interiors"
+    },
+    "keywords": [
+      "fabric recliner",
+      "upholstered recliner",
+      "cozy recliner",
+      "comfortable fabric recliner",
+      "modern fabric chair",
+      "plush recliner"
+    ],
+    "description": "Soft and cozy fabric recliner with plush cushioning, perfect for relaxation in bedrooms or living spaces.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:24:27.096Z",
+    "updatedAt": "2025-09-02T13:24:27.096Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef6096af6e3fedb960cf",
+    "name": "Floating Console Table",
+    "categoryId": null,
+    "slug": "floating-console-table",
+    "mainImage": {
+      "alt": "Floating wall-mounted console table for modern spaces"
+    },
+    "keywords": [
+      "floating console table",
+      "wall-mounted console table",
+      "modern hallway table",
+      "minimalist console",
+      "space saving console",
+      "narrow entryway furniture"
+    ],
+    "description": "Wall-mounted floating console table for a minimal and modern look. Great for narrow spaces and stylish decor.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:21:36.063Z",
+    "updatedAt": "2025-09-02T13:21:36.063Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f10596af6e3fedb96151",
+    "name": "Floating Nightstand",
+    "categoryId": null,
+    "slug": "floating-nightstand",
+    "mainImage": {
+      "alt": "Wall mounted floating nightstand with drawer"
+    },
+    "keywords": [
+      "floating nightstand",
+      "wall mounted nightstand",
+      "space saving nightstand",
+      "compact nightstand",
+      "minimalist bedside table",
+      "modern floating bedside shelf"
+    ],
+    "description": "Wall-mounted floating nightstand with a compact design, ideal for small bedrooms and minimalist interiors.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:37.479Z",
+    "updatedAt": "2025-09-02T13:28:37.479Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0b296af6e3fedb9612f",
+    "name": "Floating TV Stand",
+    "categoryId": {
+      "_id": "68b57a8d0629cfb9f4f378de",
+      "name": "TV Stand",
+      "slug": "tv-stand"
+    },
+    "slug": "floating-tv-stand",
+    "mainImage": {
+      "alt": "Wall-mounted floating TV stand with hidden storage"
+    },
+    "keywords": [
+      "floating TV stand",
+      "wall mounted TV unit",
+      "modern floating TV shelf",
+      "sleek TV stand",
+      "minimalist TV furniture",
+      "contemporary wall TV cabinet"
+    ],
+    "description": "Wall-mounted floating TV stand with hidden storage, giving a sleek and clutter-free modern living room look.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:27:14.357Z",
+    "updatedAt": "2025-09-02T13:27:14.357Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f18896af6e3fedb9617b",
+    "name": "Glass Coffee Table",
+    "categoryId": {
+      "_id": "68b57a030629cfb9f4f378bb",
+      "name": "Coffee Table",
+      "slug": "coffee-table"
+    },
+    "slug": "glass-coffee-table",
+    "mainImage": {
+      "alt": "Round glass coffee table with metal frame"
+    },
+    "keywords": [
+      "glass coffee table",
+      "modern coffee table",
+      "living room table",
+      "round glass coffee table",
+      "contemporary coffee table",
+      "stylish coffee table"
+    ],
+    "description": "Elegant glass coffee table with a sleek frame, perfect for modern living rooms.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:30:48.232Z",
+    "updatedAt": "2025-09-02T13:30:48.232Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef7996af6e3fedb960d9",
+    "name": "Glass Door Cabinet",
+    "categoryId": {
+      "_id": "68b57ae80629cfb9f4f378f7",
+      "name": "Cabinet",
+      "slug": "cabinet"
+    },
+    "slug": "glass-door-cabinet",
+    "mainImage": {
+      "alt": "Elegant glass door cabinet for displaying decor and organizing items"
+    },
+    "keywords": [
+      "glass door cabinet",
+      "display cabinet",
+      "decor cabinet",
+      "living room glass cabinet",
+      "modern glass cabinet",
+      "transparent door cabinet"
+    ],
+    "description": "Elegant glass door cabinet perfect for displaying decor or organizing items while keeping them visible.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:01.711Z",
+    "updatedAt": "2025-09-02T13:22:01.711Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef5f96af6e3fedb960c9",
+    "name": "Glass Top Console Table",
+    "categoryId": null,
+    "slug": "glass-top-console-table",
+    "mainImage": {
+      "alt": "Modern glass top console table for living room or hallway"
+    },
+    "keywords": [
+      "glass top console table",
+      "modern console table",
+      "living room glass console",
+      "hallway glass table",
+      "stylish console table",
+      "minimalist console table"
+    ],
+    "description": "Sleek glass top console table for modern interiors. Perfect for showcasing decor while maintaining minimal style.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:21:35.874Z",
+    "updatedAt": "2025-09-02T13:21:35.874Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef9996af6e3fedb960e9",
+    "name": "Glass Top Side Table",
+    "categoryId": null,
+    "slug": "glass-top-side-table",
+    "mainImage": {
+      "alt": "Elegant side table with glass top for modern living spaces"
+    },
+    "keywords": [
+      "glass top side table",
+      "modern side table",
+      "living room glass table",
+      "bedroom glass table",
+      "decor table",
+      "transparent top side table"
+    ],
+    "description": "Elegant side table with glass top, ideal for displaying decor or placing essentials in modern living spaces.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:33.985Z",
+    "updatedAt": "2025-09-02T13:22:33.985Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f12e96af6e3fedb96161",
+    "name": "Industrial Bookshelf",
+    "categoryId": {
+      "_id": "68b57a590629cfb9f4f378cf",
+      "name": "Bookshelf",
+      "slug": "bookshelf"
+    },
+    "slug": "industrial-bookshelf",
+    "mainImage": {
+      "alt": "Industrial bookshelf with metal frame and wooden shelves"
+    },
+    "keywords": [
+      "industrial bookshelf",
+      "metal and wood bookshelf",
+      "industrial style bookcase",
+      "sturdy bookshelf",
+      "vintage industrial bookshelf",
+      "loft style bookshelf"
+    ],
+    "description": "Industrial-style bookshelf with a metal frame and wooden shelves, blending durability with aesthetics.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:18.098Z",
+    "updatedAt": "2025-09-02T13:29:18.098Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f15596af6e3fedb96171",
+    "name": "Kids Wardrobe",
+    "categoryId": null,
+    "slug": "kids-wardrobe",
+    "mainImage": {
+      "alt": "Kids wardrobe with playful design and compact size"
+    },
+    "keywords": [
+      "kids wardrobe",
+      "children wardrobe",
+      "compact wardrobe",
+      "colorful wardrobe",
+      "kids furniture wardrobe",
+      "small wardrobe for kids"
+    ],
+    "description": "Compact and colorful wardrobe designed especially for kids’ clothes and essentials.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:57.642Z",
+    "updatedAt": "2025-09-02T13:29:57.642Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b5dac941da4ae6672bc80b",
+    "name": "King Size Bed",
+    "categoryId": {
+      "_id": "68b579320629cfb9f4f378b1",
+      "name": "Bed",
+      "slug": "bed"
+    },
+    "slug": "king-size-bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756748488/subcategories/u0f6hrdjonwnfua5sx4d.jpg",
+      "alt": "King Size Bed",
+      "publicId": "subcategories/u0f6hrdjonwnfua5sx4d"
+    },
+    "createdAt": "2025-09-01T17:41:29.914Z",
+    "updatedAt": "2025-09-02T07:04:19.215Z",
+    "__v": 0,
+    "description": "A king size bed offers ultimate comfort and luxury with extra-wide space, making it perfect for master bedrooms. Designed with premium materials and elegant finishes, it enhances both sleep quality and bedroom aesthetics.",
+    "keywords": [
+      "king size bed",
+      "luxury bed online",
+      "large bed for master bedroom",
+      "wooden king bed",
+      "modern king size bed",
+      "designer king bed furniture"
+    ],
+    "priority": 2,
+    "isActive": true
+  },
+  {
+    "_id": "68b6f12e96af6e3fedb9615d",
+    "name": "Ladder Bookshelf",
+    "categoryId": {
+      "_id": "68b57a590629cfb9f4f378cf",
+      "name": "Bookshelf",
+      "slug": "bookshelf"
+    },
+    "slug": "ladder-bookshelf",
+    "mainImage": {
+      "alt": "Leaning ladder bookshelf with books and plants"
+    },
+    "keywords": [
+      "ladder bookshelf",
+      "leaning bookshelf",
+      "stylish ladder shelf",
+      "decorative bookshelf",
+      "modern ladder bookcase",
+      "small space bookshelf"
+    ],
+    "description": "Trendy ladder-style bookshelf that leans against the wall, offering both function and décor.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:18.009Z",
+    "updatedAt": "2025-09-02T13:29:18.009Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eea996af6e3fedb9609d",
+    "name": "Leather Armchair",
+    "categoryId": {
+      "_id": "68b57b1e0629cfb9f4f3790b",
+      "name": "Armchair",
+      "slug": "armchair"
+    },
+    "slug": "leather-armchair",
+    "mainImage": {
+      "alt": "Premium leather armchair for living room or office"
+    },
+    "keywords": [
+      "leather armchair",
+      "premium chair",
+      "comfortable leather chair",
+      "living room leather armchair",
+      "study leather chair",
+      "office leather chair"
+    ],
+    "description": "Luxurious leather armchairs that offer comfort and a premium look, suitable for living rooms, studies, or offices.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:18:33.494Z",
+    "updatedAt": "2025-09-02T13:18:33.494Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6efda96af6e3fedb960f9",
+    "name": "Leather Ottoman",
+    "categoryId": null,
+    "slug": "leather-ottoman",
+    "mainImage": {
+      "alt": "Luxurious leather ottoman for modern living rooms"
+    },
+    "keywords": [
+      "leather ottoman",
+      "premium ottoman",
+      "modern leather ottoman",
+      "living room ottoman",
+      "luxury ottoman",
+      "durable leather ottoman"
+    ],
+    "description": "Luxurious leather ottoman that enhances any living space with style, durability, and a premium finish.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:23:38.447Z",
+    "updatedAt": "2025-09-02T13:23:38.447Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f00b96af6e3fedb96107",
+    "name": "Leather Recliner",
+    "categoryId": null,
+    "slug": "leather-recliner",
+    "mainImage": {
+      "alt": "Premium leather recliner chair for living rooms"
+    },
+    "keywords": [
+      "leather recliner",
+      "luxury recliner",
+      "modern recliner",
+      "durable recliner",
+      "premium leather chair",
+      "comfortable recliner"
+    ],
+    "description": "Premium leather recliner with superior comfort, durability, and a luxurious finish for modern living rooms.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:24:27.047Z",
+    "updatedAt": "2025-09-02T13:24:27.047Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69d8296b29ea167663fe4",
+    "name": "Loveseat Sofa",
+    "categoryId": {
+      "_id": "68b579620629cfb9f4f378b6",
+      "name": "Sofa",
+      "slug": "sofa"
+    },
+    "slug": "loveseat-sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798337/subcategories/kdxmmeti97zfvapfb6lf.jpg",
+      "alt": "Loveseat Sofa",
+      "publicId": "subcategories/kdxmmeti97zfvapfb6lf"
+    },
+    "keywords": [
+      "loveseat sofa",
+      "2 seater sofa",
+      "compact sofa",
+      "small space sofa set",
+      "modern loveseat",
+      "stylish loveseat couch"
+    ],
+    "description": "Compact and stylish, loveseat sofas are ideal for couples, small apartments, and cozy seating spaces. Popular for bedrooms and living room add-ons.",
+    "priority": 0,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:32:18.868Z",
+    "updatedAt": "2025-09-02T07:32:18.868Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f00b96af6e3fedb9610b",
+    "name": "Manual Recliner",
+    "categoryId": null,
+    "slug": "manual-recliner",
+    "mainImage": {
+      "alt": "Traditional manual recliner chair"
+    },
+    "keywords": [
+      "manual recliner",
+      "traditional recliner",
+      "affordable recliner",
+      "classic recliner",
+      "recliner with lever",
+      "simple recliner"
+    ],
+    "description": "Classic manual recliner with smooth reclining mechanism, offering comfort and affordability in one design.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:24:27.140Z",
+    "updatedAt": "2025-09-02T13:24:27.140Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f18896af6e3fedb9617f",
+    "name": "Marble Coffee Table",
+    "categoryId": {
+      "_id": "68b57a030629cfb9f4f378bb",
+      "name": "Coffee Table",
+      "slug": "coffee-table"
+    },
+    "slug": "marble-coffee-table",
+    "mainImage": {
+      "alt": "White marble coffee table with golden base"
+    },
+    "keywords": [
+      "marble coffee table",
+      "luxury coffee table",
+      "premium living room table",
+      "stone coffee table",
+      "modern marble table",
+      "designer coffee table"
+    ],
+    "description": "Luxury marble coffee table with a polished top and sturdy base for a premium look.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:30:48.362Z",
+    "updatedAt": "2025-09-02T13:30:48.362Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6acbec359db8927ad62df",
+    "name": "Marble Top Dining Table",
+    "categoryId": {
+      "_id": "68b57a200629cfb9f4f378c0",
+      "name": "Dining Table",
+      "slug": "dining-table"
+    },
+    "slug": "marble-top-dining-table",
+    "mainImage": {
+      "alt": "Marble Top Dining Table"
+    },
+    "keywords": [
+      "marble dining table",
+      "marble top dining set",
+      "luxury dining table",
+      "modern marble dining table design",
+      "premium dining furniture",
+      "stylish dining table"
+    ],
+    "description": "A marble dining table is a luxury statement piece, known for elegance, durability, and timeless appeal. Perfect for premium dining rooms.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T08:37:18.404Z",
+    "updatedAt": "2025-09-02T08:37:18.404Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef5f96af6e3fedb960cb",
+    "name": "Metal Frame Console Table",
+    "categoryId": null,
+    "slug": "metal-frame-console-table",
+    "mainImage": {
+      "alt": "Sturdy metal frame console table for modern living spaces"
+    },
+    "keywords": [
+      "metal frame console table",
+      "industrial console table",
+      "metal console table",
+      "modern living room console",
+      "hallway metal table",
+      "sturdy console furniture"
+    ],
+    "description": "Durable metal frame console table with industrial or contemporary design. Ideal for living areas and entryways.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:21:35.924Z",
+    "updatedAt": "2025-09-02T13:21:35.924Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ee6496af6e3fedb96087",
+    "name": "Metal Shoe Rack",
+    "categoryId": {
+      "_id": "68b57b2f0629cfb9f4f37910",
+      "name": "Shoe Rack",
+      "slug": "shoe-rack"
+    },
+    "slug": "metal-shoe-rack",
+    "mainImage": {
+      "alt": "Modern metal shoe rack for entryway"
+    },
+    "keywords": [
+      "metal shoe rack",
+      "modern shoe organizer",
+      "durable metal rack",
+      "shoe storage for entryway",
+      "garage shoe rack",
+      "stylish metal rack"
+    ],
+    "description": "Metal shoe racks offer modern style and durability, ideal for entryways or garages. Easy to assemble and maintain.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:17:24.096Z",
+    "updatedAt": "2025-09-02T13:17:24.096Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef9a96af6e3fedb960eb",
+    "name": "Metal Side Table",
+    "categoryId": null,
+    "slug": "metal-side-table",
+    "mainImage": {
+      "alt": "Durable metal side table for contemporary or industrial interiors"
+    },
+    "keywords": [
+      "metal side table",
+      "industrial side table",
+      "modern metal table",
+      "living room metal table",
+      "office side table",
+      "sturdy metal table"
+    ],
+    "description": "Durable metal side table suitable for contemporary or industrial interiors, perfect for both decoration and utility.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:34.031Z",
+    "updatedAt": "2025-09-02T13:22:34.031Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef7996af6e3fedb960db",
+    "name": "Metal Storage Cabinet",
+    "categoryId": {
+      "_id": "68b57ae80629cfb9f4f378f7",
+      "name": "Cabinet",
+      "slug": "cabinet"
+    },
+    "slug": "metal-storage-cabinet",
+    "mainImage": {
+      "alt": "Durable metal storage cabinet for industrial or contemporary interiors"
+    },
+    "keywords": [
+      "metal storage cabinet",
+      "industrial cabinet",
+      "office metal cabinet",
+      "metal organizer cabinet",
+      "modern metal storage",
+      "secure storage cabinet"
+    ],
+    "description": "Durable metal storage cabinet ideal for industrial or contemporary interiors. Perfect for secure storage in any room.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:01.758Z",
+    "updatedAt": "2025-09-02T13:22:01.758Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f12d96af6e3fedb9615b",
+    "name": "Modern Bookshelf",
+    "categoryId": {
+      "_id": "68b57a590629cfb9f4f378cf",
+      "name": "Bookshelf",
+      "slug": "bookshelf"
+    },
+    "slug": "modern-bookshelf",
+    "mainImage": {
+      "alt": "Modern minimalist bookshelf with open shelves"
+    },
+    "keywords": [
+      "modern bookshelf",
+      "sleek bookshelf",
+      "contemporary bookcase",
+      "designer bookshelf",
+      "modern storage shelf",
+      "stylish bookshelf"
+    ],
+    "description": "Sleek modern bookshelf with clean lines and a contemporary design for stylish storage.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:17.957Z",
+    "updatedAt": "2025-09-02T13:29:17.957Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0b296af6e3fedb9612b",
+    "name": "Modern Glass TV Stand",
+    "categoryId": {
+      "_id": "68b57a8d0629cfb9f4f378de",
+      "name": "TV Stand",
+      "slug": "tv-stand"
+    },
+    "slug": "modern-glass-tv-stand",
+    "mainImage": {
+      "alt": "Modern glass TV stand with metal frame"
+    },
+    "keywords": [
+      "glass TV stand",
+      "modern TV unit",
+      "contemporary TV stand",
+      "stylish glass TV cabinet",
+      "metal and glass TV furniture",
+      "luxury TV stand"
+    ],
+    "description": "Sleek glass TV stand with metal accents, designed for a contemporary look and perfect for modern living rooms.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:27:14.261Z",
+    "updatedAt": "2025-09-02T13:27:14.261Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f10596af6e3fedb9614b",
+    "name": "Modern Nightstand",
+    "categoryId": null,
+    "slug": "modern-nightstand",
+    "mainImage": {
+      "alt": "Minimalist modern nightstand with open shelf and drawer"
+    },
+    "keywords": [
+      "modern nightstand",
+      "sleek nightstand",
+      "contemporary bedside table",
+      "stylish bedroom nightstand",
+      "luxury nightstand",
+      "premium modern bedside cabinet"
+    ],
+    "description": "Minimalist modern nightstand with a sleek finish, adding a stylish touch to any bedroom décor.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:37.313Z",
+    "updatedAt": "2025-09-02T13:28:37.313Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0e096af6e3fedb9613b",
+    "name": "Modern White Dresser",
+    "categoryId": {
+      "_id": "68b57a7c0629cfb9f4f378d9",
+      "name": "Dresser",
+      "slug": "dresser"
+    },
+    "slug": "modern-white-dresser",
+    "mainImage": {
+      "alt": "Minimalist modern white dresser with drawers"
+    },
+    "keywords": [
+      "white dresser",
+      "modern dresser",
+      "minimalist dresser",
+      "stylish bedroom dresser",
+      "contemporary dresser cabinet",
+      "luxury dresser with storage"
+    ],
+    "description": "Sleek white dresser with a minimalist design, blending seamlessly into modern and contemporary interiors.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:00.436Z",
+    "updatedAt": "2025-09-02T13:28:00.436Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f15596af6e3fedb9616d",
+    "name": "Modular Wardrobe",
+    "categoryId": null,
+    "slug": "modular-wardrobe",
+    "mainImage": {
+      "alt": "Modern modular wardrobe with shelves and drawers"
+    },
+    "keywords": [
+      "modular wardrobe",
+      "custom wardrobe",
+      "flexible storage wardrobe",
+      "modern modular wardrobe",
+      "wardrobe with drawers",
+      "designer wardrobe"
+    ],
+    "description": "Customizable modular wardrobe with adjustable shelves and drawers for flexible storage.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:57.515Z",
+    "updatedAt": "2025-09-02T13:29:57.515Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef7996af6e3fedb960df",
+    "name": "Multi-Drawer Cabinet",
+    "categoryId": {
+      "_id": "68b57ae80629cfb9f4f378f7",
+      "name": "Cabinet",
+      "slug": "cabinet"
+    },
+    "slug": "multi-drawer-cabinet",
+    "mainImage": {
+      "alt": "Cabinet with multiple drawers for organized storage"
+    },
+    "keywords": [
+      "multi-drawer cabinet",
+      "cabinet with drawers",
+      "organized storage cabinet",
+      "living room drawer cabinet",
+      "bedroom drawer storage",
+      "office storage cabinet"
+    ],
+    "description": "Cabinet with multiple drawers for organized storage of clothes, documents, or miscellaneous items.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:01.859Z",
+    "updatedAt": "2025-09-02T13:22:01.859Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ee6496af6e3fedb9608d",
+    "name": "Multi-Tier Shoe Rack",
+    "categoryId": {
+      "_id": "68b57b2f0629cfb9f4f37910",
+      "name": "Shoe Rack",
+      "slug": "shoe-rack"
+    },
+    "slug": "multi-tier-shoe-rack",
+    "mainImage": {
+      "alt": "Multi-tier shoe rack for organized footwear"
+    },
+    "keywords": [
+      "multi-tier shoe rack",
+      "large shoe storage",
+      "organized shoe rack",
+      "family shoe organizer",
+      "tiered shoe storage",
+      "durable multi-tier rack"
+    ],
+    "description": "Multi-tier shoe racks provide organized storage for multiple pairs at once. Perfect for large families or shoe enthusiasts.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:17:24.261Z",
+    "updatedAt": "2025-09-02T13:17:24.261Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f10596af6e3fedb9614d",
+    "name": "Nightstand with Charging Ports",
+    "categoryId": null,
+    "slug": "nightstand-with-charging-ports",
+    "mainImage": {
+      "alt": "Nightstand with USB charging ports and drawers"
+    },
+    "keywords": [
+      "nightstand with charging",
+      "smart nightstand",
+      "USB charging bedside table",
+      "functional nightstand",
+      "nightstand with drawers and charging ports",
+      "modern tech nightstand"
+    ],
+    "description": "Smart nightstand with built-in USB charging ports and ample storage, combining convenience with style.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:37.363Z",
+    "updatedAt": "2025-09-02T13:28:37.363Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eef796af6e3fedb960a9",
+    "name": "Office Drawer Cabinet",
+    "categoryId": null,
+    "slug": "office-drawer-cabinet",
+    "mainImage": {
+      "alt": "Organized office drawer cabinet for documents"
+    },
+    "keywords": [
+      "office drawer cabinet",
+      "file storage drawer",
+      "stationery organizer cabinet",
+      "office storage drawers",
+      "home office drawer unit",
+      "metal drawer cabinet"
+    ],
+    "description": "Practical office drawer cabinet for organizing files, stationery, and documents. Perfect for home or corporate offices.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:19:51.734Z",
+    "updatedAt": "2025-09-02T13:19:51.734Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef2796af6e3fedb960bb",
+    "name": "Outdoor Bench",
+    "categoryId": {
+      "_id": "68b57b050629cfb9f4f37901",
+      "name": "Bench",
+      "slug": "bench"
+    },
+    "slug": "outdoor-bench",
+    "mainImage": {
+      "alt": "Durable outdoor bench for garden or patio"
+    },
+    "keywords": [
+      "outdoor bench",
+      "garden bench",
+      "patio bench",
+      "balcony seating bench",
+      "weather-resistant bench",
+      "wooden outdoor bench"
+    ],
+    "description": "Durable outdoor bench designed for patios, gardens, or balconies. Weather-resistant and stylish.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:20:39.594Z",
+    "updatedAt": "2025-09-02T13:20:39.594Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ee6496af6e3fedb9608b",
+    "name": "Over-the-Door Shoe Rack",
+    "categoryId": {
+      "_id": "68b57b2f0629cfb9f4f37910",
+      "name": "Shoe Rack",
+      "slug": "shoe-rack"
+    },
+    "slug": "over-the-door-shoe-rack",
+    "mainImage": {
+      "alt": "Over-the-door hanging shoe rack for closets"
+    },
+    "keywords": [
+      "over the door shoe rack",
+      "hanging shoe organizer",
+      "space saving shoe rack",
+      "closet shoe storage",
+      "door mounted shoe rack",
+      "easy hanging shoe organizer"
+    ],
+    "description": "Over-the-door shoe racks maximize storage without occupying floor space. Ideal for bedrooms, closets, or bathrooms.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:17:24.208Z",
+    "updatedAt": "2025-09-02T13:17:24.208Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f00b96af6e3fedb9610d",
+    "name": "Power Recliner",
+    "categoryId": null,
+    "slug": "power-recliner",
+    "mainImage": {
+      "alt": "Electric power recliner with motorized controls"
+    },
+    "keywords": [
+      "power recliner",
+      "electric recliner",
+      "automatic recliner",
+      "motorized recliner",
+      "modern recliner chair",
+      "luxury power recliner"
+    ],
+    "description": "Modern power recliner with motorized adjustment for effortless comfort and customizable seating positions.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:24:27.185Z",
+    "updatedAt": "2025-09-02T13:24:27.185Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6953796b29ea167663faf",
+    "name": "Queen Size Bed",
+    "categoryId": {
+      "_id": "68b579320629cfb9f4f378b1",
+      "name": "Bed",
+      "slug": "bed"
+    },
+    "slug": "queen-size-bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756796213/subcategories/ijfzrh3gflakc1qfydhq.jpg",
+      "alt": "Queen Size Bed",
+      "publicId": "subcategories/ijfzrh3gflakc1qfydhq"
+    },
+    "keywords": [
+      "queen bed",
+      "queen size bed online",
+      "modern queen bed",
+      "wooden queen bed",
+      "compact queen size bed",
+      "affordable queen bed designs"
+    ],
+    "description": "Queen beds are stylish, comfortable, and space-efficient, making them the most popular choice for modern homes. Ideal for couples or small families, they blend practicality with design.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T06:56:55.339Z",
+    "updatedAt": "2025-09-02T06:56:55.339Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eea996af6e3fedb96095",
+    "name": "Recliner Armchair",
+    "categoryId": {
+      "_id": "68b57b1e0629cfb9f4f3790b",
+      "name": "Armchair",
+      "slug": "armchair"
+    },
+    "slug": "recliner-armchair",
+    "mainImage": {
+      "alt": "Comfortable recliner armchair for living room"
+    },
+    "keywords": [
+      "recliner armchair",
+      "comfortable armchair",
+      "leather recliner",
+      "fabric recliner chair",
+      "living room recliner",
+      "relaxing armchair"
+    ],
+    "description": "A comfortable recliner armchair perfect for relaxing, reading, or watching TV. Available in leather and fabric finishes.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:18:33.301Z",
+    "updatedAt": "2025-09-02T13:18:33.301Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f00b96af6e3fedb9610f",
+    "name": "Recliner Sofa",
+    "categoryId": null,
+    "slug": "recliner-sofa",
+    "mainImage": {
+      "alt": "Large recliner sofa with multiple reclining seats"
+    },
+    "keywords": [
+      "recliner sofa",
+      "sofa with recliners",
+      "family recliner sofa",
+      "multi-seat recliner",
+      "comfortable recliner couch",
+      "luxury recliner sofa"
+    ],
+    "description": "Spacious recliner sofa designed for families, combining multiple reclining seats with premium comfort.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:24:27.233Z",
+    "updatedAt": "2025-09-02T13:24:27.233Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69c2796b29ea167663fd8",
+    "name": "Recliner Sofa",
+    "categoryId": {
+      "_id": "68b579620629cfb9f4f378b6",
+      "name": "Sofa",
+      "slug": "sofa"
+    },
+    "slug": "recliner-sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756797989/subcategories/e0fp3mbboxy3s7tetbtn.jpg",
+      "alt": "Recliner Sofa",
+      "publicId": "subcategories/e0fp3mbboxy3s7tetbtn"
+    },
+    "keywords": [
+      "recliner sofa",
+      "recliner couch",
+      "3 seater recliner",
+      "leather recliner sofa set",
+      "modern recliner sofa",
+      "best recliner couch"
+    ],
+    "description": "Recliner sofas are loved for their unmatched comfort with adjustable backrests and leg support. A top choice for home theaters and cozy living rooms.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:26:31.183Z",
+    "updatedAt": "2025-09-02T07:26:31.183Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f18896af6e3fedb96183",
+    "name": "Round Coffee Table",
+    "categoryId": {
+      "_id": "68b57a030629cfb9f4f378bb",
+      "name": "Coffee Table",
+      "slug": "coffee-table"
+    },
+    "slug": "round-coffee-table",
+    "mainImage": {
+      "alt": "Minimalist round coffee table with wooden legs"
+    },
+    "keywords": [
+      "round coffee table",
+      "small coffee table",
+      "modern round coffee table",
+      "minimal coffee table",
+      "space saving coffee table",
+      "compact coffee table"
+    ],
+    "description": "Stylish round coffee table with a minimal design, perfect for compact spaces.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:30:48.460Z",
+    "updatedAt": "2025-09-02T13:30:48.460Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6a0f996b29ea167664002",
+    "name": "Round Dining Table",
+    "categoryId": {
+      "_id": "68b57a200629cfb9f4f378c0",
+      "name": "Dining Table",
+      "slug": "dining-table"
+    },
+    "slug": "round-dining-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756799224/subcategories/otbcufzvprevmitoa4y5.jpg",
+      "alt": "Round Dining Table",
+      "publicId": "subcategories/otbcufzvprevmitoa4y5"
+    },
+    "keywords": [
+      "round dining table",
+      "circular dining table",
+      "wooden round dining set",
+      "modern round dining table",
+      "small space dining furniture",
+      "luxury round dining set"
+    ],
+    "description": "Round dining tables create a cozy and intimate dining experience, perfect for small families and stylish spaces. Available in wooden, marble, and glass tops.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:47:05.742Z",
+    "updatedAt": "2025-09-02T07:47:05.742Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6efda96af6e3fedb960fd",
+    "name": "Round Ottoman",
+    "categoryId": null,
+    "slug": "round-ottoman",
+    "mainImage": {
+      "alt": "Round ottoman for stylish and compact seating"
+    },
+    "keywords": [
+      "round ottoman",
+      "circular ottoman",
+      "modern round ottoman",
+      "small round ottoman",
+      "stylish ottoman",
+      "compact ottoman"
+    ],
+    "description": "Chic round ottoman that adds a stylish, space-saving seating or footrest option for living and lounge areas.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:23:38.540Z",
+    "updatedAt": "2025-09-02T13:23:38.540Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef9a96af6e3fedb960ed",
+    "name": "Round Side Table",
+    "categoryId": null,
+    "slug": "round-side-table",
+    "mainImage": {
+      "alt": "Round side table for living room or bedroom"
+    },
+    "keywords": [
+      "round side table",
+      "circular side table",
+      "modern round table",
+      "small round table",
+      "living room round table",
+      "bedroom round side table"
+    ],
+    "description": "Round side table that adds a soft, stylish touch to any room. Perfect for compact spaces and modern décor.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:34.078Z",
+    "updatedAt": "2025-09-02T13:22:34.078Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0e096af6e3fedb9613f",
+    "name": "Rustic Dresser",
+    "categoryId": {
+      "_id": "68b57a7c0629cfb9f4f378d9",
+      "name": "Dresser",
+      "slug": "dresser"
+    },
+    "slug": "rustic-dresser",
+    "mainImage": {
+      "alt": "Rustic wooden dresser with farmhouse style design"
+    },
+    "keywords": [
+      "rustic dresser",
+      "farmhouse dresser",
+      "distressed wood dresser",
+      "vintage dresser cabinet",
+      "country style dresser",
+      "wooden rustic dresser unit"
+    ],
+    "description": "Farmhouse-inspired rustic dresser made from distressed wood, offering a vintage and cozy appeal.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:00.546Z",
+    "updatedAt": "2025-09-02T13:28:00.546Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f10596af6e3fedb9614f",
+    "name": "Rustic Nightstand",
+    "categoryId": null,
+    "slug": "rustic-nightstand",
+    "mainImage": {
+      "alt": "Rustic wooden nightstand with vintage farmhouse design"
+    },
+    "keywords": [
+      "rustic nightstand",
+      "farmhouse bedside table",
+      "distressed wood nightstand",
+      "vintage nightstand cabinet",
+      "country style nightstand",
+      "wooden rustic nightstand"
+    ],
+    "description": "Farmhouse-inspired rustic nightstand made with distressed wood, offering a cozy vintage look.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:37.421Z",
+    "updatedAt": "2025-09-02T13:28:37.421Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0b296af6e3fedb96131",
+    "name": "Rustic TV Stand",
+    "categoryId": {
+      "_id": "68b57a8d0629cfb9f4f378de",
+      "name": "TV Stand",
+      "slug": "tv-stand"
+    },
+    "slug": "rustic-tv-stand",
+    "mainImage": {
+      "alt": "Rustic farmhouse style TV stand with wooden finish"
+    },
+    "keywords": [
+      "rustic TV stand",
+      "farmhouse TV cabinet",
+      "distressed wood TV unit",
+      "vintage style TV stand",
+      "rustic entertainment center",
+      "wooden rustic TV furniture"
+    ],
+    "description": "Rustic-style TV stand with farmhouse charm, combining distressed wood and sturdy design for cozy interiors.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:27:14.427Z",
+    "updatedAt": "2025-09-02T13:27:14.427Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69b7d96b29ea167663fd2",
+    "name": "Sectional Sofa",
+    "categoryId": {
+      "_id": "68b579620629cfb9f4f378b6",
+      "name": "Sofa",
+      "slug": "sofa"
+    },
+    "slug": "sectional-sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756797820/subcategories/ciapnixeyj980rgbgzkm.jpg",
+      "alt": "Sectional Sofa",
+      "publicId": "subcategories/ciapnixeyj980rgbgzkm"
+    },
+    "keywords": [
+      "sectional sofa",
+      "l shape sofa",
+      "u shape sofa set",
+      "modern sectional sofa",
+      "designer sectional couch",
+      "family sofa"
+    ],
+    "description": "Sectional sofas are the most popular choice for modern homes, offering spacious seating and flexible arrangements like L-shape and U-shape. Perfect for families and stylish living rooms.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:23:42.002Z",
+    "updatedAt": "2025-09-02T07:23:42.002Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b697e296b29ea167663fc0",
+    "name": "Single Bed",
+    "categoryId": {
+      "_id": "68b579320629cfb9f4f378b1",
+      "name": "Bed",
+      "slug": "bed"
+    },
+    "slug": "single-bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756796896/subcategories/orqcj7gcxf8lic3fbw9r.jpg",
+      "alt": "Single Bed",
+      "publicId": "subcategories/orqcj7gcxf8lic3fbw9r"
+    },
+    "keywords": [
+      "single bed",
+      "kids single bed",
+      "space saving single bed",
+      "guest room bed",
+      "single bed with storage",
+      "modern single bed"
+    ],
+    "description": "Perfect for kids’ rooms, guest spaces, or compact apartments, single beds are lightweight, versatile, and available in multiple designs including storage and minimalistic styles.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:08:18.431Z",
+    "updatedAt": "2025-09-02T07:08:18.431Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69ccc96b29ea167663fde",
+    "name": "Sleeper Sofa",
+    "categoryId": {
+      "_id": "68b579620629cfb9f4f378b6",
+      "name": "Sofa",
+      "slug": "sofa"
+    },
+    "slug": "sleeper-sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756798155/subcategories/bgh5t2ypq5cfkmcr8zgt.jpg",
+      "alt": "Sleeper Sofa",
+      "publicId": "subcategories/bgh5t2ypq5cfkmcr8zgt"
+    },
+    "keywords": [
+      "sofa bed",
+      "sleeper sofa",
+      "convertible sofa",
+      "pull out couch",
+      "modern sofa bed design",
+      "best sofa cum bed"
+    ],
+    "description": "Sleeper sofas are highly practical, serving as both a sofa and a bed. Perfect for guest rooms, apartments, and multipurpose spaces.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:29:16.832Z",
+    "updatedAt": "2025-09-02T07:29:16.832Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f15596af6e3fedb9616b",
+    "name": "Sliding Door Wardrobe",
+    "categoryId": null,
+    "slug": "sliding-door-wardrobe",
+    "mainImage": {
+      "alt": "Sliding door wardrobe with mirror panels"
+    },
+    "keywords": [
+      "sliding door wardrobe",
+      "modern wardrobe",
+      "space saving wardrobe",
+      "contemporary wardrobe",
+      "sliding wardrobe design",
+      "wardrobe with mirror"
+    ],
+    "description": "Modern sliding door wardrobe designed for compact spaces with smooth sliding mechanism.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:57.452Z",
+    "updatedAt": "2025-09-02T13:29:57.452Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6edfb96af6e3fedb9607b",
+    "name": "Stackable Chair",
+    "categoryId": {
+      "_id": "68b57a390629cfb9f4f378c5",
+      "name": "Chair",
+      "slug": "chair"
+    },
+    "slug": "stackable-chair",
+    "mainImage": {
+      "alt": "Lightweight stackable chair for dining or events"
+    },
+    "keywords": [
+      "stackable chair",
+      "folding dining chair",
+      "lightweight chair",
+      "space saving chair",
+      "modern stackable seating",
+      "durable dining chair"
+    ],
+    "description": "Stackable chairs are perfect for space-saving solutions in dining areas, cafes, or events. Lightweight, durable, and easy to store.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:15:39.185Z",
+    "updatedAt": "2025-09-02T13:15:39.185Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ee6496af6e3fedb96089",
+    "name": "Stackable Shoe Rack",
+    "categoryId": {
+      "_id": "68b57b2f0629cfb9f4f37910",
+      "name": "Shoe Rack",
+      "slug": "shoe-rack"
+    },
+    "slug": "stackable-shoe-rack",
+    "mainImage": {
+      "alt": "Compact stackable shoe rack for small spaces"
+    },
+    "keywords": [
+      "stackable shoe rack",
+      "space saving shoe organizer",
+      "modular shoe rack",
+      "adjustable shoe storage",
+      "compact stackable rack",
+      "easy to store shoes"
+    ],
+    "description": "Stackable shoe racks are space-saving and versatile. Perfect for small apartments, closets, or modular storage setups.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:17:24.151Z",
+    "updatedAt": "2025-09-02T13:17:24.151Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f08e96af6e3fedb9611f",
+    "name": "Standing Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "slug": "standing-desk",
+    "mainImage": {
+      "alt": "Adjustable standing desk for ergonomic workspace"
+    },
+    "keywords": [
+      "standing desk",
+      "adjustable height desk",
+      "ergonomic standing workstation",
+      "modern standing desk",
+      "sit stand desk",
+      "electric standing table"
+    ],
+    "description": "Ergonomic standing desk with adjustable height for a healthier workspace, designed for flexibility and comfort.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:26:38.782Z",
+    "updatedAt": "2025-09-02T13:26:38.782Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b69ac996b29ea167663fcc",
+    "name": "Storage Bed",
+    "categoryId": {
+      "_id": "68b579320629cfb9f4f378b1",
+      "name": "Bed",
+      "slug": "bed"
+    },
+    "slug": "storage-bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756797639/subcategories/ctwuhufwknot2ba8fjqj.jpg",
+      "alt": "Storage Bed",
+      "publicId": "subcategories/ctwuhufwknot2ba8fjqj"
+    },
+    "keywords": [
+      "storage bed",
+      "hydraulic bed",
+      "bed with drawers",
+      "space saving storage bed",
+      "wooden storage bed",
+      "smart storage bed designs"
+    ],
+    "description": "A storage bed is the smartest way to save space, offering hydraulic lifts or drawers to keep essentials neatly organized without sacrificing style.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T07:20:41.357Z",
+    "updatedAt": "2025-09-02T07:20:41.357Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef2796af6e3fedb960b5",
+    "name": "Storage Bench",
+    "categoryId": {
+      "_id": "68b57b050629cfb9f4f37901",
+      "name": "Bench",
+      "slug": "bench"
+    },
+    "slug": "storage-bench",
+    "mainImage": {
+      "alt": "Functional storage bench for entryway or bedroom"
+    },
+    "keywords": [
+      "storage bench",
+      "bench with storage",
+      "entryway bench storage",
+      "bedroom storage bench",
+      "modern storage bench",
+      "wooden storage bench"
+    ],
+    "description": "Functional storage bench with space to keep shoes, blankets, or accessories. Ideal for entryways or bedrooms.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:20:39.443Z",
+    "updatedAt": "2025-09-02T13:20:39.443Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f18896af6e3fedb96181",
+    "name": "Storage Coffee Table",
+    "categoryId": {
+      "_id": "68b57a030629cfb9f4f378bb",
+      "name": "Coffee Table",
+      "slug": "coffee-table"
+    },
+    "slug": "storage-coffee-table",
+    "mainImage": {
+      "alt": "Wooden coffee table with drawers and open shelves"
+    },
+    "keywords": [
+      "storage coffee table",
+      "functional coffee table",
+      "coffee table with drawers",
+      "multi-purpose coffee table",
+      "living room storage table",
+      "practical coffee table"
+    ],
+    "description": "Functional coffee table with built-in drawers and shelves for extra storage space.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:30:48.409Z",
+    "updatedAt": "2025-09-02T13:30:48.409Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef6096af6e3fedb960cd",
+    "name": "Storage Console Table",
+    "categoryId": null,
+    "slug": "storage-console-table",
+    "mainImage": {
+      "alt": "Functional console table with storage for entryway or living room"
+    },
+    "keywords": [
+      "storage console table",
+      "console table with drawers",
+      "entryway storage table",
+      "living room console storage",
+      "modern storage console",
+      "hallway organization table"
+    ],
+    "description": "Functional console table with drawers or shelves for storage. Keeps entryways or living rooms organized and stylish.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:21:36.012Z",
+    "updatedAt": "2025-09-02T13:21:36.012Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6efda96af6e3fedb960f7",
+    "name": "Storage Ottoman",
+    "categoryId": null,
+    "slug": "storage-ottoman",
+    "mainImage": {
+      "alt": "Storage ottoman with hidden space for essentials"
+    },
+    "keywords": [
+      "storage ottoman",
+      "ottoman with storage",
+      "multi-purpose ottoman",
+      "living room storage ottoman",
+      "bedroom storage ottoman",
+      "functional ottoman"
+    ],
+    "description": "Multi-functional storage ottoman that doubles as seating and hidden storage for blankets, books, or essentials.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:23:38.393Z",
+    "updatedAt": "2025-09-02T13:23:38.393Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eea996af6e3fedb96099",
+    "name": "Swivel Armchair",
+    "categoryId": {
+      "_id": "68b57b1e0629cfb9f4f3790b",
+      "name": "Armchair",
+      "slug": "armchair"
+    },
+    "slug": "swivel-armchair",
+    "mainImage": {
+      "alt": "360-degree swivel armchair for living or office"
+    },
+    "keywords": [
+      "swivel armchair",
+      "rotating chair",
+      "comfortable swivel chair",
+      "home office armchair",
+      "modern swivel chair",
+      "lounge swivel chair"
+    ],
+    "description": "Swivel armchairs rotate 360°, offering both comfort and mobility. Perfect for home offices or lounge areas.",
+    "priority": 3,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:18:33.404Z",
+    "updatedAt": "2025-09-02T13:18:33.404Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0e096af6e3fedb96141",
+    "name": "Tallboy Dresser",
+    "categoryId": {
+      "_id": "68b57a7c0629cfb9f4f378d9",
+      "name": "Dresser",
+      "slug": "dresser"
+    },
+    "slug": "tallboy-dresser",
+    "mainImage": {
+      "alt": "Tall slim dresser with multiple vertical drawers"
+    },
+    "keywords": [
+      "tallboy dresser",
+      "slim dresser cabinet",
+      "vertical dresser with drawers",
+      "space saving dresser",
+      "narrow bedroom dresser",
+      "tall storage dresser"
+    ],
+    "description": "Slim tallboy dresser with vertical drawers, ideal for compact spaces while providing ample storage.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:00.596Z",
+    "updatedAt": "2025-09-02T13:28:00.596Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6efda96af6e3fedb960ff",
+    "name": "Tufted Ottoman",
+    "categoryId": null,
+    "slug": "tufted-ottoman",
+    "mainImage": {
+      "alt": "Elegant tufted ottoman with classic design"
+    },
+    "keywords": [
+      "tufted ottoman",
+      "luxury ottoman",
+      "classic ottoman",
+      "button tufted ottoman",
+      "decorative ottoman",
+      "upholstered tufted ottoman"
+    ],
+    "description": "Elegant tufted ottoman with detailed upholstery, designed to elevate luxury interiors with timeless charm.",
+    "priority": 5,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:23:38.591Z",
+    "updatedAt": "2025-09-02T13:23:38.591Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eef796af6e3fedb960ab",
+    "name": "Under-bed Drawer",
+    "categoryId": null,
+    "slug": "under-bed-drawer",
+    "mainImage": {
+      "alt": "Pull-out under-bed drawer for storage"
+    },
+    "keywords": [
+      "under-bed drawer",
+      "bed storage drawer",
+      "space saving drawer",
+      "bedroom under storage",
+      "shoe or linen drawer",
+      "pull-out under bed drawer"
+    ],
+    "description": "Space-saving under-bed drawer to store extra bedding, clothes, or shoes. Ideal for compact bedrooms.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:19:51.781Z",
+    "updatedAt": "2025-09-02T13:19:51.781Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef2796af6e3fedb960b7",
+    "name": "Upholstered Bench",
+    "categoryId": {
+      "_id": "68b57b050629cfb9f4f37901",
+      "name": "Bench",
+      "slug": "bench"
+    },
+    "slug": "upholstered-bench",
+    "mainImage": {
+      "alt": "Comfortable upholstered bench for living room or bedroom"
+    },
+    "keywords": [
+      "upholstered bench",
+      "padded bench seating",
+      "living room bench",
+      "bedroom seating bench",
+      "comfortable bench",
+      "modern upholstered bench"
+    ],
+    "description": "Comfortable upholstered bench perfect for seating in bedrooms, living rooms, or hallways. Stylish and soft.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:20:39.499Z",
+    "updatedAt": "2025-09-02T13:20:39.499Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f15596af6e3fedb9616f",
+    "name": "Walk-in Wardrobe",
+    "categoryId": null,
+    "slug": "walk-in-wardrobe",
+    "mainImage": {
+      "alt": "Spacious walk-in wardrobe with shelves and hanging space"
+    },
+    "keywords": [
+      "walk-in wardrobe",
+      "luxury wardrobe",
+      "spacious wardrobe",
+      "walk-in closet",
+      "premium wardrobe design",
+      "modern walk-in wardrobe"
+    ],
+    "description": "Luxurious walk-in wardrobe offering dedicated space for clothes, shoes, and accessories.",
+    "priority": 4,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:57.568Z",
+    "updatedAt": "2025-09-02T13:29:57.568Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6eea996af6e3fedb96097",
+    "name": "Wingback Armchair",
+    "categoryId": {
+      "_id": "68b57b1e0629cfb9f4f3790b",
+      "name": "Armchair",
+      "slug": "armchair"
+    },
+    "slug": "wingback-armchair",
+    "mainImage": {
+      "alt": "Elegant wingback armchair with high back"
+    },
+    "keywords": [
+      "wingback armchair",
+      "classic armchair",
+      "high back chair",
+      "living room wingback",
+      "elegant armchair",
+      "reading chair"
+    ],
+    "description": "Classic wingback armchairs with high back and winged sides, ideal for elegant living rooms or reading corners.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:18:33.361Z",
+    "updatedAt": "2025-09-02T13:18:33.361Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f12d96af6e3fedb96159",
+    "name": "Wooden Bookshelf",
+    "categoryId": {
+      "_id": "68b57a590629cfb9f4f378cf",
+      "name": "Bookshelf",
+      "slug": "bookshelf"
+    },
+    "slug": "wooden-bookshelf",
+    "mainImage": {
+      "alt": "Classic wooden bookshelf filled with books and décor"
+    },
+    "keywords": [
+      "wooden bookshelf",
+      "solid wood bookshelf",
+      "classic bookshelf",
+      "sturdy bookshelf",
+      "wood bookcase",
+      "bookshelf with storage"
+    ],
+    "description": "Sturdy wooden bookshelf with multiple shelves, perfect for organizing books and decorative items.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:17.903Z",
+    "updatedAt": "2025-09-02T13:29:17.903Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f18896af6e3fedb9617d",
+    "name": "Wooden Coffee Table",
+    "categoryId": {
+      "_id": "68b57a030629cfb9f4f378bb",
+      "name": "Coffee Table",
+      "slug": "coffee-table"
+    },
+    "slug": "wooden-coffee-table",
+    "mainImage": {
+      "alt": "Rectangular wooden coffee table with storage shelf"
+    },
+    "keywords": [
+      "wooden coffee table",
+      "solid wood coffee table",
+      "classic coffee table",
+      "living room wooden table",
+      "durable coffee table",
+      "traditional wooden table"
+    ],
+    "description": "Solid wooden coffee table offering durability and timeless charm for any décor style.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:30:48.296Z",
+    "updatedAt": "2025-09-02T13:30:48.296Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef5f96af6e3fedb960c7",
+    "name": "Wooden Console Table",
+    "categoryId": null,
+    "slug": "wooden-console-table",
+    "mainImage": {
+      "alt": "Classic wooden console table for living room or entryway"
+    },
+    "keywords": [
+      "wooden console table",
+      "living room console",
+      "entryway table",
+      "modern wooden console",
+      "classic console table",
+      "hallway furniture"
+    ],
+    "description": "Classic wooden console table ideal for living rooms and entryways. Sturdy and elegant design with natural finishes.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:21:35.835Z",
+    "updatedAt": "2025-09-02T13:21:35.835Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0e096af6e3fedb96139",
+    "name": "Wooden Dresser",
+    "categoryId": {
+      "_id": "68b57a7c0629cfb9f4f378d9",
+      "name": "Dresser",
+      "slug": "dresser"
+    },
+    "slug": "wooden-dresser",
+    "mainImage": {
+      "alt": "Classic wooden dresser with multiple drawers"
+    },
+    "keywords": [
+      "wooden dresser",
+      "solid wood dresser",
+      "classic dresser",
+      "durable bedroom dresser",
+      "traditional dresser cabinet",
+      "spacious dresser with drawers"
+    ],
+    "description": "Classic wooden dresser with a smooth finish and spacious drawers, perfect for organizing clothes and essentials.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:00.390Z",
+    "updatedAt": "2025-09-02T13:28:00.390Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f10596af6e3fedb96149",
+    "name": "Wooden Nightstand",
+    "categoryId": null,
+    "slug": "wooden-nightstand",
+    "mainImage": {
+      "alt": "Classic wooden nightstand with drawers beside bed"
+    },
+    "keywords": [
+      "wooden nightstand",
+      "bedside table",
+      "bedroom nightstand",
+      "solid wood nightstand",
+      "traditional nightstand with storage",
+      "durable bedside cabinet"
+    ],
+    "description": "Classic wooden nightstand with drawers, perfect for keeping bedtime essentials close at hand.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:28:37.257Z",
+    "updatedAt": "2025-09-02T13:28:37.257Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ee6496af6e3fedb96085",
+    "name": "Wooden Shoe Rack",
+    "categoryId": {
+      "_id": "68b57b2f0629cfb9f4f37910",
+      "name": "Shoe Rack",
+      "slug": "shoe-rack"
+    },
+    "slug": "wooden-shoe-rack",
+    "mainImage": {
+      "alt": "Elegant wooden shoe rack for home"
+    },
+    "keywords": [
+      "wooden shoe rack",
+      "wood shoe organizer",
+      "home shoe rack",
+      "stylish wooden rack",
+      "compact shoe storage",
+      "durable shoe rack"
+    ],
+    "description": "A sturdy wooden shoe rack that organizes your footwear neatly. Available in multiple finishes to match home interiors.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:17:24.012Z",
+    "updatedAt": "2025-09-02T13:17:24.012Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef9996af6e3fedb960e7",
+    "name": "Wooden Side Table",
+    "categoryId": null,
+    "slug": "wooden-side-table",
+    "mainImage": {
+      "alt": "Classic wooden side table for living room or bedroom"
+    },
+    "keywords": [
+      "wooden side table",
+      "living room side table",
+      "bedroom side table",
+      "classic wood table",
+      "modern wooden side table",
+      "small wooden table"
+    ],
+    "description": "Classic wooden side table perfect for living rooms and bedrooms. Combines elegance with functional tabletop space.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:33.933Z",
+    "updatedAt": "2025-09-02T13:22:33.933Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6ef7996af6e3fedb960d7",
+    "name": "Wooden Storage Cabinet",
+    "categoryId": {
+      "_id": "68b57ae80629cfb9f4f378f7",
+      "name": "Cabinet",
+      "slug": "cabinet"
+    },
+    "slug": "wooden-storage-cabinet",
+    "mainImage": {
+      "alt": "Classic wooden storage cabinet for living room, bedroom, or office"
+    },
+    "keywords": [
+      "wooden storage cabinet",
+      "living room cabinet",
+      "bedroom storage cabinet",
+      "classic wooden cabinet",
+      "office storage cabinet",
+      "modern wood cabinet"
+    ],
+    "description": "Classic wooden storage cabinet for living rooms, bedrooms, or offices. Combines elegance with functional storage.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:22:01.667Z",
+    "updatedAt": "2025-09-02T13:22:01.667Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f0b296af6e3fedb96129",
+    "name": "Wooden TV Stand",
+    "categoryId": {
+      "_id": "68b57a8d0629cfb9f4f378de",
+      "name": "TV Stand",
+      "slug": "tv-stand"
+    },
+    "slug": "wooden-tv-stand",
+    "mainImage": {
+      "alt": "Classic wooden TV stand with storage cabinets"
+    },
+    "keywords": [
+      "wooden TV stand",
+      "solid wood TV cabinet",
+      "classic TV stand",
+      "durable wooden TV unit",
+      "modern wooden entertainment stand",
+      "stylish TV furniture"
+    ],
+    "description": "Elegant wooden TV stand crafted from high-quality wood with a natural finish, offering durability and timeless style.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:27:14.209Z",
+    "updatedAt": "2025-09-02T13:27:14.209Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f15596af6e3fedb96169",
+    "name": "Wooden Wardrobe",
+    "categoryId": null,
+    "slug": "wooden-wardrobe",
+    "mainImage": {
+      "alt": "Traditional wooden wardrobe with double doors"
+    },
+    "keywords": [
+      "wooden wardrobe",
+      "solid wood wardrobe",
+      "spacious wardrobe",
+      "classic wardrobe",
+      "wardrobe with storage",
+      "2 door wardrobe"
+    ],
+    "description": "Classic wooden wardrobe with spacious compartments for clothes, accessories, and essentials.",
+    "priority": 1,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:29:57.350Z",
+    "updatedAt": "2025-09-02T13:29:57.350Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b6f08e96af6e3fedb9611b",
+    "name": "Writing Desk",
+    "categoryId": {
+      "_id": "68b57aa10629cfb9f4f378e3",
+      "name": "Desk",
+      "slug": "desk"
+    },
+    "slug": "writing-desk",
+    "mainImage": {
+      "alt": "Minimalist wooden writing desk for home office"
+    },
+    "keywords": [
+      "writing desk",
+      "minimalist study desk",
+      "wooden writing table",
+      "small desk for home office",
+      "stylish writing table",
+      "modern writing workstation"
+    ],
+    "description": "Minimalist writing desk with a clean surface and compact design, perfect for home offices, study corners, or creative work.",
+    "priority": 2,
+    "isActive": true,
+    "createdAt": "2025-09-02T13:26:38.664Z",
+    "updatedAt": "2025-09-02T13:26:38.664Z",
+    "__v": 0
+  }
+]

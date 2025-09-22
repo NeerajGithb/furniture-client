@@ -105,12 +105,15 @@ interface ProductStore {
 
   showcaseProducts: Product[];
   loadingShowcase: boolean;
+
   // Category Actions
   fetchCategories: () => Promise<void>;
   fetchCategoryBySlug: (slug: string) => Promise<Category | null>;
+  loadDefaultCategories: () => Promise<void>;
 
   // Subcategory Actions
   fetchSubcategories: () => Promise<void>;
+  loadDefaultSubcategories: () => Promise<void>;
 
   // Filter Actions
   setFilters: (filters: ProductFilters) => void;
@@ -204,6 +207,7 @@ export const useProductStore = create<ProductStore>()(
     totalProducts: 0,
     showcaseProducts: [],
     loadingShowcase: false,
+
     // Initial Loading States
     loading: false,
     loadingProducts: false,
@@ -243,12 +247,13 @@ export const useProductStore = create<ProductStore>()(
     addingToCart: false,
     buyingNow: false,
     addingToWishlist: false,
+
     // Initialization flags
     initialized: false,
     categoriesInitialized: false,
     subcategoriesInitialized: false,
 
-    // Initialize store
+    // Initialize store with default data first
     initializeProducts: async () => {
       const state = get();
       if (state.initialized) return;
@@ -256,6 +261,10 @@ export const useProductStore = create<ProductStore>()(
       set({ initialized: true });
 
       try {
+        // Load default data first for immediate display
+        await Promise.all([get().loadDefaultCategories(), get().loadDefaultSubcategories()]);
+
+        // Then fetch latest from API in background
         await Promise.all([
           get().fetchCategories(),
           get().fetchSubcategories(),
@@ -264,6 +273,142 @@ export const useProductStore = create<ProductStore>()(
       } catch (error) {
         console.error('Error during initialization:', error);
         set({ error: 'Failed to initialize store' });
+      }
+    },
+
+    // Load default categories from static JSON
+    loadDefaultCategories: async () => {
+      try {
+        const res = await fetch('/categories.json');
+        if (res.ok) {
+          const defaultCategories: Category[] = await res.json();
+          if (defaultCategories && defaultCategories.length > 0) {
+            set({ categories: defaultCategories });
+            console.log('Loaded default categories:', defaultCategories.length);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load default categories:', error);
+      }
+    },
+
+    // Load default subcategories from static JSON
+    loadDefaultSubcategories: async () => {
+      try {
+        const res = await fetch('/subcategories.json');
+        if (res.ok) {
+          const defaultSubcategories: SubCategory[] = await res.json();
+          if (defaultSubcategories && defaultSubcategories.length > 0) {
+            set({ subcategories: defaultSubcategories });
+            console.log('Loaded default subcategories:', defaultSubcategories.length);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load default subcategories:', error);
+      }
+    },
+
+    // Fetch categories with default fallback
+    fetchCategories: async () => {
+      const { categoriesInitialized, loadingCategories } = get();
+      if (categoriesInitialized || loadingCategories) return;
+
+      let hasDefault = false;
+      let defaultCategories: Category[] = [];
+
+      // Load default data first
+      try {
+        const resDefault = await fetch('/categories.json');
+        if (resDefault.ok) {
+          defaultCategories = await resDefault.json();
+          if (defaultCategories.length > 0) {
+            set({ categories: defaultCategories });
+            hasDefault = true;
+          }
+        }
+      } catch (err) {
+        console.warn('No default categories found.');
+      }
+
+      // Only show loading if no default data
+      if (!hasDefault) set({ loadingCategories: true });
+
+      try {
+        const categories = await fetchWithQuery(QUERY_KEYS.categories(), async () => {
+          const response = await fetchWithCredentials('/api/categories');
+          return handleApiResponse(response);
+        });
+
+        // Save as default for next time
+        await fetch('/api/saveDefault/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(categories),
+        });
+
+        set({
+          categories,
+          loadingCategories: false,
+          categoriesInitialized: true,
+        });
+      } catch (error) {
+        set({
+          categories: defaultCategories,
+          loadingCategories: false,
+          categoriesInitialized: true,
+        });
+      }
+    },
+
+    // Fetch subcategories with default fallback
+    fetchSubcategories: async () => {
+      const { subcategoriesInitialized, loadingSubcategories } = get();
+      if (subcategoriesInitialized || loadingSubcategories) return;
+
+      let hasDefault = false;
+      let defaultSubcategories: SubCategory[] = [];
+
+      // Load default data first
+      try {
+        const resDefault = await fetch('/subcategories.json');
+        if (resDefault.ok) {
+          defaultSubcategories = await resDefault.json();
+          if (defaultSubcategories.length > 0) {
+            set({ subcategories: defaultSubcategories });
+            hasDefault = true;
+          }
+        }
+      } catch (err) {
+        console.warn('No default subcategories found.');
+      }
+
+      // Only show loading if no default data
+      if (!hasDefault) set({ loadingSubcategories: true });
+
+      try {
+        const subcategories = await fetchWithQuery(QUERY_KEYS.subcategories(), async () => {
+          const response = await fetchWithCredentials('/api/subcategories');
+          return handleApiResponse(response);
+        });
+
+        // Save as default for next time
+        await fetch('/api/saveDefault/subcategories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subcategories),
+        });
+
+        set({
+          subcategories,
+          loadingSubcategories: false,
+          subcategoriesInitialized: true,
+        });
+      } catch (error) {
+        set({
+          subcategories: defaultSubcategories,
+          loadingSubcategories: false,
+          subcategoriesInitialized: true,
+        });
       }
     },
 
@@ -403,7 +548,7 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Add this method in the store
+    // Fetch showcase products
     fetchShowcaseProducts: async () => {
       set({ loadingShowcase: true, error: null });
 
@@ -455,66 +600,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch categories with caching
-    fetchCategories: async () => {
-      const state = get();
-      if (state.categoriesInitialized || state.loadingCategories) return;
-
-      let hasDefault = false;
-      let defaultCategories: any[] = [];
-
-      // 1️⃣ Try to load default categories
-      try {
-        const resDefault = await fetch('/categories.json');
-        if (resDefault.ok) {
-          defaultCategories = await resDefault.json();
-          if (defaultCategories.length > 0) {
-            set({ categories: defaultCategories });
-            hasDefault = true;
-          }
-        }
-      } catch (err) {
-        console.warn('No default categories found.');
-      }
-
-      // 2️⃣ Only show loading if no default
-      if (!hasDefault) set({ loadingCategories: true, error: null });
-
-      try {
-        // 3️⃣ Fetch from API
-        const categories = await fetchWithQuery(
-          QUERY_KEYS.categories(),
-          async () => {
-            const response = await fetchWithCredentials('/api/categories');
-            if (!response.ok) throw new Error(`Failed to fetch categories: ${response.status}`);
-            return handleApiResponse(response);
-          },
-          15 * 60 * 1000, // 15 minutes stale
-        );
-
-        // 4️⃣ Save to default file only if empty
-        await fetch('/api/saveDefault/categories', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(categories),
-        });
-
-        // 5️⃣ Update store
-        set({
-          categories,
-          loadingCategories: false,
-          categoriesInitialized: true,
-        });
-      } catch (err) {
-        console.error('Failed to fetch categories:', err);
-        set({
-          categories: defaultCategories,
-          error: err instanceof Error ? err.message : 'Failed to load categories',
-          loadingCategories: false,
-        });
-      }
-    },
-
     // Fetch category by slug with caching
     fetchCategoryBySlug: async (slug: string) => {
       set({ loadingCategory: true, error: null });
@@ -542,35 +627,6 @@ export const useProductStore = create<ProductStore>()(
           loadingCategory: false,
         });
         return null;
-      }
-    },
-
-    // Fetch subcategories with caching
-    fetchSubcategories: async () => {
-      const state = get();
-      if (state.subcategoriesInitialized || state.loadingSubcategories) return;
-
-      set({ loadingSubcategories: true, error: null });
-
-      try {
-        const subcategories = await fetchWithQuery(
-          QUERY_KEYS.subcategories(),
-          async () => {
-            const response = await fetchWithCredentials('/api/subcategories');
-            if (!response.ok) throw new Error(`Failed to fetch subcategories: ${response.status}`);
-            return handleApiResponse(response);
-          },
-          15 * 60 * 1000,
-        );
-
-        set({ subcategories, loadingSubcategories: false, subcategoriesInitialized: true });
-      } catch (err) {
-        console.error('Failed to fetch subcategories:', err);
-        set({
-          error: err instanceof Error ? err.message : 'Failed to load subcategories',
-          loadingSubcategories: false,
-          subcategories: [],
-        });
       }
     },
 

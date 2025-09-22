@@ -1,35 +1,50 @@
-// app/api/saveDefaultCategories/route.ts
+// app/api/saveDefault/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
-export async function POST(req: NextRequest) {
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: { url: string; alt: string; publicId: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const data = await req.json();
-    const categories: any[] = Array.isArray(data) ? data : data.categories || [];
-
-    const publicFolder = path.join(process.cwd(), 'public');
-    if (!fs.existsSync(publicFolder)) fs.mkdirSync(publicFolder, { recursive: true });
-
-    const filePath = path.join(publicFolder, 'categories.json');
-
-    let writeFile = false;
-    if (!fs.existsSync(filePath)) {
-      writeFile = true;
-    } else {
-      const fileData = fs.readFileSync(filePath, 'utf-8');
-      if (!fileData || fileData.trim() === '[]') writeFile = true;
+    const categories: Category[] = await req.json();
+    if (!Array.isArray(categories)) {
+      return NextResponse.json({ message: 'Invalid data format' }, { status: 400 });
     }
 
-    if (writeFile) {
-      fs.writeFileSync(filePath, JSON.stringify(categories, null, 2), 'utf-8');
+    const filePath = path.join(process.cwd(), 'public', 'categories.json');
+    let shouldSave = false;
+
+    try {
+      const existingData = await fs.readFile(filePath, 'utf-8');
+      const parsed = existingData.trim() ? JSON.parse(existingData) : [];
+
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        shouldSave = true;
+      }
+    } catch {
+      // File doesn't exist or invalid JSON → allow save
+      shouldSave = true;
     }
 
-    return NextResponse.json({ message: 'Default categories saved if empty' });
-  } catch (err) {
-    console.error(err);
+    if (shouldSave) {
+      await fs.writeFile(filePath, JSON.stringify(categories, null, 2), 'utf-8');
+      return NextResponse.json({ message: 'Categories saved successfully' });
+    }
+
+    return NextResponse.json({ message: 'File already has categories. Skipped saving.' });
+  } catch (error: any) {
+    console.error('Error saving categories:', error);
     return NextResponse.json(
-      { message: 'Failed to save default categories', error: err },
+      { message: 'Failed to save categories', error: error.message },
       { status: 500 },
     );
   }

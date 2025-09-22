@@ -113,13 +113,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
       checkoutData: null,
 
       setCheckoutData: (data: Omit<CheckoutState, 'timestamp'>) => {
-        console.log('Setting checkout data:', {
-          selectedItems: data.selectedItems.length,
-          totalAmount: data.totals.totalAmount,
-          cartItems: data.cartItems.length,
-          insuranceEnabled: data.insuranceEnabled.length,
-        });
-
         const recalculatedTotals = calculateTotals(
           data.cartItems,
           data.selectedItems,
@@ -224,13 +217,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
           totals: updatedTotals,
           timestamp: Date.now(),
         };
-
-        console.log('Insurance toggled:', {
-          productId,
-          hasInsurance: newInsuranceEnabled.includes(productId),
-          newInsuranceCost: updatedTotals.insuranceCost,
-          newTotalAmount: updatedTotals.totalAmount,
-        });
 
         set({ checkoutData: updatedData });
 
@@ -345,12 +331,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       onRehydrateStorage: () => (state) => {
         if (state?.checkoutData) {
-          console.log('Rehydrated checkout data:', {
-            selectedItems: state.checkoutData.selectedItems?.length || 0,
-            totalAmount: state.checkoutData.totals?.totalAmount || 0,
-            insuranceEnabled: state.checkoutData.insuranceEnabled?.length || 0,
-          });
-
           if (state.checkoutData.cartItems && state.checkoutData.selectedItems) {
             const recalculatedTotals = calculateTotals(
               state.checkoutData.cartItems,

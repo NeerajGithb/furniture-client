@@ -890,14 +890,6 @@ class PureSearchService {
       let results = [];
       let total = 0;
 
-      console.log('Search Debug:', {
-        originalQuery: query,
-        tokens,
-        classified,
-        intent,
-        numerics,
-      });
-
       try {
         const pipeline = this.buildSearchPipeline(numericTokens, numerics, classified, intent);
 

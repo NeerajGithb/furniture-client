@@ -109,6 +109,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState<boolean>(false);
 
   const loadingProducts = useSearchStore((state: any) => state.loadingProducts);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +152,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [recentSearches]);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (pathName !== '/search') {
       setQuery('');
     }
@@ -168,13 +173,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [autoFocus]);
 
   useEffect(() => {
+    if (!isMounted) return;
     try {
       const recentSearchesData = JSON.parse(localStorage.getItem('recentSearches') || '[]');
       setRecentSearches(recentSearchesData.slice(0, 6));
     } catch (error) {
       console.error('Error loading search data:', error);
     }
-  }, []);
+  }, [isMounted]);
+
   useEffect(() => {
     if (initialQuery && initialQuery !== query) {
       setQuery(initialQuery);
@@ -188,24 +195,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [initialQuery]);
 
-  const saveToRecentSearches = useCallback((searchQuery: string) => {
-    try {
-      const cleanQuery = searchQuery.trim().toLowerCase();
-      if (cleanQuery.length < 2) return;
+  const saveToRecentSearches = useCallback(
+    (searchQuery: string) => {
+      if (!isMounted) return;
+      try {
+        const cleanQuery = searchQuery.trim().toLowerCase();
+        if (cleanQuery.length < 2) return;
 
-      setRecentSearches((prevRecent) => {
-        const updatedRecent = [
-          searchQuery,
-          ...prevRecent.filter((item) => item.toLowerCase() !== cleanQuery),
-        ].slice(0, 6);
+        setRecentSearches((prevRecent) => {
+          const updatedRecent = [
+            searchQuery,
+            ...prevRecent.filter((item) => item.toLowerCase() !== cleanQuery),
+          ].slice(0, 6);
 
-        localStorage.setItem('recentSearches', JSON.stringify(updatedRecent));
-        return updatedRecent;
-      });
-    } catch (error) {
-      console.error('Error saving search data:', error);
-    }
-  }, []);
+          localStorage.setItem('recentSearches', JSON.stringify(updatedRecent));
+          return updatedRecent;
+        });
+      } catch (error) {
+        console.error('Error saving search data:', error);
+      }
+    },
+    [isMounted],
+  );
 
   const getInstantSuggestions = useCallback(
     (searchQuery: string): SuggestionsData => {
@@ -580,6 +591,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   let currentIndex = 0;
 
+  const shouldShowClearButton =
+    query && !isSearching && !loadingProducts && (isHovered || isFocused);
+
   return (
     <div className={`relative ${className}`} role="search">
       <form onSubmit={handleSubmit} className="relative">
@@ -598,7 +612,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onBlur={handleInputBlur}
             placeholder={placeholderText}
             disabled={isSearching || loadingProducts}
-            className={`w-full pl-7  pr-16 h-full text-sm font-normal md:rounded-xs md:bg-gray-50 md:border md:border-gray-200 
+            className={`w-full pl-7 pr-16 h-full text-sm font-normal md:rounded-xs md:bg-gray-50 md:border md:border-gray-200 
 md:pl-5 md:pr-16 md:h-[30px] md:max-h-[30px] md:text-xs
 focus:outline-none md:focus:border-gray-600 md:focus:bg-white transition-all duration-300 ease-out 
 text-gray-900 placeholder-gray-400 
@@ -609,13 +623,8 @@ ${isSearching || loadingProducts ? 'cursor-not-allowed opacity-70' : ''}`}
             aria-haspopup="listbox"
             role="combobox"
           />
-          <style jsx>{`
-            input:not(:placeholder-shown) {
-              font-size: 0.875rem;
-            }
-          `}</style>
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 md:right-2">
-            {query && !isSearching && !loadingProducts && isHovered && (
+            {shouldShowClearButton && (
               <button
                 type="button"
                 onClick={clearSearch}
@@ -629,7 +638,7 @@ ${isSearching || loadingProducts ? 'cursor-not-allowed opacity-70' : ''}`}
             <button
               type="submit"
               disabled={isSearching || loadingProducts || !query.trim()}
-              className={`p-2 rounded transition-colors duration-200 ${
+              className={`px-2 py-1 rounded transition-colors duration-200 flex items-center justify-center ${
                 isSearching || loadingProducts
                   ? 'text-blue-600 bg-blue-50'
                   : query.trim()
@@ -639,9 +648,12 @@ ${isSearching || loadingProducts ? 'cursor-not-allowed opacity-70' : ''}`}
               aria-label={isSearching || loadingProducts ? 'Searching...' : 'Search'}
             >
               {isSearching || isLoading || loadingProducts ? (
-                <Loader2 size={20} className="animate-spin md:w-[18px] md:h-[18px]" />
+                <Loader2 size={20} className="animate-spin md:w-[18px] md:h-[18px] flex-shrink-0" />
               ) : (
-                <Search size={20} className="md:w-[18px] md:h-[18px] max-md:text-white" />
+                <Search
+                  size={20}
+                  className="md:w-[18px] md:h-[18px] max-md:text-white flex-shrink-0"
+                />
               )}
             </button>
           </div>

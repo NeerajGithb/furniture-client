@@ -22,19 +22,21 @@ interface ProfileState {
   editing: boolean;
   uploadingImage: boolean;
   form: ProfileFormData;
+  error: string | null;
 
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   setEditing: (editing: boolean) => void;
   setUploadingImage: (uploading: boolean) => void;
+  setError: (error: string | null) => void;
   updateForm: (form: Partial<ProfileFormData>) => void;
   resetForm: () => void;
 
-  initializeProfile: () => Promise<boolean>;
+  initializeProfile: () => Promise<{ success: boolean; user?: User }>;
   initializeForm: (user: User) => void;
   cancelEdit: () => void;
-  updateProfile: () => Promise<boolean>;
-  uploadProfileImage: (file: File) => Promise<boolean>;
+  updateProfile: () => Promise<{ success: boolean; user?: User }>;
+  uploadProfileImage: (file: File) => Promise<{ success: boolean; user?: User }>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -43,11 +45,13 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   editing: false,
   uploadingImage: false,
   form: { name: '', phone: '' },
+  error: null,
 
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
   setEditing: (editing) => set({ editing }),
   setUploadingImage: (uploadingImage) => set({ uploadingImage }),
+  setError: (error) => set({ error }),
 
   updateForm: (formUpdate) =>
     set((state) => ({
@@ -83,31 +87,23 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   },
 
   initializeProfile: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
 
     try {
-      const res = await fetchWithCredentials('/api/user/profile', {
-        method: 'GET',
-      });
-
+      const res = await fetchWithCredentials('/api/user/profile', { method: 'GET' });
       if (!res.ok) {
         const errorData = await handleApiResponse(res);
         throw new Error(errorData?.message || 'Failed to fetch profile');
       }
-
       const user = await handleApiResponse(res);
       set({
         user,
-        form: {
-          name: user.name || '',
-          phone: user.phone || '',
-        },
+        form: { name: user.name || '', phone: user.phone || '' },
       });
-
-      return true;
-    } catch (error) {
-      console.error('Profile initialization error:', error);
-      return false;
+      return { success: true, user };
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch profile' });
+      return { success: false };
     } finally {
       set({ loading: false });
     }
@@ -116,11 +112,11 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   updateProfile: async () => {
     const { form, user } = get();
     if (!user) {
-      toast.error('User not found');
-      return false;
+      set({ error: 'User not found' });
+      return { success: false };
     }
 
-    set({ loading: true });
+    set({ loading: true, error: null });
 
     try {
       const res = await fetchWithCredentials('/api/user/profile', {
@@ -135,12 +131,19 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       }
 
       const updatedUser = await handleApiResponse(res);
-      set({ user: updatedUser, editing: false });
+      set({
+        user: updatedUser,
+        editing: false,
+        form: {
+          name: updatedUser.name || '',
+          phone: updatedUser.phone || '',
+        },
+      });
       toast.success('Profile updated successfully');
-      return true;
-    } catch (error) {
-      console.error('Profile update error:', error);
-      return false;
+      return { success: true, user: updatedUser };
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to update profile' });
+      return { success: false };
     } finally {
       set({ loading: false });
     }
@@ -149,52 +152,85 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   uploadProfileImage: async (file: File) => {
     const { user } = get();
     if (!user) {
-      return false;
+      set({ error: 'User not found' });
+      return { success: false };
     }
 
-    if (!file.type.startsWith('image/')) {
-      return false;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
-      return false;
+    if (!file) {
+      set({ error: 'No file selected' });
+      return { success: false };
     }
 
-    set({ uploadingImage: true });
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      set({ error: `Invalid file type: ${file.type}. Please use JPG, PNG, GIF, or WebP.` });
+      return { success: false };
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      set({
+        error: `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 5MB.`,
+      });
+      return { success: false };
+    }
+
+    set({ uploadingImage: true, error: null });
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const reader = new FileReader();
+      const fileResult = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          if (reader.result) resolve(reader.result as string);
+          else reject(new Error('Failed to read file'));
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
 
       const uploadRes = await fetchWithCredentials('/api/upload', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: fileResult, folder: 'profile-images' }),
       });
-      if (!uploadRes.ok) throw new Error('Failed to upload image');
+
+      if (!uploadRes.ok) {
+        const errorData = await handleApiResponse(uploadRes);
+        throw new Error(errorData?.message || 'Failed to upload image');
+      }
 
       const uploadData = await handleApiResponse(uploadRes);
+      if (!uploadData.url) throw new Error('Invalid upload response');
 
-      const profileRes = await fetchWithCredentials('/api/user/profile', {
+      const updatedProfileRes = await fetchWithCredentials('/api/user/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...user,
+          name: user.name,
+          phone: user.phone || '',
           photoURL: uploadData.url,
         }),
       });
 
-      if (!profileRes.ok) {
-        const errorData = await handleApiResponse(profileRes);
+      if (!updatedProfileRes.ok) {
+        const errorData = await handleApiResponse(updatedProfileRes);
         throw new Error(errorData?.message || 'Failed to update profile image');
       }
 
-      const updatedUser = await handleApiResponse(profileRes);
-      set({ user: updatedUser });
+      const updatedUser = await handleApiResponse(updatedProfileRes);
+      set({
+        user: updatedUser,
+        form: {
+          name: updatedUser.name || '',
+          phone: updatedUser.phone || '',
+        },
+      });
       toast.success('Profile image updated successfully');
-      return true;
-    } catch (error) {
-      console.error('Image upload error:', error);
-      return false;
+      return { success: true, user: updatedUser };
+    } catch (error: any) {
+      console.error('Profile image upload error:', error);
+      set({ error: error.message || 'Failed to upload image' });
+      return { success: false };
     } finally {
       set({ uploadingImage: false });
     }

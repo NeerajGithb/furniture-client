@@ -53,12 +53,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await checkout.save();
 
-    console.log('Checkout session created:', {
-      sessionId,
-      userId: user.userId,
-      itemCount: checkoutItems.length,
-    });
-
     return NextResponse.json({
       success: true,
       sessionId: sessionId,
@@ -193,14 +187,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       expiresAt: checkout.expiresAt,
       createdAt: checkout.createdAt,
     };
-
-    console.log('Checkout session retrieved:', {
-      sessionId: checkout.sessionId,
-      itemCount: formattedItems.length,
-      totalAmount,
-      validItemsCount: validItems.length,
-      originalItemsCount: checkout.items.length,
-    });
 
     return NextResponse.json({
       success: true,

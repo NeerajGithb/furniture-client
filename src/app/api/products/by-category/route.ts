@@ -29,18 +29,6 @@ export async function GET(request: NextRequest) {
     const onSale = searchParams.get('onSale') === 'true';
     const discount = searchParams.get('discount')?.trim();
 
-    console.log(`[PRODUCTS-BY-CATEGORY-API] Processing request with params:`, {
-      productsPerCategory,
-      minPrice,
-      maxPrice,
-      material,
-      inStock,
-      onSale,
-      discount,
-      sort,
-      includeUnpublished,
-    });
-
     const baseQuery: any = {};
 
     if (!includeUnpublished) {
@@ -201,12 +189,6 @@ export async function GET(request: NextRequest) {
         structure: 'Products grouped by category with limit per category',
       },
     };
-
-    console.log(
-      `[PRODUCTS-BY-CATEGORY-API] Returning ${totalProductsReturned} products across ${
-        categoriesWithProducts.length
-      } categories in ${Date.now() - startTime}ms`,
-    );
 
     const response = NextResponse.json(responseData);
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');

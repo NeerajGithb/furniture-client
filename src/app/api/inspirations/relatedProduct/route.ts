@@ -50,10 +50,7 @@ export async function GET(request: Request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    console.log(
-      'GET relatedProduct called with params:',
-      Object.fromEntries(searchParams.entries()),
-    );
+
     const slug = searchParams.get('slug');
     const limit = parseInt(searchParams.get('limit') || '20');
     const sort = searchParams.get('sort');

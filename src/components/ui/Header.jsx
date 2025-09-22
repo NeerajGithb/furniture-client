@@ -108,11 +108,11 @@ const InspirationItem = memo(({ inspiration, isActive, onEnter, onActivate, onGe
       transition={{ duration: 0.1 }}
     >
       <button
-        className="flex items-center gap-1.5 text-sm font-normal text-gray-800 hover:text-black transition-colors duration-150 py-2.5 px-3 rounded hover:bg-gray-50 whitespace-nowrap min-w-0"
+        className="flex items-center gap-1 text-sm font-normal text-gray-800 hover:text-red-600 transition-colors duration-150 py-2.5 px-3  whitespace-nowrap min-w-0"
         onClick={handleClick}
         title={inspiration.name}
       >
-        <span className="font-semibold truncate">{displayName}</span>
+        <span className="font-medium truncate">{displayName}</span>
         <motion.div
           animate={{ rotate: isActive ? 180 : 0 }}
           transition={{ duration: 0.15, ease: 'easeInOut' }}
@@ -121,12 +121,6 @@ const InspirationItem = memo(({ inspiration, isActive, onEnter, onActivate, onGe
           <ChevronDown size={12} className="text-gray-600" />
         </motion.div>
       </button>
-      <motion.div
-        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 h-[1px] bg-black rounded-full"
-        initial={{ width: 0 }}
-        animate={{ width: isActive ? '80%' : 0 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-      />
     </motion.li>
   );
 });
@@ -304,7 +298,7 @@ const InspirationMegaMenu = memo(
                         <Link
                           href={`/${category.slug || ''}`}
                           onClick={handleLinkClick}
-                          className="block text-sm font-bold text-black hover:text-gray-600 transition-colors duration-150 mb-2 leading-tight truncate"
+                          className="block text-sm font-semibold text-black hover:text-red-600 transition-colors duration-150 mb-2 leading-tight truncate"
                           title={category.name}
                         >
                           {category.name}
@@ -320,7 +314,7 @@ const InspirationMegaMenu = memo(
                                 key={subcategory._id}
                                 href={`/${subcategory.slug}`}
                                 onClick={handleLinkClick}
-                                className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-1.5 font-normal hover:bg-gray-50 rounded px-2 truncate"
+                                className="block text-xs text-gray-600 hover:text-red-600 transition-all duration-150 py-1.5 font-normal px-2 truncate"
                                 title={subcategory.name}
                               >
                                 {subcategory.name}
@@ -330,7 +324,7 @@ const InspirationMegaMenu = memo(
                             {hasMoreSubs && (
                               <button
                                 onClick={() => toggleSubcategories(category._id)}
-                                className="flex items-center gap-1 text-xs text-black hover:text-gray-600 font-semibold py-1.5 mt-2 transition-all duration-150 hover:bg-gray-50 rounded px-2 w-full text-left"
+                                className="flex items-center gap-1 text-xs text-black hover:text-red-600 font-semibold py-1.5 mt-2 transition-all duration-150  rounded px-2 w-full text-left"
                               >
                                 <span className="truncate">
                                   {isExpanded
@@ -353,7 +347,7 @@ const InspirationMegaMenu = memo(
                           <Link
                             href={`/${category.slug}`}
                             onClick={handleLinkClick}
-                            className="block text-xs text-gray-600 hover:text-black transition-all duration-150 py-1.5 font-normal hover:bg-gray-50 rounded px-2"
+                            className="block text-xs text-gray-600 hover:text-red-600 transition-all duration-150 py-1.5 font-normal px-2"
                           >
                             View all
                           </Link>
@@ -384,7 +378,7 @@ const InspirationMegaMenu = memo(
                 <div className="relative flex justify-center">
                   <button
                     onClick={() => setShowAllCategories(true)}
-                    className="inline-flex items-center gap-2 text-xs font-semibold text-black hover:text-gray-600 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-150 shadow-sm whitespace-nowrap"
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-black hover:text-red-600 bg-white  px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-150 shadow-sm whitespace-nowrap"
                   >
                     <Plus size={14} className="flex-shrink-0" />
                     <span>Show {inspirationCategories.length - maxVisibleCategories} more</span>
@@ -571,7 +565,7 @@ const Header = () => {
 
     if ((!hasCategories && loadingCategories) || (!hasInspirations && loadingInspirations)) {
       return (
-        <div className="flex items-center justify-center gap-3 py-2 h-12 overflow-hidden">
+        <div className="flex items-center justify-center gap-3 py-2 h-10 overflow-hidden">
           {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="flex items-center gap-1 flex-shrink-0">
               <div className="w-16 h-3 bg-gray-200 rounded animate-pulse"></div>
@@ -582,7 +576,7 @@ const Header = () => {
       );
     }
     return (
-      <div className="h-12 flex items-center justify-center overflow-hidden">
+      <div className="h-10 flex items-center justify-center overflow-hidden">
         <div className="w-full overflow-x-auto scrollbar-hide">
           <ul className="flex items-center justify-start md:justify-center gap-1 px-2 md:px-0 list-none min-w-max">
             {transformedInspirations.map((inspiration) => (
@@ -644,7 +638,7 @@ const Header = () => {
     return (
       <motion.button
         onClick={openAuth}
-        className="flex items-center p-2 text-gray-800 hover:text-black hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
+        className="flex items-center p-2 text-gray-800 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 flex-shrink-0"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Login"

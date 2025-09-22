@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCheckoutStore } from '@/stores/checkoutStore';
 import { useAddressStore } from '@/stores/addressStore';
 import PriceSummaryCard from '@/components/ui/PriceSummaryCard';
-import { toast } from 'react-hot-toast';
 
 import {
   MapPin,
@@ -26,6 +25,7 @@ import {
   Star,
 } from 'lucide-react';
 import Loading from '@/components/ui/Loader';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const VALIDATION_PATTERNS = {
   phone: /^[6-9]\d{9}$/,
@@ -232,12 +232,13 @@ const AddressCard = memo<AddressCardProps>(({ address, isSelected, onSelect, onE
 AddressCard.displayName = 'AddressCard';
 
 const CheckoutPage = () => {
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const renderCountRef = useRef(0);
   renderCountRef.current += 1;
 
   const { user } = useCurrentUser();
   const router = useRouter();
-  const pathname = usePathname();
   const priceCardRef = useRef(null);
   const [showFixedCheckout, setShowFixedCheckout] = useState(false);
 
@@ -265,6 +266,8 @@ const CheckoutPage = () => {
   const showAddressForm = addressStore.showAddressForm;
   const addressForm = addressStore.addressForm;
   const editingAddressId = addressStore.editingAddressId;
+  const addressStoreError = addressStore.error;
+  const clearAddressStoreError = addressStore.clearError;
   const addAddress = useCallback((form: any) => addressStore.addAddress(form), [addressStore]);
   const updateAddress = useCallback(
     (id: string, form: any) => addressStore.updateAddress(id, form),
@@ -336,6 +339,13 @@ const CheckoutPage = () => {
     };
   }, [checkoutData]);
 
+  useEffect(() => {
+    if (addressStoreError) {
+      setAddressError(addressStoreError);
+    } else {
+      setAddressError(null); // clear local error if store error is cleared
+    }
+  }, [addressStoreError]);
   const handleFieldChange = useCallback(
     (fieldName: string, value: string) => {
       updateAddressForm({ [fieldName]: value });
@@ -383,7 +393,7 @@ const CheckoutPage = () => {
       setTouchedFields(new Set(fields));
 
       if (Object.keys(errors).length > 0) {
-        toast.error('Please fix the errors before submitting');
+        setAddressError('Please fix the errors before submitting');
         return;
       }
 
@@ -416,8 +426,7 @@ const CheckoutPage = () => {
           setShowAllAddresses(false);
         }
       } catch (error) {
-        console.error('Error saving address:', error);
-        toast.error('An error occurred while saving the address');
+        setAddressError('An error occurred while saving the address');
       } finally {
         setIsSubmitting(false);
       }
@@ -428,10 +437,10 @@ const CheckoutPage = () => {
   const handleProceedToPayment = useCallback(() => {
     if (!canProceedToPayment()) {
       if (!checkoutData?.selectedAddressId) {
-        toast.error('Please select a delivery address');
+        setPaymentError('Please select a delivery address');
         return;
       }
-      toast.error('Unable to proceed to payment');
+      setPaymentError('Unable to proceed to payment');
       return;
     }
 
@@ -556,6 +565,9 @@ const CheckoutPage = () => {
               </p>
             </div>
           </div>
+          {paymentError && (
+            <ErrorMessage message={paymentError} onClose={() => setPaymentError(null)} />
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -776,6 +788,13 @@ const CheckoutPage = () => {
                             >
                               Cancel
                             </button>
+                            {addressError && (
+                              <ErrorMessage
+                                message={addressError}
+                                onClose={() => clearAddressStoreError()}
+                                className="sm:ml-4 flex-1"
+                              />
+                            )}
                           </div>
                         </form>
                       </div>

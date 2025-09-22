@@ -38,6 +38,7 @@ import {
 import CancelOrderModal from '@/components/models/CancelOrderModal';
 import type { Order, OrderStatus } from '@/stores/orderStore';
 import toast from 'react-hot-toast';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 interface CancelModalState {
   isOpen: boolean;
@@ -184,6 +185,7 @@ const paymentMethodLabels = {
 } as const;
 
 export default function OrdersPage() {
+  const [orderError, setOrderError] = useState<string | null>(null);
   const { user, loading: userLoading } = useCurrentUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -262,7 +264,7 @@ export default function OrdersPage() {
 
   const handleDeleteOrder = (order: Order) => {
     if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned') {
-      toast.error('Only cancelled or returned orders can be deleted');
+      setOrderError('Only cancelled or returned orders can be deleted');
       return;
     }
 
@@ -372,6 +374,9 @@ export default function OrdersPage() {
                 )}
               </p>
             </div>
+            {orderError && (
+              <ErrorMessage message={orderError} onClose={() => setOrderError(null)} />
+            )}
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleRefresh}

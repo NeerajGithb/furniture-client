@@ -33,7 +33,7 @@ export default function HomePage() {
         <HeroBanner />
       </motion.div>
 
-      <motion.div variants={fadeInUp} className="py-12">
+      <motion.div variants={fadeInUp} className="py-6">
         <CategoryGrid />
       </motion.div>
 

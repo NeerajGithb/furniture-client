@@ -9,16 +9,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Package,
   MapPin,
-  CreditCard,
   Heart,
   Star,
-  Bell,
-  Gift,
   HelpCircle,
   LogOut,
   Loader2,
   User,
-  Settings,
   Menu,
   X,
   ShoppingBag,
@@ -27,6 +23,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 import { resetApp } from '@/stores/globalStoreManager';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const navItems = [
   { label: 'Profile', href: '/profile', icon: User },
@@ -38,7 +35,13 @@ const navItems = [
   { label: 'Support', href: '/support', icon: HelpCircle },
 ];
 
-export default function ProfileLayout({ children }: { children: React.ReactNode }) {
+interface ProfileLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function ProfileLayout({ children }: ProfileLayoutProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { user, loading } = useCurrentUser();
   const { setUser } = useAuth();
@@ -46,78 +49,114 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
+  // Handle mounting
   useEffect(() => {
-    if (!loading && !user) router.push('/login');
-  }, [user, loading, router]);
+    setMounted(true);
+  }, []);
+
+  // Redirect to login if not authenticated (only after mounting)
+  useEffect(() => {
+    if (mounted && !loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router, mounted]);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     setIsMobileMenuOpen(false);
 
     try {
-      const res = await fetchWithCredentials('/api/auth/logout', { method: 'POST' });
+      const res = await fetchWithCredentials('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
       const data = await handleApiResponse(res);
 
       if (!res.ok) {
-        toast.error(data?.error || 'Logout failed');
+        setError(data?.error || 'Logout failed');
         setIsLoggingOut(false);
         return;
       }
 
+      // Clear user state and reset app
       setUser(null);
       await resetApp();
+
       toast.success('Logged out successfully');
       router.push('/');
     } catch (err) {
-      toast.error('Something went wrong');
+      console.error('Logout error:', err);
+      setError('Something went wrong during logout');
       setIsLoggingOut(false);
     }
   };
 
-  if (loading) {
+  // Show loading state until mounted and auth is resolved
+  if (!mounted || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center mx-auto">
-            <Loader2 className="w-5 h-5 animate-spin text-white" />
-          </div>
+          <Loader2 className="w-6 h-6 animate-spin text-gray-600 mx-auto" />
           <p className="text-sm text-gray-600">Loading your account...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) return null;
+  // Don't render anything if redirecting to login
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-sm text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const getInitials = (name: string): string => {
+    if (!name) return '';
+    return name
+      .split(' ')
+      .map((n: string) => n.charAt(0).toUpperCase())
+      .join('')
+      .slice(0, 2);
+  };
 
   const SidebarContent = () => (
-    <>
+    <div className="flex flex-col h-full">
       {/* User Info */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
           {user.photoURL ? (
             <img
               src={user.photoURL}
-              alt="Profile"
-              className="w-10 h-10 rounded-full object-cover"
+              alt={`${user.name || 'User'} profile`}
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
             />
-          ) : (
-            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white text-sm font-medium">
-              {(user.name || '')
-                .split(' ')
-                .map((n: any) => n.charAt(0))
-                .join('')
-                .slice(0, 2)}
-            </div>
-          )}
+          ) : null}
+          <div
+            className={`w-10 h-10 bg-gradient-to-br from-gray-800 to-black rounded-full flex items-center justify-center text-white text-sm font-medium ${
+              user.photoURL ? 'hidden' : ''
+            }`}
+          >
+            {getInitials(user.name || '')}
+          </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-medium text-gray-900 truncate">{user.name}</h3>
+            <h3 className="text-sm font-medium text-gray-900 truncate">{user.name || 'User'}</h3>
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="p-2">
+      <nav className="flex-1 p-2 overflow-y-auto">
         <div className="space-y-1">
           {navItems.map(({ label, href, icon: Icon }) => {
             const active = pathname === href;
@@ -125,10 +164,11 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
               <Link key={href} href={href}>
                 <motion.div
                   whileHover={{ x: 2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xs text-sm mb-1 font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xs text-sm font-medium transition-all duration-200 ${
                     active
-                      ? 'bg-black text-white'
+                      ? 'bg-black text-white shadow-sm'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
@@ -141,12 +181,13 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         </div>
       </nav>
 
-      {/* Logout */}
-      <div className="p-2 border-t border-gray-100 mt-auto">
+      {/* Logout Button */}
+      <div className="p-2 border-t border-gray-100">
         <motion.button
           onClick={handleLogout}
           disabled={isLoggingOut}
           whileHover={!isLoggingOut ? { x: 2 } : {}}
+          whileTap={!isLoggingOut ? { scale: 0.98 } : {}}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xs text-sm font-medium transition-all duration-200 ${
             isLoggingOut
               ? 'cursor-not-allowed text-gray-400 bg-gray-50'
@@ -161,7 +202,14 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
           <span className="truncate">{isLoggingOut ? 'Signing Out...' : 'Sign Out'}</span>
         </motion.button>
       </div>
-    </>
+
+      {/* Error Display */}
+      {error && (
+        <div className="p-2">
+          <ErrorMessage message={error} onClose={() => setError(null)} />
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -169,13 +217,16 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
       {/* Mobile Header */}
       <div className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-lg font-semibold text-gray-900">Account</h1>
-          <button
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-gray-900">Account</h1>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 -m-2 text-gray-600 hover:text-gray-900"
+            className="p-2 -m-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
           >
             <Menu className="w-5 h-5" />
-          </button>
+          </motion.button>
         </div>
       </div>
 
@@ -188,25 +239,34 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden fixed inset-0 bg-black/20  z-50"
+              className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
             />
             <motion.div
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="lg:hidden fixed inset-y-0 left-0 w-72 bg-white z-50 flex flex-col shadow-xl"
+              transition={{
+                type: 'spring',
+                damping: 25,
+                stiffness: 200,
+                mass: 0.8,
+              }}
+              className="lg:hidden fixed inset-y-0 left-0 w-72 bg-white z-50 flex flex-col shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              {/* Mobile Menu Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
                 <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-1 -m-1 text-gray-600 hover:text-gray-900"
+                  className="p-1 -m-1 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </motion.button>
               </div>
-              <div className="flex-1 flex flex-col overflow-hidden">
+
+              {/* Mobile Menu Content */}
+              <div className="flex-1 overflow-hidden">
                 <SidebarContent />
               </div>
             </motion.div>
@@ -214,16 +274,17 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         )}
       </AnimatePresence>
 
+      {/* Main Layout Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
-            <div className="bg-white rounded-xs shadow-sm border border-gray-200 sticky top-8 flex flex-col max-h-[calc(100vh-4rem)]">
+            <div className="bg-white rounded-xs shadow-sm border border-gray-200 sticky top-8 overflow-hidden max-h-[calc(100vh-4rem)]">
               <SidebarContent />
             </div>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content Area */}
           <div className="lg:col-span-3 w-full">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

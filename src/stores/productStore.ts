@@ -258,7 +258,6 @@ export const useProductStore = create<ProductStore>()(
           const defaultCategories: Category[] = await res.json();
           if (defaultCategories && defaultCategories.length > 0) {
             set({ categories: defaultCategories });
-            console.log('Loaded default categories:', defaultCategories.length);
           }
         }
       } catch (error) {
@@ -273,7 +272,6 @@ export const useProductStore = create<ProductStore>()(
           const defaultSubcategories: SubCategory[] = await res.json();
           if (defaultSubcategories && defaultSubcategories.length > 0) {
             set({ subcategories: defaultSubcategories });
-            console.log('Loaded default subcategories:', defaultSubcategories.length);
           }
         }
       } catch (error) {

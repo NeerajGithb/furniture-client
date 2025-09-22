@@ -39,7 +39,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
 
   const [imageLoading, setImageLoading] = useState(true);
 
-  const dataInitialized = user?._id ? cartInitialized && wishlistInitialized : true;
   const cleanName = product.name.replace(/\s*\(Copy\)\s*/g, '').trim();
 
   const hasDiscount = product.discountPercent && product.discountPercent > 0;
@@ -52,7 +51,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
 
   const displayImage = product.mainImage?.url;
   const reviews = product.reviews || { average: 0, count: 0 };
-  const rating = product.ratings || reviews.average || 0;
 
   const productInCart = isInCart(product._id);
   const cartItem = getCartItem(product._id);
@@ -185,7 +183,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             <div className="absolute inset-0 bg-gray-200 animate-pulse" />
           )}
 
-          {/* Top badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {hasDiscount && (
               <span className="bg-red-500 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 font-bold shadow-sm">
@@ -209,7 +206,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             )}
           </div>
 
-          {/* Top right icons */}
           <div className="absolute top-2 right-2 flex items-center gap-1.5 sm:gap-2 z-20">
             {productInCart && (
               <motion.div
@@ -232,9 +228,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               disabled={isAddingToWishlist || !user?._id}
               className={`p-1.5 sm:p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-colors duration-200 hover:bg-white ${
                 productWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-              } ${
-                !user?._id || !dataInitialized ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-              }`}
+              } ${!user?._id ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               {isAddingToWishlist ? (
                 <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
@@ -246,7 +240,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
             </motion.button>
           </div>
 
-          {/* Out of stock overlay */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-white/90 flex items-center justify-center z-40">
               <div className="bg-gray-800 text-white px-2 sm:px-4 py-1 sm:py-2 font-semibold text-xs sm:text-sm shadow-lg">
@@ -257,15 +250,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         </Link>
       </div>
 
-      {/* Product details - Flexible height */}
       <div className="flex-1 px-3 mt-2 md:px-1 py-2 flex flex-col min-h-0">
         <div className="flex-1 min-h-0">
-          {/* Product name */}
           <h3 className="font-semibold text-gray-900 text-xs sm:text-sm leading-tight mb-1 line-clamp-2">
             {cleanName}
           </h3>
 
-          {/* Compact info */}
           {getCompactInfo() && (
             <p className="text-[10px] sm:text-xs text-gray-500 mb-1.5 leading-tight line-clamp-1">
               {getCompactInfo()}
@@ -273,7 +263,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           )}
         </div>
 
-        {/* Price section - Fixed at bottom */}
         <div className="mt-auto flex-shrink-0 mb-4 sm:mb-1.5">
           <div className="flex items-baseline gap-1.5">
             <span className="font-bold text-sm sm:text-base text-gray-900">
@@ -287,13 +276,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           </div>
         </div>
 
-        {/* Buttons section - Always takes space, visible only on hover */}
         <div className="hidden sm:block flex-shrink-0 h-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mt-1">
           <div className="flex gap-1.5 h-full">
-            {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              disabled={isOutOfStock || isAddingToCart}
+              disabled={isOutOfStock || isAddingToCart || !user?._id}
               className={`flex-1 h-full text-white text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5 rounded-xs backdrop-blur-sm ${
                 productInCart
                   ? 'bg-emerald-600 hover:bg-emerald-700 shadow-sm'
@@ -320,7 +307,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               )}
             </button>
 
-            {/* View Product Button */}
             <Link
               href={productUrl}
               className="flex-1 h-full bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-center gap-1.5 rounded-xs shadow-sm hover:shadow-md"

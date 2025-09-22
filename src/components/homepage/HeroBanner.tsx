@@ -120,7 +120,7 @@ const HeroBanner = () => {
   );
 
   return (
-    <section className="relative h-[30vh] sm:h-[50vh] min-h-[300px] overflow-hidden shadow-bottom">
+    <section className="relative h-[30vh] sm:h-[45vh] min-h-[300px] overflow-hidden shadow-bottom">
       <div
         className="relative h-full w-full"
         onMouseEnter={stopAutoSlide}

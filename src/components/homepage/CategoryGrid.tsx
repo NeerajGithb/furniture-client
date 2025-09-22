@@ -62,10 +62,10 @@ const CategoryGrid = () => {
     return (
       <section className="px-4 max-w-7xl mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl font-light text-black mb-2 tracking-wide">
-            POPULAR CATEGORIES
+          <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-2 tracking-wide">
+            Popular Categories
           </h2>
-          <p className="text-red-500 text-sm">{error}</p>
+          <p className="text-red-400 text-sm font-medium">{error}</p>
         </div>
       </section>
     );
@@ -74,55 +74,56 @@ const CategoryGrid = () => {
   return (
     <section className="px-4 max-w-7xl mx-auto">
       <motion.div
-        className="text-center mb-6"
+        className="text-center mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h2 className="text-xl md:text-2xl font-light text-black mb-2 tracking-wide">
-          POPULAR CATEGORIES
-        </h2>
-        <p className="text-gray-500 text-xs md:text-sm">Explore our most popular categories</p>
+        <h2 className="text-2xl font-light text-gray-900 mb-3 tracking-wide">POPULAR CATEGORIES</h2>
+        <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-gray-400 to-transparent mx-auto mb-2"></div>
+        <p className="text-gray-600 text-sm md:text-base font-light">
+          Discover our curated collections
+        </p>
       </motion.div>
 
-      {/* Mobile: Horizontal scroll + Scroll buttons */}
+      {/* Mobile: Horizontal scroll */}
       <div className="block md:hidden relative">
         <div className="overflow-x-auto scrollbar-hide" ref={scrollRef}>
           <div
-            className="grid grid-rows-2 grid-flow-col gap-4 pb-2"
+            className="grid grid-rows-2 grid-flow-col gap-4 pb-4"
             style={{ width: 'max-content' }}
           >
             {showSkeletons
               ? Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className="animate-pulse flex-shrink-0">
-                    <div className="w-30 h-30 bg-gray-200 mb-2"></div>
-                    <div className="h-3 bg-gray-200 w-20 mx-auto"></div>
+                    <div className="w-28 h-28 bg-gray-100"></div>
+                    <div className="h-2.5 bg-gray-200 w-20 mx-auto mt-3 rounded-full"></div>
                   </div>
                 ))
               : categories.slice(0, 12).map((category, index) => (
                   <motion.div
                     key={category._id}
-                    className="flex-shrink-0"
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    className="flex-shrink-0 group"
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: index * 0.03 }}
                   >
                     <Link
                       onClick={() => resetProductState()}
                       href={`/${category.slug}`}
-                      className="block text-center group"
+                      className="block text-center"
                     >
-                      <div className="relative w-30 h-30 mb-2 overflow-hidden shadow-sm transition-all duration-300 group-hover:shadow-md group-hover:scale-105">
+                      <div className="relative w-28 h-28 mb-3 overflow-hidden bg-gray-50 group-hover:bg-gray-100 transition-colors duration-200">
                         <Image
                           src={category.mainImage?.url || '/placeholder.png'}
                           alt={category.mainImage?.alt || category.name}
                           fill
                           className="object-cover"
                           loading="lazy"
-                          sizes="(max-width: 768px) 120px"
+                          sizes="120px"
                         />
                       </div>
-                      <h3 className="text-xs font-medium text-black w-28 truncate">
+                      <h3 className="text-xs font-medium text-gray-800 w-28 truncate group-hover:text-gray-900 transition-colors">
                         {category.name}
                       </h3>
                     </Link>
@@ -131,53 +132,47 @@ const CategoryGrid = () => {
           </div>
         </div>
 
-        {/* Left Scroll Button */}
         {canScrollLeft && <PrevLeft onClick={handleScrollLeft} isMobile={true} />}
-
-        {/* Right Scroll Button */}
         {canScrollRight && <PrevRight onClick={handleScrollRight} isMobile={true} />}
       </div>
 
-      {/* Desktop: Grid layout */}
-      <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+      {/* Desktop: Grid */}
+      <div className="hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6 lg:gap-8">
         {showSkeletons
-          ? Array.from({ length: 10 }).map((_, i) => (
+          ? Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-square bg-gray-200 mb-3"></div>
-                <div className="h-4 bg-gray-200 mx-auto w-3/4"></div>
+                <div className="aspect-square bg-gray-100"></div>
+                <div className="h-3 bg-gray-200 w-3/4 mx-auto mt-4 rounded-full"></div>
+                <div className="h-2 bg-gray-100 w-1/2 mx-auto mt-2 rounded-full"></div>
               </div>
             ))
-          : categories.slice(0, 10).map((category, index) => (
+          : categories.slice(0, 12).map((category, index) => (
               <motion.div
                 key={category._id}
+                className="group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.05 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
               >
                 <Link
                   onClick={() => resetProductState()}
                   href={`/${category.slug}`}
-                  className="block h-full group"
+                  className="block text-center"
                 >
-                  <div className="relative aspect-square w-full overflow-hidden shadow-all transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+                  <div className="relative shadow-all aspect-square w-full overflow-hidden bg-gray-50 group-hover:bg-gray-100 transition-colors duration-200">
                     <Image
                       src={category.mainImage?.url || '/placeholder.png'}
                       alt={category.mainImage?.alt || category.name}
                       fill
-                      className="object-cover"
+                      className="object-cover hover:scale-102 transition-transform duration-200"
                       loading="lazy"
-                      sizes="(max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
+                      sizes="(max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 15vw"
                     />
                   </div>
-                  <div className="py-3 text-center">
-                    <h3 className="text-sm lg:text-base font-medium text-black tracking-wide transition-colors duration-200 group-hover:text-gray-700">
+                  <div className="mt-4">
+                    <h3 className="text-sm md:text-base font-medium text-gray-800 truncate group-hover:text-gray-900 transition-colors duration-200">
                       {category.name}
                     </h3>
-                    {category.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">
-                        {category.description}
-                      </p>
-                    )}
                   </div>
                 </Link>
               </motion.div>

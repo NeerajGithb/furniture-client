@@ -28,20 +28,6 @@ export async function GET(request: NextRequest) {
     const discount = searchParams.get('discount')?.trim();
     const sort = searchParams.get('sort') || 'newest';
 
-    console.log(`[API] Processing request with params:`, {
-      page,
-      limit,
-      category,
-      subcategory,
-      minPrice,
-      maxPrice,
-      material,
-      inStock,
-      onSale,
-      discount,
-      sort,
-    });
-
     const query: any = {};
 
     query.isPublished = { $ne: false };

@@ -147,10 +147,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         error: errorMessage,
         selectedAddressId: '',
       });
-
-      if (!errorMessage.includes('401')) {
-        toast.error(errorMessage);
-      }
     }
   },
 
@@ -158,7 +154,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     const { addressForm } = get();
 
     if (!get().isValidForm()) {
-      toast.error('Please fill in all required fields correctly');
+      set({ error: 'Please fill in all required fields correctly' });
       return false;
     }
 
@@ -176,17 +172,17 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     };
 
     if (!validatePhone(payload.phone)) {
-      toast.error('Please enter a valid 10-digit phone number');
+      set({ error: 'Please enter a valid 10-digit phone number' });
       return false;
     }
 
     if (!validatePostalCode(payload.postalCode)) {
-      toast.error('Please enter a valid 6-digit PIN code');
+      set({ error: 'Please enter a valid 6-digit PIN code' });
       return false;
     }
 
     if (!validateName(payload.fullName)) {
-      toast.error('Please enter a valid full name');
+      set({ error: 'Please enter a valid full name' });
       return false;
     }
 
@@ -200,6 +196,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     set((state) => ({
       addresses: [...state.addresses, optimisticAddress],
       loading: true,
+      error: null,
     }));
 
     try {
@@ -226,6 +223,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         selectedAddressId: responseData.address._id,
         showAddressForm: false,
         loading: false,
+        error: null,
       }));
 
       get().resetAddressForm();
@@ -235,11 +233,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       set((state) => ({
         addresses: state.addresses.filter((addr) => addr._id !== tempId),
         loading: false,
+        error: error instanceof Error ? error.message : 'Failed to add address',
       }));
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add address';
-      console.error('Add address error:', errorMessage);
-      toast.error(errorMessage);
+      console.error('Add address error:', get().error);
       return false;
     }
   },
@@ -247,7 +244,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
   updateAddress: async (id, updates) => {
     const current = get().getAddressById(id);
     if (!current) {
-      toast.error('Address not found');
+      set({ error: 'Address not found' });
       return false;
     }
 
@@ -255,7 +252,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     if (cleanUpdates.phone) {
       cleanUpdates.phone = cleanUpdates.phone.replace(/\s+/g, '');
       if (!validatePhone(cleanUpdates.phone)) {
-        toast.error('Please enter a valid 10-digit phone number');
+        set({ error: 'Please enter a valid 10-digit phone number' });
         return false;
       }
     }
@@ -263,13 +260,13 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     if (cleanUpdates.postalCode) {
       cleanUpdates.postalCode = cleanUpdates.postalCode.trim();
       if (!validatePostalCode(cleanUpdates.postalCode)) {
-        toast.error('Please enter a valid 6-digit PIN code');
+        set({ error: 'Please enter a valid 6-digit PIN code' });
         return false;
       }
     }
 
     if (cleanUpdates.fullName && !validateName(cleanUpdates.fullName.trim())) {
-      toast.error('Please enter a valid full name');
+      set({ error: 'Please enter a valid full name' });
       return false;
     }
 
@@ -290,6 +287,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     set((state) => ({
       addresses: state.addresses.map((addr) => (addr._id === id ? optimisticAddress : addr)),
       loading: true,
+      error: null,
     }));
 
     try {
@@ -314,6 +312,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         editingAddressId: null,
         showAddressForm: false,
         loading: false,
+        error: null,
       }));
 
       get().resetAddressForm();
@@ -323,11 +322,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       set((state) => ({
         addresses: state.addresses.map((addr) => (addr._id === id ? current : addr)),
         loading: false,
+        error: error instanceof Error ? error.message : 'Failed to update address',
       }));
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update address';
-      console.error('Update address error:', errorMessage);
-      toast.error(errorMessage);
+      console.error('Update address error:', get().error);
       return false;
     }
   },
@@ -337,7 +335,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     const addressToDelete = currentAddresses.find((addr) => addr._id === id);
 
     if (!addressToDelete) {
-      toast.error('Address not found');
+      set({ error: 'Address not found' });
       return false;
     }
 
@@ -346,6 +344,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       addresses: filteredAddresses,
       deletingId: id,
       selectedAddressId: get().selectedAddressId === id ? '' : get().selectedAddressId,
+      error: null,
     });
 
     try {
@@ -358,7 +357,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         throw new Error(errorData.error || `HTTP Error: ${response.status}`);
       }
 
-      set({ deletingId: null });
+      set({ deletingId: null, error: null });
       toast.success('Address deleted successfully');
 
       if (filteredAddresses.length > 0 && !get().selectedAddressId) {
@@ -371,11 +370,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       set({
         addresses: currentAddresses,
         deletingId: null,
+        error: error instanceof Error ? error.message : 'Failed to delete address',
       });
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete address';
-      console.error('Delete address error:', errorMessage);
-      toast.error(errorMessage);
+      console.error('Delete address error:', get().error);
       return false;
     }
   },
@@ -426,7 +424,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         });
       } else {
         console.warn(`Attempted to edit non-existent address: ${id}`);
-        toast.error('Address not found');
+        set({ error: 'Address not found' });
       }
     } else {
       set({ editingAddressId: null });

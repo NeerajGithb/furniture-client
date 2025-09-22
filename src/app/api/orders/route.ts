@@ -383,14 +383,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       couponCode,
     } = body;
 
-    console.log('Order creation request:', {
-      addressId,
-      paymentMethod,
-      selectedItems: selectedItems?.length || 0,
-      cartData: cartData?.length || 0,
-      totalAmount: totals?.totalAmount,
-    });
-
     if (!addressId || !paymentMethod) {
       return NextResponse.json(
         { error: 'Address and payment method are required' },

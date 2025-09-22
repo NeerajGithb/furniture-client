@@ -12,7 +12,6 @@ export const GET = withAuth(async (req: NextRequest, user: AuthenticatedUser) =>
     if (!userProfile) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
-
     return NextResponse.json({
       success: true,
       id: userProfile._id,
@@ -71,7 +70,6 @@ export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) 
     if (!updatedUser) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
-
     return NextResponse.json({
       success: true,
       message: 'Profile updated successfully',

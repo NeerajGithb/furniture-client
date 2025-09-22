@@ -67,11 +67,71 @@ const getCachedUser = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => getCachedUser());
+  const [user, setUserState] = useState(() => getCachedUser());
   const [loading, setLoading] = useState(!getCachedUser());
   const [storesInitialized, setStoresInitialized] = useState(false);
   const refreshIntervalRef = useRef(null);
   const initializationRef = useRef(false);
+
+  // Function to fetch fresh user data from API after updates
+  const fetchFreshUserData = async () => {
+    try {
+      const res = await fetchWithCredentials('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        const data = await handleApiResponse(res);
+        if (data?.user) {
+          setUserState(data.user);
+          setSessionUser(data.user);
+          return data.user;
+        }
+      }
+
+      // If API call fails, clear user
+      clearUser();
+      await resetStores();
+      return null;
+    } catch (err) {
+      clearUser();
+      await resetStores();
+      return null;
+    }
+  };
+
+  // Function for user updates (profile changes, etc.)
+  const setUser = async () => {
+    setLoading(true);
+    try {
+      const freshUser = await fetchFreshUserData();
+      if (freshUser) {
+        window.location.reload();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to update user data (same as setUser - always fetch fresh)
+  const updateUser = async () => {
+    setLoading(true);
+    try {
+      const freshUser = await fetchFreshUserData();
+      if (freshUser) {
+        window.location.reload();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to clear user (for logout scenarios)
+  const clearUser = () => {
+    setUserState(null);
+    clearUserCache();
+  };
 
   const fetchUser = async (skipCache = false) => {
     try {
@@ -86,7 +146,7 @@ export const AuthProvider = ({ children }) => {
       if (!skipCache) {
         const cachedUser = getCachedUser();
         if (cachedUser) {
-          setUser(cachedUser);
+          setUserState(cachedUser);
           await initializeStores();
           startAutoRefresh();
           setLoading(false);
@@ -94,30 +154,13 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
-      const res = await fetchWithCredentials('/api/auth/me', {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (res.ok) {
-        const data = await handleApiResponse(res);
-        if (data?.user) {
-          setUser(data.user);
-          setSessionUser(data.user);
-          startAutoRefresh();
-          await initializeStores();
-          return data.user;
-        }
+      const freshUser = await fetchFreshUserData();
+      if (freshUser) {
+        startAutoRefresh();
+        await initializeStores();
+        return freshUser;
       }
 
-      setUser(null);
-      clearUserCache();
-      await resetStores();
-      return null;
-    } catch (err) {
-      setUser(null);
-      clearUserCache();
-      await resetStores();
       return null;
     } finally {
       setLoading(false);
@@ -153,25 +196,18 @@ export const AuthProvider = ({ children }) => {
         if (!res.ok) {
           clearInterval(refreshIntervalRef.current);
           refreshIntervalRef.current = null;
-          setUser(null);
-          clearUserCache();
+          clearUser();
           await resetStores();
         }
       } catch {
         clearInterval(refreshIntervalRef.current);
         refreshIntervalRef.current = null;
-        setUser(null);
-        clearUserCache();
+        clearUser();
         await resetStores();
       }
     }, 13 * 60 * 1000);
 
     refreshIntervalRef.current = interval;
-  };
-
-  const updateUser = (newUserData) => {
-    setUser(newUserData);
-    setSessionUser(newUserData);
   };
 
   const logout = async () => {
@@ -181,8 +217,7 @@ export const AuthProvider = ({ children }) => {
         refreshIntervalRef.current = null;
       }
 
-      setUser(null);
-      clearUserCache();
+      clearUser();
       await resetStores();
 
       await fetchWithCredentials('/api/auth/logout', {
@@ -215,7 +250,9 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         storesInitialized,
-        setUser: updateUser,
+        setUser, // Now fetches fresh data from API
+        updateUser, // Now fetches fresh data from API
+        clearUser, // Use for logout scenarios
         refetch: () => fetchUser(true),
         logout,
         initializeStores,

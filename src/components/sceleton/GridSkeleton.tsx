@@ -34,7 +34,7 @@ const SkeletonCard = memo(() => (
 SkeletonCard.displayName = 'SkeletonCard';
 
 const GridSkeleton = () => (
-  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-4 lg:gap-5">
+  <div className="px-1 sm:px-2 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-4 lg:gap-5">
     {Array.from({ length: 12 }).map((_, i) => (
       <SkeletonCard key={`skeleton-${i}`} />
     ))}

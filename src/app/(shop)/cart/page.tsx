@@ -23,13 +23,14 @@ import { useCheckoutStore } from '@/stores/checkoutStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import PriceSummaryCard from '@/components/ui/PriceSummaryCard';
 import toast from 'react-hot-toast';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const CartPage = () => {
   const { user } = useCurrentUser();
   const router = useRouter();
   const priceCardRef = useRef(null);
   const [showFixedCheckout, setShowFixedCheckout] = useState(false);
-
+  const [error, setError] = useState<string | null>(null);
   const {
     cart,
     loading,
@@ -83,13 +84,13 @@ const CartPage = () => {
   const handleCheckout = () => {
     const selectedItems = getSelectedCartItems();
     if (selectedItems.length === 0) {
-      toast.error('Please select items to checkout');
+      setError('Please select at least one item to proceed to checkout.');
       return;
     }
 
     const checkoutData = getCheckoutData();
     if (!checkoutData) {
-      toast.error('Unable to prepare checkout data');
+      setError('Unable to prepare checkout data');
       return;
     }
 
@@ -126,8 +127,7 @@ const CartPage = () => {
       await removeFromCart(productId);
       toast.success('Item moved to wishlist');
     } catch (error) {
-      console.error('Error moving to wishlist:', error);
-      toast.error('Failed to move item to wishlist');
+      setError('Failed to move item to wishlist');
     }
   };
 
@@ -213,7 +213,9 @@ const CartPage = () => {
               )}
             </div>
           </div>
-
+          {error && (
+            <ErrorMessage message={error} onClose={() => setError(null)} className="sm:ml-4" />
+          )}
           {!isEmpty && (
             <div className="flex items-center gap-2 sm:gap-3">
               <button

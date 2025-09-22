@@ -15,8 +15,10 @@ import { useWishlistStore } from '@/stores/wishlistStore';
 import { useCheckoutStore } from '@/stores/checkoutStore';
 import { useProductStore } from '@/stores/productStore';
 import { Product } from '@/types/Product';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const SingleProductPage = () => {
+  const [SingleProductPageError, setSingleProductPageError] = useState<string | null>(null);
   const params = useParams();
   const router = useRouter();
   const { user } = useCurrentUser();
@@ -105,12 +107,12 @@ const SingleProductPage = () => {
 
   const handleAddToCart = async () => {
     if (!user?._id) {
-      toast.error('Please login to add items to cart');
+      setSingleProductPageError('Please login to add items to cart');
       return;
     }
 
     if (!product || isOutOfStock) {
-      toast.error('Product is out of stock');
+      setSingleProductPageError('Product is out of stock');
       return;
     }
 
@@ -119,7 +121,7 @@ const SingleProductPage = () => {
       await addToCart(product._id, quantity);
     } catch (error: any) {
       console.error('Add to cart error:', error);
-      toast.error(error?.message || 'Failed to add to cart');
+      setSingleProductPageError(error?.message || 'Failed to add to cart');
     } finally {
       setAddingToCart(false);
     }
@@ -127,12 +129,12 @@ const SingleProductPage = () => {
 
   const handleBuyNow = async () => {
     if (!user?._id) {
-      toast.error('Please login to purchase');
+      setSingleProductPageError('Please login to purchase');
       return;
     }
 
     if (!product || isOutOfStock) {
-      toast.error('Product is out of stock');
+      setSingleProductPageError('Product is out of stock');
       return;
     }
 
@@ -184,7 +186,7 @@ const SingleProductPage = () => {
       router.push('/checkout');
     } catch (error: any) {
       console.error('Buy now error:', error);
-      toast.error(error?.message || 'Failed to proceed with purchase');
+      setSingleProductPageError(error?.message || 'Failed to proceed with purchase');
       setAddingToCart(false);
     } finally {
       setBuyingNow(false);
@@ -193,7 +195,7 @@ const SingleProductPage = () => {
 
   const handleWishlistToggle = async () => {
     if (!user?._id) {
-      toast.error('Please login to add items to wishlist');
+      setSingleProductPageError('Please login to add items to wishlist');
       return;
     }
 
@@ -206,7 +208,7 @@ const SingleProductPage = () => {
         toast.success('Removed from wishlist');
       } catch (error: any) {
         console.error('Remove from wishlist error:', error);
-        toast.error(error?.message || 'Failed to remove from wishlist');
+        setSingleProductPageError(error?.message || 'Failed to remove from wishlist');
       } finally {
         setRemovingFromWishlist(false);
       }
@@ -217,7 +219,7 @@ const SingleProductPage = () => {
         toast.success('Added to wishlist');
       } catch (error: any) {
         console.error('Add to wishlist error:', error);
-        toast.error(error?.message || 'Failed to add to wishlist');
+        setSingleProductPageError(error?.message || 'Failed to add to wishlist');
       } finally {
         setAddingToWishlist(false);
       }
@@ -322,12 +324,8 @@ const SingleProductPage = () => {
     : false;
 
   const productInCart = product?._id ? isInCart(product._id) : false;
-  const productWishlisted = product?._id ? isWishlisted(product._id) : false;
   const cartItem = product?._id ? getCartItem(product._id) : null;
   const isUpdatingCart = product?._id ? cartUpdatingItems.has(product._id) || addingToCart : false;
-  const isUpdatingWishlist = product?._id
-    ? wishlistUpdatingItems.has(product._id) || addingToWishlist || removingFromWishlist
-    : false;
 
   if (loading && !hasFetched) {
     return (
@@ -464,6 +462,12 @@ const SingleProductPage = () => {
               {cleanedProductName}
             </li>
           </ol>
+          {SingleProductPageError && (
+            <ErrorMessage
+              message={SingleProductPageError}
+              onClose={() => setSingleProductPageError(null)}
+            />
+          )}
         </nav>
 
         <div className="flex flex-col md:flex-row gap-8 lg:gap-12 mb-16">

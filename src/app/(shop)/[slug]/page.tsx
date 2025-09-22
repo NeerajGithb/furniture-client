@@ -261,7 +261,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
       await fetchProducts(params.toString(), false);
       setCurrentPage(nextPage);
     } catch (error) {
-      console.error('Error loading more products:', error);
     } finally {
       setTimeout(() => {
         isLoadingMoreRef.current = false;

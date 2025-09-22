@@ -23,6 +23,7 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
 import { useCartStore } from '@/stores/cartStore';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 interface PaymentMethod {
   id: string;
@@ -35,6 +36,7 @@ interface PaymentMethod {
 }
 
 const PaymentPage = () => {
+  const [orderError, setOrderError] = useState<string | null>(null);
   const { user } = useCurrentUser();
   const router = useRouter();
   const priceCardRef = useRef(null);
@@ -140,7 +142,7 @@ const PaymentPage = () => {
     }
 
     if (checkoutData && !checkoutData.selectedAddressId) {
-      toast.error('Please select a delivery address');
+      setOrderError('Please select a delivery address');
       return;
     }
   }, [user?._id, hasValidCheckout, checkoutData?.selectedAddressId, router]);
@@ -149,7 +151,7 @@ const PaymentPage = () => {
     (methodId: string) => {
       const method = paymentMethods.find((m) => m.id === methodId);
       if (!method?.available) {
-        toast.error(`${method?.name || 'This payment method'} is coming soon!`);
+        setOrderError(`${method?.name || 'This payment method'} is coming soon!`);
         return;
       }
 
@@ -166,14 +168,6 @@ const PaymentPage = () => {
         return;
       }
 
-      console.log(
-        `Removing ${orderedItems.length} ordered items from cart:`,
-        orderedItems.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-        })),
-      );
-
       const removePromises = orderedItems.map(async (item) => {
         try {
           const success = await removeFromCart(item.productId);
@@ -183,7 +177,11 @@ const PaymentPage = () => {
           }
           return success;
         } catch (error) {
-          console.error(`Error removing ${item.productId} from cart:`, error);
+          setOrderError(
+            `Error removing ${item.productId} from cart: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
           return false;
         }
       });
@@ -201,8 +199,11 @@ const PaymentPage = () => {
           console.warn(`Failed to remove ${failed} items from cart`);
         }
       } catch (error) {
-        console.error('Error in bulk cart item removal:', error);
-        throw error;
+        setOrderError(
+          `Error in bulk cart item removal: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
       }
     },
     [removeFromCart],
@@ -210,28 +211,28 @@ const PaymentPage = () => {
 
   const handlePlaceOrder = useCallback(async () => {
     if (!checkoutData || !selectedCartItems.length) {
-      toast.error('No items selected for checkout');
+      setOrderError('No items selected for checkout');
       return;
     }
 
     if (!checkoutData.selectedAddressId) {
-      toast.error('Please select a delivery address');
+      setOrderError('Please select a delivery address');
       return;
     }
 
     if (!checkoutData.selectedPaymentMethod) {
-      toast.error('Please select a payment method');
+      setOrderError('Please select a payment method');
       return;
     }
 
     if (checkoutData.selectedPaymentMethod === 'upi') {
       if (!upiId.trim()) {
-        toast.error('Please enter your UPI ID');
+        setOrderError('Please enter your UPI ID');
         return;
       }
       const upiRegex = /^[\w.-]+@[\w.-]+$/;
       if (!upiRegex.test(upiId)) {
-        toast.error('Please enter a valid UPI ID');
+        setOrderError('Please enter a valid UPI ID');
         return;
       }
     }
@@ -248,11 +249,6 @@ const PaymentPage = () => {
         cartData: selectedCartItems,
         upiId: checkoutData.selectedPaymentMethod === 'upi' ? upiId : undefined,
       };
-
-      console.log('Placing order with payload:', {
-        ...orderPayload,
-        cartData: `${orderPayload.cartData.length} items`,
-      });
 
       const orderResponse = await fetchWithCredentials('/api/orders', {
         method: 'POST',
@@ -276,14 +272,16 @@ const PaymentPage = () => {
         try {
           await removeOrderedItemsFromCart(selectedCartItems);
         } catch (cartError) {
-          console.error('Error removing ordered items from cart:', cartError);
-
-          toast.error('Order placed but failed to update cart. Please refresh your cart.');
+          setOrderError(
+            `Error removing ordered items from cart: ${
+              cartError instanceof Error ? cartError.message : String(cartError)
+            }`,
+          );
         }
 
         clearCheckout();
 
-        window.location.href = `/order-success?orderNumber=${orderNumber}`;
+        router.replace(`/order-success?orderNumber=${orderNumber}`);
         return;
       } else {
         try {
@@ -305,8 +303,12 @@ const PaymentPage = () => {
             try {
               await removeOrderedItemsFromCart(selectedCartItems);
             } catch (cartError) {
-              console.error('Error removing ordered items from cart after payment:', cartError);
-              toast.error(
+              setOrderError(
+                `Error removing ordered items from cart after payment: ${
+                  cartError instanceof Error ? cartError.message : String(cartError)
+                }`,
+              );
+              setOrderError(
                 'Payment successful but failed to update cart. Please refresh your cart.',
               );
             }
@@ -314,20 +316,22 @@ const PaymentPage = () => {
             clearCheckout();
 
             toast.success('Payment successful! Order placed.');
-            window.location.href = `/order-success?orderNumber=${orderNumber}`;
+            router.replace(`/order-success?orderNumber=${orderNumber}`);
           } else {
             const errorData = await paymentResponse.json().catch(() => ({}));
             throw new Error(errorData.error || `Payment failed: ${paymentResponse.status}`);
           }
         } catch (paymentError) {
-          console.error('Payment error:', paymentError);
-          throw paymentError;
+          setOrderError(
+            `Payment error: ${
+              paymentError instanceof Error ? paymentError.message : String(paymentError)
+            }`,
+          );
         }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
-      console.error('Order placement error:', errorMessage);
-      toast.error(errorMessage);
+      setOrderError(`Order placement error: ${errorMessage}`);
     } finally {
       setPlacingOrder(false);
     }
@@ -416,6 +420,9 @@ const PaymentPage = () => {
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Payment</h1>
             </div>
+            {orderError && (
+              <ErrorMessage message={orderError} onClose={() => setOrderError(null)} />
+            )}
           </div>
         </div>
 

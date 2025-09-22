@@ -1,9 +1,7 @@
-// stores/orderStore.ts - Fixed version
 import { create } from 'zustand';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 import { toast } from 'react-hot-toast';
 
-// Types
 export type OrderStatus =
   | 'pending'
   | 'confirmed'
@@ -40,7 +38,6 @@ export interface OrderProduct {
   discountPercent?: number;
 }
 
-// Enhanced OrderItem interface
 export interface OrderItem {
   _id: string;
   productId?: string;
@@ -57,20 +54,17 @@ export interface OrderItem {
   };
   productImage?: string;
 
-  // NEW FIELDS from enhanced model
   sku?: string;
   itemId?: string;
   discount?: number;
   discountPercent?: number;
 
-  // Calculated fields for UI
   itemTotal?: number;
   originalItemTotal?: number;
   itemSavings?: number;
   itemInsuranceTotal?: number;
 }
 
-// Price breakdown interface
 export interface PriceBreakdown {
   originalSubtotal: number;
   itemDiscount: number;
@@ -82,7 +76,6 @@ export interface PriceBreakdown {
   grandTotal: number;
   totalSavings: number;
 
-  // Additional calculated fields for UI
   itemsSubtotal?: number;
   insuranceTotal?: number;
   subtotalWithInsurance?: number;
@@ -91,7 +84,6 @@ export interface PriceBreakdown {
   youSaved?: number;
 }
 
-// Order timeline interface
 export interface OrderTimelineStep {
   status: string;
   title: string;
@@ -102,7 +94,6 @@ export interface OrderTimelineStep {
   type?: 'success' | 'error' | 'warning';
 }
 
-// Order summary interface
 export interface OrderSummary {
   totalItems: number;
   totalQuantity: number;
@@ -115,7 +106,6 @@ export interface OrderSummary {
   isRecentOrder: boolean;
 }
 
-// Payment information interface
 export interface PaymentInfo {
   _id: string;
   paymentId: string;
@@ -127,31 +117,26 @@ export interface PaymentInfo {
   failureReason?: string;
 }
 
-// Enhanced Order interface
 export interface Order {
   _id: string;
   orderNumber: string;
   userId: string;
   items: OrderItem[];
 
-  // Enhanced price details
   priceBreakdown: PriceBreakdown;
 
-  // Legacy fields (maintained for backward compatibility)
   subtotal: number;
   shippingCost: number;
   tax: number;
   discount: number | boolean;
   totalAmount: number;
 
-  // Order information
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
   shippingAddress: OrderAddress;
   billingAddress?: OrderAddress;
 
-  // Tracking and timeline
   trackingNumber?: string;
   expectedDeliveryDate?: string;
   deliveredAt?: string;
@@ -161,21 +146,17 @@ export interface Order {
   refundedAt?: string;
   notes?: string;
 
-  // NEW FIELDS
   insuranceEnabled?: string[];
   couponCode?: string;
   carrier?: string;
 
-  // Timestamps
   createdAt: string;
   updatedAt: string;
 
-  // Enhanced response fields
   payment?: PaymentInfo;
   orderTimeline?: OrderTimelineStep[];
   orderSummary?: OrderSummary;
 
-  // Legacy fields (for backward compatibility)
   paymentId?: string;
   insuranceCost?: number | boolean;
 }
@@ -229,23 +210,19 @@ export interface OrderFilters {
 }
 
 interface OrderStore {
-  // State
   orders: Order[];
   order: Order | null;
   loading: boolean;
   error: string | null;
   deletingOrders: string[];
 
-  // Pagination
   totalOrders: number;
   currentPage: number;
   totalPages: number;
   hasMore: boolean;
 
-  // Cache
   lastFetchTime: number;
 
-  // Actions
   initializeOrders: (userId?: string) => Promise<void>;
   fetchOrders: (filters?: OrderFilters, forceRefresh?: boolean) => Promise<void>;
   fetchOrderById: (id: string) => Promise<void>;
@@ -256,28 +233,23 @@ interface OrderStore {
   cancelOrder: (id: string, reason?: string) => Promise<boolean>;
   deleteOrderByNumber: (orderNumber: string) => Promise<boolean>;
 
-  // Utility actions
   clearError: () => void;
   clearOrder: () => void;
   clearOrders: () => void;
 
-  // Getters
   getOrderByNumber: (orderNumber: string) => Order | null;
   getOrdersByStatus: (status: OrderStatus) => Order[];
   isOrderBeingDeleted: (orderNumber: string) => boolean;
 
-  // Enhanced getters
   getOrderPriceBreakdown: (orderNumber: string) => PriceBreakdown | null;
   getOrderTimeline: (orderNumber: string) => OrderTimelineStep[] | null;
   canCancelOrder: (orderNumber: string) => boolean;
   canReturnOrder: (orderNumber: string) => boolean;
 }
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
-// Fixed processOrderData function
 const processOrderData = (order: any): Order => {
-  // Calculate item totals and savings
   const processedItems = (order.items || []).map((item: any) => {
     const itemPrice = item.price || 0;
     const itemOriginalPrice = item.originalPrice || itemPrice;
@@ -293,7 +265,6 @@ const processOrderData = (order: any): Order => {
     };
   });
 
-  // Calculate totals from items
   const itemsSubtotal = processedItems.reduce(
     (sum: number, item: any) => sum + (item.itemTotal || 0),
     0,
@@ -311,13 +282,10 @@ const processOrderData = (order: any): Order => {
     0,
   );
 
-  // Handle legacy discount field
   const legacyDiscount = typeof order.discount === 'number' ? order.discount : 0;
   const legacyInsurance = typeof order.insuranceCost === 'number' ? order.insuranceCost : 0;
 
-  // Build comprehensive price breakdown
   const priceBreakdown: PriceBreakdown = {
-    // Use calculated values or fallback to order values
     originalSubtotal: originalSubtotal || order.subtotal || 0,
     itemDiscount: totalItemSavings || legacyDiscount || 0,
     couponDiscount: order.priceBreakdown?.couponDiscount || order.couponDiscount || 0,
@@ -330,7 +298,6 @@ const processOrderData = (order: any): Order => {
       (totalItemSavings || legacyDiscount || 0) +
       (order.priceBreakdown?.couponDiscount || order.couponDiscount || 0),
 
-    // Additional UI fields
     itemsSubtotal: itemsSubtotal || order.subtotal || 0,
     insuranceTotal: totalInsurance || legacyInsurance || 0,
     subtotalWithInsurance:
@@ -354,7 +321,7 @@ const processOrderData = (order: any): Order => {
     insuranceEnabled: order.insuranceEnabled || [],
     orderTimeline: order.orderTimeline || [],
     priceBreakdown,
-    // Ensure orderSummary is available
+
     orderSummary: {
       totalItems: processedItems.length,
       totalQuantity: processedItems.reduce(
@@ -367,14 +334,13 @@ const processOrderData = (order: any): Order => {
       canReturn: ['delivered'].includes(order.orderStatus),
       estimatedDelivery: order.expectedDeliveryDate,
       orderAge: Date.now() - new Date(order.createdAt).getTime(),
-      isRecentOrder: Date.now() - new Date(order.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000, // 7 days
+      isRecentOrder: Date.now() - new Date(order.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000,
       ...order.orderSummary,
     },
   };
 };
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
-  // Initial state
   orders: [],
   order: null,
   loading: false,
@@ -531,7 +497,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   },
 
   createOrder: async (orderData: CreateOrderData) => {
-    // Enhanced temporary order with new fields
     const tempOrder: Order = {
       _id: `temp-${Date.now()}`,
       orderNumber: 'TEMP',
@@ -572,7 +537,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
 
-      // Enhanced fields
       subtotal: orderData.totals.subtotal,
       shippingCost: orderData.totals.shippingCost,
       tax: 0,
@@ -580,7 +544,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       insuranceEnabled: orderData.insuranceEnabled || [],
       couponCode: orderData.couponCode,
 
-      // Enhanced price breakdown
       priceBreakdown: {
         originalSubtotal: orderData.totals.subtotal,
         itemDiscount: 0,
@@ -637,7 +600,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  // Rest of the methods remain the same...
   updateOrderStatus: async (id: string, status: OrderStatus) => {
     const prevState = { orders: get().orders, order: get().order };
 
@@ -809,7 +771,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  // Utils
   clearError: () => set({ error: null }),
   clearOrder: () => set({ order: null }),
   clearOrders: () =>
@@ -823,7 +784,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       deletingOrders: [],
     }),
 
-  // Enhanced getters
   getOrderByNumber: (orderNumber: string) =>
     get().orders.find((order) => order.orderNumber === orderNumber) || null,
 
@@ -832,7 +792,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   isOrderBeingDeleted: (orderNumber: string) => get().deletingOrders.includes(orderNumber),
 
-  // Enhanced getters
   getOrderPriceBreakdown: (orderNumber: string) => {
     const order = get().getOrderByNumber(orderNumber);
     return order?.priceBreakdown || null;

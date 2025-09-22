@@ -1,4 +1,3 @@
-// app/profile/page.tsx
 'use client';
 
 import { useEffect } from 'react';
@@ -35,7 +34,6 @@ export default function ProfileOverview() {
     uploadProfileImage,
   } = useProfileStore();
 
-  // Initialize form when user data is available
   useEffect(() => {
     if (currentUser) {
       initializeForm(currentUser);

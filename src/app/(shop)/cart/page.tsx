@@ -58,7 +58,6 @@ const CartPage = () => {
     }
   }, [user?._id, initializeCart]);
 
-  // Intersection Observer for checkout button visibility
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {

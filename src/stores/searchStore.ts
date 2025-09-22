@@ -9,18 +9,15 @@ interface RelatedCategory {
 }
 
 interface SearchState {
-  // Products data
   products: Product[];
   totalProducts: number;
 
-  // Loading states
   loadingProducts: boolean;
   loadingMore: boolean;
   setLoadingProducts: (value: boolean) => void;
-  // Error state
+
   error: string | null;
 
-  // Pagination
   pagination: {
     page: number;
     limit: number;
@@ -29,29 +26,27 @@ interface SearchState {
   };
   hasMore: boolean;
 
-  // Search specific data
   query: string;
   suggestion: string | null;
   relatedCategories: RelatedCategory[];
   normalized: string | null;
-  fallback: boolean; // shows if results are fallback
-  noResults: boolean; // shows if query returned nothing
+  fallback: boolean;
+  noResults: boolean;
 
-  // Filter data (these should come from layout, not fetched here)
   categories: any[];
   subcategories: any[];
   materials: string[];
   priceRange: { minPrice: number; maxPrice: number };
 
-  // Actions
   searchProducts: (query: string, params: string, reset?: boolean) => Promise<void>;
+  fetchProducts: (params: string, reset?: boolean) => Promise<void>;
   setQuery: (query: string) => void;
-  setFilters: (filters: any) => void; // To accept filters from layout
+  setFilters: (filters: any) => void;
   resetSearch: () => void;
+  resetProductState: () => void;
 }
 
 const useSearchStore = create<SearchState>((set, get) => ({
-  // Initial state
   products: [],
   totalProducts: 0,
   loadingProducts: false,
@@ -76,7 +71,6 @@ const useSearchStore = create<SearchState>((set, get) => ({
   materials: [],
   priceRange: { minPrice: 0, maxPrice: 100000 },
 
-  // Set filters from external source (layout)
   setFilters: (filters) => {
     set({
       categories: filters.categories || [],
@@ -86,8 +80,30 @@ const useSearchStore = create<SearchState>((set, get) => ({
     });
   },
 
-  // Reset search state
   resetSearch: () => {
+    set({
+      products: [],
+      totalProducts: 0,
+      loadingProducts: false,
+      loadingMore: false,
+      error: null,
+      pagination: {
+        page: 1,
+        limit: 24,
+        total: 0,
+        pages: 0,
+      },
+      hasMore: false,
+      suggestion: null,
+      relatedCategories: [],
+      normalized: null,
+      fallback: false,
+      noResults: false,
+      query: '',
+    });
+  },
+
+  resetProductState: () => {
     set({
       products: [],
       totalProducts: 0,
@@ -109,19 +125,13 @@ const useSearchStore = create<SearchState>((set, get) => ({
     });
   },
 
-  // Search products function
-  searchProducts: async (query: string, params: string, reset = false) => {
+  fetchProducts: async (params: string, reset = false) => {
     const state = get();
 
-    if (!query.trim()) {
-      return;
-    }
-
     try {
-      // Set appropriate loading state
       if (reset) {
         set({
-          products: [], // Clear products immediately for new search
+          products: [],
           totalProducts: 0,
           loadingProducts: true,
           loadingMore: false,
@@ -139,7 +149,132 @@ const useSearchStore = create<SearchState>((set, get) => ({
         });
       }
 
-      // Build search URL
+      const searchParams = new URLSearchParams(params);
+
+      if (!reset) {
+        const currentPage = state.pagination.page;
+        searchParams.set('page', (currentPage + 1).toString());
+      }
+
+      const response = await fetch(`/api/search?${searchParams.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await handleApiResponse(response);
+
+      if (!data.ok) {
+        throw new Error(data.error || 'Failed to fetch products');
+      }
+
+      if (!data.products || data.products.length === 0) {
+        set({
+          products: [],
+          totalProducts: 0,
+          loadingProducts: false,
+          loadingMore: false,
+          hasMore: false,
+          pagination: {
+            page: 1,
+            limit: state.pagination.limit,
+            total: 0,
+            pages: 0,
+          },
+          fallback: false,
+          noResults: true,
+          suggestion: null,
+          relatedCategories: [],
+          normalized: null,
+        });
+        return;
+      }
+
+      const totalPages = Math.ceil(data.total / data.pageSize);
+      const hasMore = data.page < totalPages;
+
+      set({
+        products: reset ? data.products : [...state.products, ...data.products],
+        totalProducts: data.total,
+        pagination: {
+          page: data.page,
+          limit: data.pageSize,
+          total: data.total,
+          pages: totalPages,
+        },
+        hasMore,
+        suggestion: null,
+        relatedCategories: data.relatedCategories || [],
+        normalized: null,
+        fallback: false,
+        noResults: false,
+        loadingProducts: false,
+        loadingMore: false,
+        error: null,
+      });
+    } catch (error) {
+      console.error('Fetch products error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch products';
+
+      set({
+        loadingProducts: false,
+        loadingMore: false,
+        error: errorMessage,
+        noResults: false,
+        fallback: false,
+      });
+    }
+  },
+
+  searchProducts: async (query: string, params: string, reset = false) => {
+    const state = get();
+
+    if (!query.trim()) {
+      const searchParams = new URLSearchParams(params);
+      const hasFilters = Array.from(searchParams.keys()).some(
+        (key) => key !== 'q' && key !== 'page' && key !== 'limit',
+      );
+
+      if (hasFilters) {
+        return get().fetchProducts(params, reset);
+      }
+
+      set({
+        products: [],
+        totalProducts: 0,
+        loadingProducts: false,
+        loadingMore: false,
+        error: null,
+        hasMore: false,
+        noResults: false,
+        fallback: false,
+        suggestion: null,
+        relatedCategories: [],
+        normalized: null,
+      });
+      return;
+    }
+
+    try {
+      if (reset) {
+        set({
+          products: [],
+          totalProducts: 0,
+          loadingProducts: true,
+          loadingMore: false,
+          error: null,
+          suggestion: null,
+          relatedCategories: [],
+          normalized: null,
+          fallback: false,
+          noResults: false,
+        });
+      } else {
+        set({
+          loadingMore: true,
+          error: null,
+        });
+      }
+
       const searchParams = new URLSearchParams(params);
       searchParams.set('q', query);
 
@@ -159,7 +294,6 @@ const useSearchStore = create<SearchState>((set, get) => ({
         throw new Error(data.error || 'Search failed');
       }
 
-      // Handle no results case
       if (!data.products || data.products.length === 0) {
         set({
           products: [],
@@ -182,11 +316,9 @@ const useSearchStore = create<SearchState>((set, get) => ({
         return;
       }
 
-      // Calculate pagination
       const totalPages = Math.ceil(data.total / data.pageSize);
       const hasMore = data.page < totalPages;
 
-      // Update with results
       set({
         products: reset ? data.products : [...state.products, ...data.products],
         totalProducts: data.total,
@@ -220,7 +352,6 @@ const useSearchStore = create<SearchState>((set, get) => ({
     }
   },
 
-  // Set query
   setQuery: (query: string) => {
     set({ query });
   },

@@ -21,7 +21,6 @@ const NewArrivals = ({
   const { fetchRelatedProducts, getRelatedProducts, relatedProductsLoading, relatedProductsError } =
     useHomeStore();
 
-  // ✅ use selector for array instead of full object
   const newArrivalProducts = getRelatedProducts(inspirationSlug);
 
   useEffect(() => {

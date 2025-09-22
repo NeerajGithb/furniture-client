@@ -1,7 +1,5 @@
-// stores/globalStoreManager.ts
 import { create } from 'zustand';
 
-// Import all store hooks
 import { useAddressStore } from './addressStore';
 import { useCartStore } from './cartStore';
 import { useCheckoutStore } from './checkoutStore';
@@ -12,26 +10,21 @@ import { useWishlistStore } from './wishlistStore';
 import { useHomeStore } from './homeStore';
 
 interface GlobalStoreManager {
-  // State
   isInitializing: boolean;
   isResetting: boolean;
 
-  // Actions
   initializeAll: () => Promise<void>;
   resetAll: () => Promise<void>;
 }
 
 export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
-  // Initial state
   isInitializing: false,
   isResetting: false,
 
-  // Initialize all stores
   initializeAll: async () => {
     set({ isInitializing: true });
 
     try {
-      // Initialize all stores in parallel
       await Promise.all([
         useProductStore.getState().initializeProducts(),
         useAddressStore.getState().initializeAddresses(),
@@ -49,12 +42,10 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
     }
   },
 
-  // Reset all stores
   resetAll: async () => {
     set({ isResetting: true });
 
     try {
-      // Clear persisted data
       if (typeof window !== 'undefined') {
         try {
           localStorage.removeItem('checkout-store');
@@ -64,7 +55,6 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
         }
       }
 
-      // Reset all stores
       useAddressStore.setState({
         addresses: [],
         selectedAddressId: '',
@@ -124,7 +114,6 @@ export const useGlobalStoreManager = create<GlobalStoreManager>((set, get) => ({
   },
 }));
 
-// Helper functions for easy access
 export const initializeApp = () => {
   return useGlobalStoreManager.getState().initializeAll();
 };

@@ -1,10 +1,8 @@
-// app/api/wishlist/check/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import { connectDB } from '@/lib/dbConnect';
 import Wishlist from '@/models/Wishlist';
 
-// POST - Check if products are in wishlist
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();

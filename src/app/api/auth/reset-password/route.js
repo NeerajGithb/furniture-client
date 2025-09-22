@@ -16,7 +16,6 @@ export async function POST(req) {
 
   user.password = newPassword;
 
-  // Cleanup reset fields
   user.resetCode = undefined;
   user.resetCodeExpires = undefined;
   await user.save();

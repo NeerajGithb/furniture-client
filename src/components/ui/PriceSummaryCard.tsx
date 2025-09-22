@@ -18,15 +18,12 @@ import { useCheckoutStore } from '@/stores/checkoutStore';
 interface PriceSummaryCardProps {
   mode: 'cart' | 'checkout' | 'payment';
 
-  // Action handlers
   onCheckout?: () => void;
   onProceedToPayment?: () => void;
   onPlaceOrder?: () => void;
 
-  // State
   placingOrder?: boolean;
 
-  // Display options
   showItemDetails?: boolean;
   showTrustSignals?: boolean;
   showContinueShopping?: boolean;
@@ -42,11 +39,9 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
   showTrustSignals = true,
   showContinueShopping = true,
 }) => {
-  // Get data based on mode
   const cartStore = useCartStore();
   const checkoutStore = useCheckoutStore();
 
-  // For cart mode, use cart store data
   const cartData =
     mode === 'cart'
       ? {
@@ -58,9 +53,8 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
         }
       : null;
 
-  // For checkout/payment mode, use checkout store data
   const checkoutData = mode !== 'cart' ? checkoutStore.getCheckoutData() : null;
-  // Get the appropriate data based on mode
+
   const selectedItems =
     mode === 'cart' ? cartData?.selectedItems || [] : checkoutStore.getSelectedItems();
   const totals = mode === 'cart' ? cartData?.totals : checkoutData?.totals;
@@ -76,13 +70,11 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
     );
   }
 
-  // Calculate original price total for display
   const originalPriceTotal = selectedItems.reduce((total, item) => {
     const originalPrice = item.product?.originalPrice || item.product?.finalPrice || 0;
     return total + originalPrice * item.quantity;
   }, 0);
 
-  // Free shipping threshold
   const freeShippingThreshold = 10000;
   const isFreeShipping = totals.subtotal >= freeShippingThreshold;
   const amountForFreeShipping = Math.max(0, freeShippingThreshold - totals.subtotal);

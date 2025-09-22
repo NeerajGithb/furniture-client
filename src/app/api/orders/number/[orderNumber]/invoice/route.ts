@@ -1,4 +1,3 @@
-// src/app/api/orders/number/[orderNumber]/invoice/route.ts
 import { NextRequest } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import Order from '@/models/Order';
@@ -20,39 +19,32 @@ export async function GET(
       });
     }
 
-    // Create PDF document with dynamic height
     const pdfDoc = await PDFDocument.create();
 
-    // Calculate required height based on content
     const itemsCount = order.items.length;
     const baseHeight = 600;
-    const itemHeight = 45; // Height per item including spacing
+    const itemHeight = 45;
     const dynamicHeight = baseHeight + itemsCount * itemHeight;
 
-    const page = pdfDoc.addPage([800, Math.max(dynamicHeight, 800)]); // Wider page, dynamic height
+    const page = pdfDoc.addPage([800, Math.max(dynamicHeight, 800)]);
     const { width, height } = page.getSize();
 
-    // Load fonts
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // Helper functions
     const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-IN')}`;
     const safeText = (text: string, maxLength: number = 50) =>
       text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
 
-    // Colors
-    const primaryColor = rgb(0.15, 0.39, 0.92); // Blue
+    const primaryColor = rgb(0.15, 0.39, 0.92);
     const darkColor = rgb(0.2, 0.2, 0.2);
     const grayColor = rgb(0.5, 0.5, 0.5);
     const lightGray = rgb(0.95, 0.95, 0.95);
 
-    // Better margins
     const margin = 50;
     const contentWidth = width - margin * 2;
     let yPosition = height - margin;
 
-    // Header Section
     page.drawRectangle({
       x: 0,
       y: yPosition - 80,
@@ -61,7 +53,6 @@ export async function GET(
       color: primaryColor,
     });
 
-    // Company name
     page.drawText('vFurniture', {
       x: margin,
       y: yPosition - 30,
@@ -70,7 +61,6 @@ export async function GET(
       color: rgb(1, 1, 1),
     });
 
-    // Order Summary title
     page.drawText('ORDER SUMMARY', {
       x: width - margin - 200,
       y: yPosition - 30,
@@ -79,7 +69,6 @@ export async function GET(
       color: rgb(1, 1, 1),
     });
 
-    // Tagline
     page.drawText('Premium Furniture & Home Decor', {
       x: margin,
       y: yPosition - 55,
@@ -90,7 +79,6 @@ export async function GET(
 
     yPosition -= 110;
 
-    // Order Information Section
     page.drawRectangle({
       x: margin,
       y: yPosition - 120,
@@ -107,7 +95,6 @@ export async function GET(
       color: primaryColor,
     });
 
-    // Order details in two columns
     const leftColumn = [
       [`Order Number:`, order.orderNumber],
       [
@@ -167,7 +154,6 @@ export async function GET(
 
     yPosition -= 150;
 
-    // Shipping Address Section
     page.drawText('Shipping Address', {
       x: margin,
       y: yPosition,
@@ -209,7 +195,6 @@ export async function GET(
 
     yPosition -= 140;
 
-    // Items Section
     page.drawText('Order Items', {
       x: margin,
       y: yPosition,
@@ -220,12 +205,10 @@ export async function GET(
 
     yPosition -= 40;
 
-    // Items table header
     const tableHeaders = ['#', 'Product Name', 'Quantity', 'Unit Price', 'Total Price'];
     const columnWidths = [50, 350, 80, 120, 130];
     let xPosition = margin;
 
-    // Draw table header
     page.drawRectangle({
       x: margin - 10,
       y: yPosition - 8,
@@ -247,12 +230,9 @@ export async function GET(
 
     yPosition -= 45;
 
-    // Draw items with alternating background
     order.items.forEach((item: any, index: number) => {
-      // Use prices directly from schema without recalculation
       const itemTotal = item.price * item.quantity;
 
-      // Alternating row background
       if (index % 2 === 0) {
         page.drawRectangle({
           x: margin - 10,
@@ -276,7 +256,6 @@ export async function GET(
       itemData.forEach((data, colIndex) => {
         let textX = xPosition;
 
-        // Right align for numeric columns
         if (colIndex >= 2) {
           const textWidth = font.widthOfTextAtSize(data, 11);
           textX = xPosition + columnWidths[colIndex] - textWidth - 10;
@@ -292,7 +271,6 @@ export async function GET(
         xPosition += columnWidths[colIndex];
       });
 
-      // Show discount information if applicable
       if (item.originalPrice && item.originalPrice > item.price) {
         const discountPercent = Math.round(
           ((item.originalPrice - item.price) / item.originalPrice) * 100,
@@ -312,20 +290,16 @@ export async function GET(
 
     yPosition -= 30;
 
-    // Price Details Section
     const totalsX = width - margin - 300;
     const totalsWidth = 280;
 
-    // Calculate original price total
     const originalPriceTotal = order.items.reduce((total: number, item: any) => {
       const originalPrice = item.originalPrice || item.price;
       return total + originalPrice * item.quantity;
     }, 0);
 
-    // Calculate total discount
     const totalDiscount = originalPriceTotal - order.subtotal;
 
-    // Determine section height based on number of items
     const hasDiscount = totalDiscount > 0;
     const hasInsurance = order.insuranceCost && order.insuranceCost > 0;
     const sectionHeight = 140 + (hasDiscount ? 22 : 0) + (hasInsurance ? 22 : 0);
@@ -348,7 +322,6 @@ export async function GET(
 
     let totalY = yPosition - 45;
 
-    // Price breakdown similar to PriceSummaryCard
     const priceDetails = [
       [
         `Price (${order.items.length} ${order.items.length === 1 ? 'item' : 'items'})`,
@@ -356,17 +329,14 @@ export async function GET(
       ],
     ];
 
-    // Add discount if applicable
     if (hasDiscount) {
       priceDetails.push([`Discount`, `-${formatCurrency(totalDiscount)}`]);
     }
 
-    // Add insurance if applicable
     if (hasInsurance) {
       priceDetails.push([`Protection Plan`, `+${formatCurrency(order.insuranceCost)}`]);
     }
 
-    // Add delivery charges
     const isFreeShipping = order.shippingCost === 0;
     priceDetails.push([
       `Delivery Charges`,
@@ -399,7 +369,6 @@ export async function GET(
 
     totalY -= 10;
 
-    // Draw line above total
     page.drawLine({
       start: { x: totalsX + 20, y: totalY + 5 },
       end: { x: totalsX + totalsWidth - 20, y: totalY + 5 },
@@ -407,7 +376,6 @@ export async function GET(
       color: primaryColor,
     });
 
-    // Final total with inclusive message
     page.drawText('Amount Payable:', {
       x: totalsX + 20,
       y: totalY - 15,
@@ -426,7 +394,6 @@ export async function GET(
       color: primaryColor,
     });
 
-    // Inclusive message
     page.drawText('Inclusive of all taxes and charges', {
       x: totalsX + 20,
       y: totalY - 35,
@@ -435,7 +402,6 @@ export async function GET(
       color: grayColor,
     });
 
-    // Footer
     yPosition = 80;
     page.drawLine({
       start: { x: margin, y: yPosition },
@@ -460,7 +426,6 @@ export async function GET(
       color: grayColor,
     });
 
-    // Generate PDF bytes
     const pdfBytes = await pdfDoc.save();
     const pdfBuffer = Buffer.from(pdfBytes);
 

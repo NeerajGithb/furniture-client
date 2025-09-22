@@ -1,4 +1,3 @@
-// app/api/checkout/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Checkout from '@/models/Checkout';
@@ -7,7 +6,6 @@ import Product from '@/models/product';
 import { connectDB } from '@/lib/dbConnect';
 import { nanoid } from 'nanoid';
 
-// POST - Create/Update checkout session
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -19,14 +17,12 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Validate that the selected items exist in user's cart
     const cart = await Cart.findOne({ userId: user.userId }).populate('items.productId');
 
     if (!cart || cart.items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
 
-    // Validate selected items
     const validSelectedItems = selectedItems.filter((productId) =>
       cart.items.some((item: any) => item.productId._id.toString() === productId),
     );
@@ -35,10 +31,8 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'No valid items selected' }, { status: 400 });
     }
 
-    // Generate unique session ID
     const sessionId = nanoid(16);
 
-    // Create checkout items with insurance info
     const checkoutItems = validSelectedItems.map((productId) => {
       const cartItem = cart.items.find((item: any) => item.productId._id.toString() === productId);
       return {
@@ -48,15 +42,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       };
     });
 
-    // Remove any existing checkout session for this user
     await Checkout.deleteMany({ userId: user.userId });
 
-    // Create new checkout session
     const checkout = new Checkout({
       userId: user.userId,
       items: checkoutItems,
       sessionId: sessionId,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     });
 
     await checkout.save();
@@ -78,7 +70,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   }
 });
 
-// GET - Get checkout session data
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -89,17 +80,15 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     let checkout;
 
     if (sessionId) {
-      // Get specific session by ID
       checkout = await Checkout.findOne({
         sessionId: sessionId,
         userId: user.userId,
-        expiresAt: { $gt: new Date() }, // Only get non-expired sessions
+        expiresAt: { $gt: new Date() },
       }).populate({
         path: 'items.productId',
         select: 'name mainImage finalPrice originalPrice discountPercent isInStock inStockQuantity',
       });
     } else {
-      // Get latest non-expired checkout session for user
       checkout = await Checkout.findOne({
         userId: user.userId,
         expiresAt: { $gt: new Date() },
@@ -113,7 +102,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
     }
 
     if (!checkout) {
-      // Clean up expired sessions
       await Checkout.deleteMany({
         userId: user.userId,
         expiresAt: { $lte: new Date() },
@@ -128,13 +116,11 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       );
     }
 
-    // Validate that all products still exist and are available
     const validItems = checkout.items.filter(
       (item: any) => item.productId && item.productId.isInStock,
     );
 
     if (validItems.length === 0) {
-      // All items are no longer available, delete the session
       await Checkout.deleteOne({ _id: checkout._id });
       return NextResponse.json(
         {
@@ -145,13 +131,11 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       );
     }
 
-    // If some items are no longer available, update the session
     if (validItems.length !== checkout.items.length) {
       checkout.items = validItems;
       await checkout.save();
     }
 
-    // Calculate totals with FIXED shipping threshold (10000 instead of 500)
     let subtotal = 0;
     let insuranceCost = 0;
     let selectedQuantity = 0;
@@ -185,7 +169,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       };
     });
 
-    // FIXED: Changed from 500 to 10000 for free shipping threshold
     const shippingCost = subtotal >= 10000 ? 0 : 40;
     const tax = Math.round(subtotal * 0.18);
     const totalAmount = subtotal + shippingCost + tax + insuranceCost;
@@ -229,7 +212,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// PUT - Update checkout session (address/payment method)
 export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -265,7 +247,6 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// DELETE - Clear checkout session
 export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -274,13 +255,11 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
     await connectDB();
 
     if (sessionId) {
-      // Delete specific session
       await Checkout.deleteOne({
         sessionId: sessionId,
         userId: user.userId,
       });
     } else {
-      // Delete all user's checkout sessions
       await Checkout.deleteMany({ userId: user.userId });
     }
 

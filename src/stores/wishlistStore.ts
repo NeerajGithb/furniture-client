@@ -1,4 +1,3 @@
-// stores/wishlistStore.ts
 import { create } from 'zustand';
 import { toast } from 'react-hot-toast';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
@@ -38,7 +37,6 @@ interface WishlistStore {
   loading: boolean;
   updatingItems: Set<string>;
 
-  // Actions
   initializeWishlists: () => Promise<void>;
   addToWishlist: (productId: string) => Promise<boolean>;
   removeFromWishlist: (productId: string) => Promise<boolean>;
@@ -46,7 +44,6 @@ interface WishlistStore {
   clearWishlist: () => Promise<boolean>;
   refreshWishlist: () => Promise<void>;
 
-  // Computed getters
   isWishlisted: (productId: string) => boolean;
   isUpdating: (productId: string) => boolean;
 }
@@ -57,7 +54,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
   loading: false,
   updatingItems: new Set(),
 
-  // Initialize wishlist on app start
   initializeWishlists: async () => {
     if (get().initialized) return;
 
@@ -111,13 +107,11 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
     if (updatingItems.has(productId)) return false;
 
-    // Check if already in wishlist
     if (wishlist?.items.some((item) => item.productId === productId)) {
       toast.error('Product already in wishlist');
       return false;
     }
 
-    // Optimistic update
     const newItem: WishlistItem = {
       _id: `temp-${productId}-${Date.now()}`,
       productId,
@@ -162,7 +156,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       console.error('Add to wishlist error:', error);
       toast.error('Failed to add to wishlist');
 
-      // Rollback optimistic update
       set({ wishlist });
       return false;
     } finally {
@@ -177,7 +170,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
     if (updatingItems.has(productId)) return false;
 
-    // Check if product is in wishlist
     if (!wishlist?.items.some((item) => item.productId === productId)) {
       toast.error('Product not in wishlist');
       return false;
@@ -185,7 +177,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
     const originalWishlist = wishlist;
 
-    // Optimistic update
     const updatedWishlist = {
       ...wishlist,
       items: wishlist.items.filter((item) => item.productId !== productId),
@@ -214,7 +205,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       console.error('Remove from wishlist error:', error);
       toast.error('Failed to remove from wishlist');
 
-      // Rollback optimistic update
       set({ wishlist: originalWishlist });
       return false;
     } finally {
@@ -224,7 +214,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     }
   },
 
-  // Batch remove items from wishlist (for order completion)
   batchRemoveFromWishlist: async (productIds: string[]): Promise<boolean> => {
     const { wishlist } = get();
 
@@ -232,12 +221,10 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
 
     const originalWishlist = wishlist;
 
-    // Optimistic update - remove all specified items
     const remainingItems = wishlist.items.filter((item) => !productIds.includes(item.productId));
     const removedCount = wishlist.items.length - remainingItems.length;
 
     if (removedCount === 0) {
-      // No items to remove
       return true;
     }
 
@@ -262,14 +249,12 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
         throw new Error(data.error || 'Failed to remove items from wishlist');
       }
 
-      // Refresh to get accurate server data
       await get().refreshWishlist();
 
       return true;
     } catch (error) {
       console.error('Batch remove from wishlist error:', error);
 
-      // Rollback optimistic update
       set({ wishlist: originalWishlist });
       return false;
     } finally {
@@ -281,7 +266,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     const { wishlist } = get();
     const originalWishlist = wishlist;
 
-    // Optimistic update
     set({
       wishlist: wishlist
         ? { ...wishlist, items: [], itemCount: 0, updatedAt: new Date().toISOString() }
@@ -305,7 +289,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
       console.error('Clear wishlist error:', error);
       toast.error('Failed to clear wishlist');
 
-      // Rollback optimistic update
       set({ wishlist: originalWishlist });
       return false;
     } finally {
@@ -313,7 +296,6 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     }
   },
 
-  // Computed getters
   isWishlisted: (productId: string) => {
     const { wishlist } = get();
     return wishlist?.items.some((item) => item.productId === productId) ?? false;

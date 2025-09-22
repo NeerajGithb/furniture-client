@@ -1,4 +1,3 @@
-// app/layout.js
 import './globals.css';
 import Providers from '@/context/Providers';
 import ToastProvider from '@/provider/ToastProvider';

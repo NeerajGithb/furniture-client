@@ -70,19 +70,16 @@ export default function AddressesPage() {
     deletingId,
   } = useAddressStore();
 
-  // Fetch addresses on mount
   useEffect(() => {
     if (user) {
       fetchAddresses();
     }
   }, [user, fetchAddresses]);
 
-  // Clear errors when component mounts
   useEffect(() => {
     clearError();
   }, [clearError]);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!userLoading && !user) {
       router.push('/login');

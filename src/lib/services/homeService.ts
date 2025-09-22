@@ -1,4 +1,3 @@
-// services/homeService.ts
 import { handleApiResponse } from '@/utils/fetchWithCredentials';
 import { Product } from '@/types/Product';
 import { IInspiration } from '@/stores/ui/homeUiStore';

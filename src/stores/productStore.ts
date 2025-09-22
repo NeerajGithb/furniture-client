@@ -40,7 +40,6 @@ interface ProductResponse {
 }
 
 interface ProductStore {
-  // Data
   product: Product | null;
   products: Product[];
   relatedProducts: Product[];
@@ -50,7 +49,6 @@ interface ProductStore {
   materials: string[];
   priceRange: { minPrice: number; maxPrice: number };
 
-  // Loading states
   loading: boolean;
   loadingProducts: boolean;
   loadingMore: boolean;
@@ -59,7 +57,6 @@ interface ProductStore {
   loadingSubcategories: boolean;
   loadingCategory: boolean;
 
-  // Pagination & filters
   pagination: {
     page: number;
     limit: number;
@@ -73,30 +70,25 @@ interface ProductStore {
   };
   appliedFilters: ProductFilters;
 
-  // Computed values
   hasMore: boolean;
   currentPage: number;
   totalProducts: number;
 
   error: string | null;
 
-  // UI State
   selectedImageIndex: number;
   quantity: number;
   isZooming: boolean;
   zoomPosition: { x: number; y: number };
 
-  // Action states
   addingToCart: boolean;
   buyingNow: boolean;
   addingToWishlist: boolean;
 
-  // Initialization flags
   initialized: boolean;
   categoriesInitialized: boolean;
   subcategoriesInitialized: boolean;
 
-  // Product Actions
   fetchProduct: (productId: string) => Promise<void>;
   fetchProducts: (queryParams?: string, reset?: boolean) => Promise<void>;
   fetchRelatedProducts: (categoryName?: string, excludeId?: string) => Promise<void>;
@@ -106,22 +98,18 @@ interface ProductStore {
   showcaseProducts: Product[];
   loadingShowcase: boolean;
 
-  // Category Actions
   fetchCategories: () => Promise<void>;
   fetchCategoryBySlug: (slug: string) => Promise<Category | null>;
   loadDefaultCategories: () => Promise<void>;
 
-  // Subcategory Actions
   fetchSubcategories: () => Promise<void>;
   loadDefaultSubcategories: () => Promise<void>;
 
-  // Filter Actions
   setFilters: (filters: ProductFilters) => void;
   clearFilters: () => void;
   loadMoreProducts: () => Promise<void>;
   setCurrentPage: (page: number) => void;
 
-  // UI Actions
   setSelectedImageIndex: (index: number) => void;
   setQuantity: (quantity: number) => void;
   setIsZooming: (isZooming: boolean) => void;
@@ -130,15 +118,12 @@ interface ProductStore {
   setBuyingNow: (isBuying: boolean) => void;
   setAddingToWishlist: (isAdding: boolean) => void;
 
-  // Initialize
   initializeProducts: () => Promise<void>;
 
-  // Reset
   resetProductState: () => void;
   resetFilters: () => void;
 }
 
-// React Query cache keys
 const QUERY_KEYS = {
   product: (id: string) => ['product', id],
   products: (filters: ProductFilters) => ['products', filters],
@@ -153,7 +138,6 @@ const QUERY_KEYS = {
   allProducts: (excludeId?: string) => ['allProducts', excludeId],
 };
 
-// Enhanced fetch functions with React Query integration
 const createEnhancedFetcher = () => {
   let queryClient: any = null;
 
@@ -193,7 +177,6 @@ const { fetchWithQuery, invalidateQuery, setQueryClient } = createEnhancedFetche
 
 export const useProductStore = create<ProductStore>()(
   subscribeWithSelector((set, get) => ({
-    // Initial Data
     product: null,
     products: [],
     relatedProducts: [],
@@ -208,7 +191,6 @@ export const useProductStore = create<ProductStore>()(
     showcaseProducts: [],
     loadingShowcase: false,
 
-    // Initial Loading States
     loading: false,
     loadingProducts: false,
     loadingMore: false,
@@ -217,7 +199,6 @@ export const useProductStore = create<ProductStore>()(
     loadingSubcategories: false,
     loadingCategory: false,
 
-    // Initial Pagination & Filters
     pagination: {
       page: 1,
       limit: 24,
@@ -237,23 +218,19 @@ export const useProductStore = create<ProductStore>()(
 
     error: null,
 
-    // Initial UI State
     selectedImageIndex: 0,
     quantity: 1,
     isZooming: false,
     zoomPosition: { x: 0, y: 0 },
 
-    // Initial Action states
     addingToCart: false,
     buyingNow: false,
     addingToWishlist: false,
 
-    // Initialization flags
     initialized: false,
     categoriesInitialized: false,
     subcategoriesInitialized: false,
 
-    // Initialize store with default data first
     initializeProducts: async () => {
       const state = get();
       if (state.initialized) return;
@@ -261,10 +238,8 @@ export const useProductStore = create<ProductStore>()(
       set({ initialized: true });
 
       try {
-        // Load default data first for immediate display
         await Promise.all([get().loadDefaultCategories(), get().loadDefaultSubcategories()]);
 
-        // Then fetch latest from API in background
         await Promise.all([
           get().fetchCategories(),
           get().fetchSubcategories(),
@@ -276,7 +251,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Load default categories from static JSON
     loadDefaultCategories: async () => {
       try {
         const res = await fetch('/categories.json');
@@ -292,7 +266,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Load default subcategories from static JSON
     loadDefaultSubcategories: async () => {
       try {
         const res = await fetch('/subcategories.json');
@@ -308,7 +281,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch categories with default fallback
     fetchCategories: async () => {
       const { categoriesInitialized, loadingCategories } = get();
       if (categoriesInitialized || loadingCategories) return;
@@ -316,7 +288,6 @@ export const useProductStore = create<ProductStore>()(
       let hasDefault = false;
       let defaultCategories: Category[] = [];
 
-      // Load default data first
       try {
         const resDefault = await fetch('/categories.json');
         if (resDefault.ok) {
@@ -330,7 +301,6 @@ export const useProductStore = create<ProductStore>()(
         console.warn('No default categories found.');
       }
 
-      // Only show loading if no default data
       if (!hasDefault) set({ loadingCategories: true });
 
       try {
@@ -339,7 +309,6 @@ export const useProductStore = create<ProductStore>()(
           return handleApiResponse(response);
         });
 
-        // Save as default for next time
         await fetch('/api/saveDefault/categories', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -360,7 +329,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch subcategories with default fallback
     fetchSubcategories: async () => {
       const { subcategoriesInitialized, loadingSubcategories } = get();
       if (subcategoriesInitialized || loadingSubcategories) return;
@@ -368,7 +336,6 @@ export const useProductStore = create<ProductStore>()(
       let hasDefault = false;
       let defaultSubcategories: SubCategory[] = [];
 
-      // Load default data first
       try {
         const resDefault = await fetch('/subcategories.json');
         if (resDefault.ok) {
@@ -382,7 +349,6 @@ export const useProductStore = create<ProductStore>()(
         console.warn('No default subcategories found.');
       }
 
-      // Only show loading if no default data
       if (!hasDefault) set({ loadingSubcategories: true });
 
       try {
@@ -391,7 +357,6 @@ export const useProductStore = create<ProductStore>()(
           return handleApiResponse(response);
         });
 
-        // Save as default for next time
         await fetch('/api/saveDefault/subcategories', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -412,7 +377,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch single product with React Query caching
     fetchProduct: async (productId: string) => {
       if (!productId) return;
       set({ loading: true, error: null });
@@ -426,7 +390,6 @@ export const useProductStore = create<ProductStore>()(
 
         set({ product: productData, loading: false });
 
-        // Background fetch related products
         if (productData.categoryId?.name) {
           get().fetchRelatedProducts(productData.categoryId.name, productId);
         }
@@ -440,7 +403,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch products with React Query caching
     fetchProducts: async (queryParams?: string, reset: boolean = false) => {
       set({
         loadingProducts: reset ? true : false,
@@ -459,7 +421,7 @@ export const useProductStore = create<ProductStore>()(
             if (!response.ok) throw new Error(`Failed to fetch products: ${response.status}`);
             return handleApiResponse(response);
           },
-          2 * 60 * 1000, // 2 minutes stale time
+          2 * 60 * 1000,
         );
 
         set((state) => {
@@ -491,7 +453,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Load more products with caching
     loadMoreProducts: async () => {
       const { pagination, appliedFilters, loadingMore, hasMore } = get();
 
@@ -518,7 +479,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch related products with caching
     fetchRelatedProducts: async (categoryName?: string, excludeId?: string) => {
       set({ loadingMore: true });
 
@@ -548,7 +508,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch showcase products
     fetchShowcaseProducts: async () => {
       set({ loadingShowcase: true, error: null });
 
@@ -562,7 +521,7 @@ export const useProductStore = create<ProductStore>()(
             const data = await handleApiResponse(response);
             return data.products || [];
           },
-          5 * 60 * 1000, // 5 minutes cache
+          5 * 60 * 1000,
         );
 
         set({ showcaseProducts: productsArray, loadingShowcase: false });
@@ -576,7 +535,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch all products with caching
     fetchAllProducts: async (excludeId?: string) => {
       set({ loadingAll: true });
 
@@ -600,7 +558,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Fetch category by slug with caching
     fetchCategoryBySlug: async (slug: string) => {
       set({ loadingCategory: true, error: null });
 
@@ -630,7 +587,6 @@ export const useProductStore = create<ProductStore>()(
       }
     },
 
-    // Filter Actions
     setFilters: (filters: ProductFilters) => {
       const newFilters = { ...get().appliedFilters, ...filters, page: 1 };
       set({ appliedFilters: newFilters });
@@ -642,7 +598,6 @@ export const useProductStore = create<ProductStore>()(
         }
       });
 
-      // Invalidate products cache when filters change
       invalidateQuery(['products']);
       get().fetchProducts(params.toString(), true);
     },
@@ -660,7 +615,6 @@ export const useProductStore = create<ProductStore>()(
       }));
     },
 
-    // UI Actions
     setSelectedImageIndex: (index) => set({ selectedImageIndex: index }),
     setQuantity: (quantity) => set({ quantity: Math.max(1, quantity) }),
     setIsZooming: (isZooming) => set({ isZooming }),
@@ -669,9 +623,7 @@ export const useProductStore = create<ProductStore>()(
     setBuyingNow: (isBuying) => set({ buyingNow: isBuying }),
     setAddingToWishlist: (isAdding) => set({ addingToWishlist: isAdding }),
 
-    // Reset functions
     resetProductState: () => {
-      // Clear React Query cache
       invalidateQuery(['products']);
       invalidateQuery(['relatedProducts']);
       invalidateQuery(['showcaseProducts']);
@@ -727,11 +679,9 @@ export const useProductStore = create<ProductStore>()(
   })),
 );
 
-// Hook to initialize React Query client
 export const useInitializeProductStore = () => {
   const queryClient = useQueryClient();
 
-  // Set query client on first render
   React.useEffect(() => {
     setQueryClient(queryClient);
   }, [queryClient]);

@@ -1,4 +1,3 @@
-// app/api/orders/number/[orderNumber]/route.ts - Enhanced with complete price details
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -13,16 +12,13 @@ interface RouteParams {
   }>;
 }
 
-// Validation schema
 const orderNumberSchema = z.string().min(1, 'Order number is required');
 
-// Helper function to format complete order response
 function formatCompleteOrderResponse(order: any, payment?: any) {
   return {
     _id: order._id,
     orderNumber: order.orderNumber,
 
-    // Enhanced items with complete details
     items: order.items.map((item: any) => ({
       _id: item._id,
       productId: item.productId?._id,
@@ -38,7 +34,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
       discount: item.discount || 0,
       discountPercent: item.discountPercent || 0,
 
-      // Calculated totals for each item
       itemTotal: item.price * item.quantity,
       originalItemTotal: (item.originalPrice || item.price) * item.quantity,
       itemSavings: ((item.originalPrice || item.price) - item.price) * item.quantity,
@@ -57,7 +52,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
         : null,
     })),
 
-    // Comprehensive price breakdown for tracking
     priceDetails: order.priceDetails
       ? {
           subtotal: order.priceDetails.subtotal,
@@ -70,7 +64,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           finalAmount: order.priceDetails.finalAmount,
           savings: order.priceDetails.savings,
 
-          // Additional breakdown for UI display
           itemsSubtotal: order.priceDetails.subtotal,
           insuranceTotal: order.priceDetails.totalInsurance,
           subtotalWithInsurance: order.priceDetails.subtotal + order.priceDetails.totalInsurance,
@@ -89,7 +82,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           youSaved: order.priceDetails.savings,
         }
       : {
-          // Fallback calculation
           subtotal: order.subtotal,
           originalSubtotal: order.subtotal,
           totalDiscount: order.discount || 0,
@@ -116,20 +108,17 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           youSaved: order.discount || 0,
         },
 
-    // Legacy fields for backward compatibility
     subtotal: order.subtotal,
     shippingCost: order.shippingCost,
     tax: order.tax,
     discount: order.discount,
     totalAmount: order.totalAmount,
 
-    // Complete order information
     shippingAddress: order.shippingAddress,
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
     orderStatus: order.orderStatus,
 
-    // Tracking and timeline information
     trackingNumber: order.trackingNumber,
     expectedDeliveryDate: order.expectedDeliveryDate,
     deliveredAt: order.deliveredAt,
@@ -139,14 +128,12 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
     refundedAt: order.refundedAt,
     notes: order.notes,
 
-    // Additional details
     insuranceEnabled: order.insuranceEnabled || [],
     couponCode: order.couponCode,
 
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
 
-    // Payment information
     payment: payment
       ? {
           _id: payment._id,
@@ -160,10 +147,8 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
         }
       : null,
 
-    // Order timeline for tracking UI
     orderTimeline: generateOrderTimeline(order),
 
-    // Order summary and capabilities
     orderSummary: {
       totalItems: order.items.length,
       totalQuantity: order.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
@@ -181,16 +166,14 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
         (new Date().getTime() - new Date(order.createdAt).getTime()) / (24 * 60 * 60 * 1000),
       ),
       isRecentOrder:
-        new Date().getTime() - new Date(order.createdAt).getTime() <= 24 * 60 * 60 * 1000, // Within 24 hours
+        new Date().getTime() - new Date(order.createdAt).getTime() <= 24 * 60 * 60 * 1000,
     },
   };
 }
 
-// Helper function to generate order timeline
 function generateOrderTimeline(order: any) {
   const timeline = [];
 
-  // Order placed
   timeline.push({
     status: 'placed',
     title: 'Order Placed',
@@ -200,19 +183,17 @@ function generateOrderTimeline(order: any) {
     icon: 'check',
   });
 
-  // Order confirmed
   if (['confirmed', 'processing', 'shipped', 'delivered'].includes(order.orderStatus)) {
     timeline.push({
       status: 'confirmed',
       title: 'Order Confirmed',
       description: 'Your order has been confirmed and is being processed',
-      timestamp: order.createdAt, // This would be updated when status changes in real app
+      timestamp: order.createdAt,
       completed: true,
       icon: 'check',
     });
   }
 
-  // Processing
   if (['processing', 'shipped', 'delivered'].includes(order.orderStatus)) {
     timeline.push({
       status: 'processing',
@@ -224,7 +205,6 @@ function generateOrderTimeline(order: any) {
     });
   }
 
-  // Shipped
   if (['shipped', 'delivered'].includes(order.orderStatus)) {
     timeline.push({
       status: 'shipped',
@@ -238,7 +218,6 @@ function generateOrderTimeline(order: any) {
     });
   }
 
-  // Delivered
   if (order.orderStatus === 'delivered') {
     timeline.push({
       status: 'delivered',
@@ -250,7 +229,6 @@ function generateOrderTimeline(order: any) {
     });
   }
 
-  // Cancelled
   if (order.orderStatus === 'cancelled') {
     timeline.push({
       status: 'cancelled',
@@ -266,13 +244,11 @@ function generateOrderTimeline(order: any) {
   return timeline;
 }
 
-// GET - Get order by order number with complete details
 export const GET = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
       const { orderNumber } = await params;
 
-      // Validate order number
       const validatedOrderNumber = orderNumberSchema.parse(orderNumber);
 
       await connectDB();
@@ -289,7 +265,6 @@ export const GET = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Get payment details
       const payment = await Payment.findOne({ orderId: order._id });
 
       const orderDetails = formatCompleteOrderResponse(order, payment);
@@ -310,7 +285,6 @@ export const GET = withAuth(
   },
 );
 
-// PUT - Update order by order number
 export const PUT = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
@@ -333,7 +307,6 @@ export const PUT = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Handle cancellation
       if (body.action === 'cancel') {
         if (!order.canCancel()) {
           return NextResponse.json(
@@ -347,7 +320,6 @@ export const PUT = withAuth(
 
         await order.cancel(body.reason);
 
-        // Restore stock
         for (const item of order.items) {
           await Product.findByIdAndUpdate(item.productId, {
             $inc: {
@@ -357,7 +329,6 @@ export const PUT = withAuth(
           });
         }
       } else {
-        // Update allowed fields
         const allowedUpdates = ['notes'];
         const updates: any = {};
 
@@ -394,7 +365,6 @@ export const PUT = withAuth(
   },
 );
 
-// DELETE - Delete order by order number
 export const DELETE = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
@@ -422,10 +392,8 @@ export const DELETE = withAuth(
         );
       }
 
-      // Delete payment records
       await Payment.deleteMany({ orderId: order._id });
 
-      // Delete order
       await Order.findByIdAndDelete(order._id);
 
       return NextResponse.json({

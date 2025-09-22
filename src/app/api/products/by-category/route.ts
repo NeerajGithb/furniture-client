@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(request.url);
 
-    // Configuration parameters
     const productsPerCategory = Math.min(
       50,
       Math.max(1, parseInt(searchParams.get('productsPerCategory') || '10')),
@@ -19,7 +18,6 @@ export async function GET(request: NextRequest) {
     const includeUnpublished = searchParams.get('includeUnpublished') === 'true';
     const sort = searchParams.get('sort') || 'newest';
 
-    // Optional global filters
     const minPrice = searchParams.get('minPrice')
       ? Math.max(0, parseFloat(searchParams.get('minPrice')!))
       : null;
@@ -43,15 +41,12 @@ export async function GET(request: NextRequest) {
       includeUnpublished,
     });
 
-    // Build base query object for products
     const baseQuery: any = {};
 
-    // Only show published products unless explicitly requested
     if (!includeUnpublished) {
       baseQuery.isPublished = { $ne: false };
     }
 
-    // Apply global filters
     if (minPrice !== null || maxPrice !== null) {
       baseQuery.finalPrice = {};
       if (minPrice !== null && minPrice > 0) baseQuery.finalPrice.$gte = minPrice;
@@ -77,7 +72,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sorting options
     let sortQuery: any = { createdAt: -1 };
     switch (sort) {
       case 'price-low':
@@ -104,7 +98,6 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Get all categories first
     const categories = await Category.find({}).select('name slug _id').lean();
 
     if (!categories || categories.length === 0) {
@@ -121,7 +114,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get products for each category
     const productsByCategory = await Promise.all(
       categories.map(async (category) => {
         const categoryQuery = {
@@ -153,16 +145,13 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    // Filter out categories with no products
     const categoriesWithProducts = productsByCategory.filter((item) => item.products.length > 0);
 
-    // Calculate total products returned
     const totalProductsReturned = categoriesWithProducts.reduce(
       (sum, item) => sum + item.products.length,
       0,
     );
 
-    // Get filter data
     const [materials, priceStats] = await Promise.all([
       Product.distinct('material', {
         material: { $nin: [null, '', undefined] },
@@ -219,7 +208,6 @@ export async function GET(request: NextRequest) {
       } categories in ${Date.now() - startTime}ms`,
     );
 
-    // Add cache headers
     const response = NextResponse.json(responseData);
     response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=300');
 

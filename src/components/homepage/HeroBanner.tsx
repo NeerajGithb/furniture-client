@@ -34,7 +34,6 @@ const HeroBanner = () => {
     },
   ];
 
-  // Functions to handle slide changes
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
   }, [slides.length]);
@@ -47,7 +46,6 @@ const HeroBanner = () => {
     setCurrentSlide(index);
   }, []);
 
-  // Functions to manage the automatic slide timer
   const startAutoSlide = useCallback(() => {
     if (autoSlideRef.current) clearInterval(autoSlideRef.current);
     autoSlideRef.current = setInterval(() => {
@@ -67,7 +65,6 @@ const HeroBanner = () => {
     return stopAutoSlide;
   }, [startAutoSlide, stopAutoSlide]);
 
-  // Unified event handlers for touch and mouse
   const handleStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       stopAutoSlide();
@@ -86,10 +83,9 @@ const HeroBanner = () => {
     const deltaX = Math.abs(clientX - startPosRef.current.x);
     const deltaY = Math.abs(clientY - startPosRef.current.y);
 
-    // If horizontal movement is significant and vertical is not, a swipe is in progress.
     if (deltaX > 10 && deltaY < 50) {
       isSwipingRef.current = true;
-      e.preventDefault(); // Prevent page scroll during horizontal swipe
+      e.preventDefault();
     }
   }, []);
 
@@ -99,10 +95,8 @@ const HeroBanner = () => {
         const clientX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
         const distance = startPosRef.current!.x - clientX;
         if (distance > 50) {
-          // Swiped left
           nextSlide();
         } else if (distance < -50) {
-          // Swiped right
           prevSlide();
         }
       }
@@ -115,13 +109,11 @@ const HeroBanner = () => {
   const handleImageClick = useCallback(
     (category: string) => {
       if (!isSwipingRef.current) {
-        // Replace "-inspiration" with "-collection"
         const friendlyCategory = category.replace('-inspiration', '-collection');
 
         router.push(`/collections/${friendlyCategory}`);
       }
 
-      // Reset the swiping flag after a click
       isSwipingRef.current = false;
     },
     [router],

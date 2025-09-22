@@ -12,7 +12,7 @@ export default function ConfettiEffect({ duration = 3000 }: { duration?: number 
 
   if (!visible) return null;
 
-  const pieces = Array.from({ length: 25 }); // only 25 tiny confetti squares
+  const pieces = Array.from({ length: 25 });
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-50">

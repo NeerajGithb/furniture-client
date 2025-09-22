@@ -1,9 +1,8 @@
-// pages/api/products/showcase/index.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import ProductModel from '@/models/product';
 import '@/models/category';
-import '@/models/subcategory'; // Add this import
+import '@/models/subcategory';
 import { Product } from '@/types/Product';
 
 export async function GET(request: NextRequest) {

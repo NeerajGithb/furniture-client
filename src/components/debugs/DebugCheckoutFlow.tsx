@@ -6,7 +6,6 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCheckoutStore } from '@/stores/checkoutStore';
 import { useCartStore } from '@/stores/cartStore';
 
-// Add this component temporarily to debug the flow
 const DebugCheckoutFlow = () => {
   const { user } = useCurrentUser();
   const router = useRouter();

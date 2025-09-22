@@ -71,7 +71,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     pathname.startsWith('/collections/') ||
     pathname === '/search';
 
-  // Fully responsive grid with proper column sizing
   const gridClasses = useMemo(
     () =>
       `grid w-full gap-[2px] lg:gap-5 xl:gap-6 
@@ -81,7 +80,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     [home],
   );
 
-  // Remove duplicate products
   const uniqueProducts = useMemo(() => {
     const seen = new Set();
     return products.filter((p) => {

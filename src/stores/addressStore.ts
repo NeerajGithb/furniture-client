@@ -1,9 +1,7 @@
-// stores/addressStore.ts - Fixed Production Ready Version
 import { create } from 'zustand';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 import { toast } from 'react-hot-toast';
 
-// Types
 export type AddressType = 'home' | 'work' | 'other';
 
 export interface Address {
@@ -44,7 +42,6 @@ interface AddressStore {
   editingAddressId: string | null;
   deletingId: string | null;
 
-  // Actions
   initializeAddresses: () => Promise<void>;
   fetchAddresses: () => Promise<void>;
   addAddress: (address: Omit<AddressForm, 'country'> & { country?: string }) => Promise<boolean>;
@@ -52,7 +49,6 @@ interface AddressStore {
   deleteAddress: (id: string) => Promise<boolean>;
   setDefaultAddress: (id: string) => Promise<boolean>;
 
-  // UI Actions
   setSelectedAddress: (id: string) => void;
   setShowAddressForm: (show: boolean) => void;
   updateAddressForm: (updates: Partial<AddressForm>) => void;
@@ -60,7 +56,6 @@ interface AddressStore {
   clearError: () => void;
   setEditingAddress: (id: string | null) => void;
 
-  // Getters
   getSelectedAddress: () => Address | null;
   getDefaultAddress: () => Address | null;
   getAddressById: (id: string) => Address | null;
@@ -81,7 +76,6 @@ const initialAddressForm: AddressForm = {
   isDefault: false,
 };
 
-// Validation helpers
 const validatePhone = (phone: string): boolean => /^[6-9]\d{9}$/.test(phone.replace(/\s+/g, ''));
 const validatePostalCode = (postalCode: string): boolean =>
   /^[1-9][0-9]{5}$/.test(postalCode.trim());
@@ -98,7 +92,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
   editingAddressId: null,
   deletingId: null,
 
-  // Initialize addresses on first call
   initializeAddresses: async () => {
     if (get().initialized) return;
 
@@ -106,7 +99,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     await get().fetchAddresses();
   },
 
-  // Fetch all addresses with proper error handling
   fetchAddresses: async () => {
     set({ loading: true, error: null });
 
@@ -115,8 +107,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 
       if (!response.ok) {
         if (response.status === 401) {
-          // User not authenticated - this is expected in some cases
-
           set({
             addresses: [],
             selectedAddressId: '',
@@ -126,13 +116,11 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
           return;
         }
 
-        // Other HTTP errors
         throw new Error(`HTTP Error: ${response.status}`);
       }
 
       const data = await handleApiResponse(response);
 
-      // Validate response structure
       if (!data || !Array.isArray(data.addresses)) {
         console.warn('Invalid address data structure:', data);
         set({ addresses: [], loading: false });
@@ -142,7 +130,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       const addresses = data.addresses as Address[];
       set({ addresses, loading: false, error: null });
 
-      // Auto-select default or first address
       const { selectedAddressId } = get();
       if (!selectedAddressId || !addresses.find((a) => a._id === selectedAddressId)) {
         const defaultAddress = addresses.find((a) => a.isDefault) || addresses[0];
@@ -161,18 +148,15 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         selectedAddressId: '',
       });
 
-      // Only show toast for non-auth errors
       if (!errorMessage.includes('401')) {
         toast.error(errorMessage);
       }
     }
   },
 
-  // Add new address with comprehensive validation
   addAddress: async (addressData) => {
     const { addressForm } = get();
 
-    // Client-side validation
     if (!get().isValidForm()) {
       toast.error('Please fill in all required fields correctly');
       return false;
@@ -181,7 +165,7 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     const payload = {
       ...addressData,
       country: addressData.country || 'India',
-      // Trim all string fields
+
       fullName: addressData.fullName.trim(),
       phone: addressData.phone.replace(/\s+/g, ''),
       addressLine1: addressData.addressLine1.trim(),
@@ -191,7 +175,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       postalCode: addressData.postalCode.trim(),
     };
 
-    // Additional server-side validation
     if (!validatePhone(payload.phone)) {
       toast.error('Please enter a valid 10-digit phone number');
       return false;
@@ -207,7 +190,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       return false;
     }
 
-    // Optimistic update
     const tempId = `temp-${Date.now()}`;
     const optimisticAddress: Address = {
       _id: tempId,
@@ -237,7 +219,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         throw new Error('Invalid response: missing address data');
       }
 
-      // Replace optimistic with real data
       set((state) => ({
         addresses: state.addresses.map((addr) =>
           addr._id === tempId ? responseData.address : addr,
@@ -251,7 +232,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       toast.success('Address added successfully');
       return true;
     } catch (error) {
-      // Rollback optimistic update
       set((state) => ({
         addresses: state.addresses.filter((addr) => addr._id !== tempId),
         loading: false,
@@ -264,7 +244,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     }
   },
 
-  // Update address with optimistic updates
   updateAddress: async (id, updates) => {
     const current = get().getAddressById(id);
     if (!current) {
@@ -272,7 +251,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       return false;
     }
 
-    // Clean and validate updates
     const cleanUpdates = { ...updates };
     if (cleanUpdates.phone) {
       cleanUpdates.phone = cleanUpdates.phone.replace(/\s+/g, '');
@@ -295,24 +273,20 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       return false;
     }
 
-    // Trim string fields
     (Object.keys(cleanUpdates) as (keyof AddressForm)[]).forEach((key) => {
       if (typeof cleanUpdates[key] === 'string') {
         const trimmed = (cleanUpdates[key] as string).trim();
-        // Only assign if the property is not possibly undefined
+
         if (trimmed.length > 0) {
           cleanUpdates[key] = trimmed as any;
         } else if (key === 'addressLine2') {
-          // For optional fields, assign undefined if empty
           cleanUpdates[key] = undefined;
         }
       }
-      // Do not assign undefined to a string property
     });
 
     const optimisticAddress = { ...current, ...cleanUpdates };
 
-    // Optimistic update
     set((state) => ({
       addresses: state.addresses.map((addr) => (addr._id === id ? optimisticAddress : addr)),
       loading: true,
@@ -335,7 +309,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
         throw new Error('Invalid response: missing address data');
       }
 
-      // Update with server response
       set((state) => ({
         addresses: state.addresses.map((addr) => (addr._id === id ? responseData.address : addr)),
         editingAddressId: null,
@@ -347,7 +320,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       toast.success('Address updated successfully');
       return true;
     } catch (error) {
-      // Rollback optimistic update
       set((state) => ({
         addresses: state.addresses.map((addr) => (addr._id === id ? current : addr)),
         loading: false,
@@ -360,7 +332,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     }
   },
 
-  // Delete address with optimistic updates
   deleteAddress: async (id) => {
     const currentAddresses = get().addresses;
     const addressToDelete = currentAddresses.find((addr) => addr._id === id);
@@ -370,7 +341,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       return false;
     }
 
-    // Optimistic update
     const filteredAddresses = currentAddresses.filter((a) => a._id !== id);
     set({
       addresses: filteredAddresses,
@@ -391,7 +361,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       set({ deletingId: null });
       toast.success('Address deleted successfully');
 
-      // Auto-select new address if deleted one was selected
       if (filteredAddresses.length > 0 && !get().selectedAddressId) {
         const defaultAddr = filteredAddresses.find((a) => a.isDefault) || filteredAddresses[0];
         set({ selectedAddressId: defaultAddr._id });
@@ -399,7 +368,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
 
       return true;
     } catch (error) {
-      // Rollback optimistic update
       set({
         addresses: currentAddresses,
         deletingId: null,
@@ -412,12 +380,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     }
   },
 
-  // Set default address
   setDefaultAddress: async (id) => {
     return get().updateAddress(id, { isDefault: true });
   },
 
-  // UI Actions
   setSelectedAddress: (id) => {
     const address = get().addresses.find((a) => a._id === id);
     if (address) {
@@ -467,7 +433,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
     }
   },
 
-  // Getters
   getSelectedAddress: () => {
     const { addresses, selectedAddressId } = get();
     return addresses.find((a) => a._id === selectedAddressId) || null;
@@ -486,7 +451,6 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
   isValidForm: () => {
     const { addressForm } = get();
 
-    // Check required fields
     const requiredFields = [
       addressForm.fullName?.trim(),
       addressForm.phone?.trim(),
@@ -496,12 +460,10 @@ export const useAddressStore = create<AddressStore>((set, get) => ({
       addressForm.postalCode?.trim(),
     ];
 
-    // All required fields must be filled
     const hasAllRequiredFields = requiredFields.every((field) => field && field.length > 0);
 
     if (!hasAllRequiredFields) return false;
 
-    // Validate formats
     const phoneValid = validatePhone(addressForm.phone);
     const postalCodeValid = validatePostalCode(addressForm.postalCode);
     const nameValid = validateName(addressForm.fullName);

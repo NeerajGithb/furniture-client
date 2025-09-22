@@ -1,4 +1,3 @@
-// app/api/payment/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Payment from '@/models/Payment';
@@ -6,11 +5,9 @@ import Order from '@/models/Order';
 import crypto from 'crypto';
 import { connectDB } from '@/lib/dbConnect';
 
-// Mock Razorpay configuration (replace with actual keys)
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'mock_key';
 const RAZORPAY_SECRET = process.env.RAZORPAY_SECRET || 'mock_secret';
 
-// POST - Initiate payment
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -22,7 +19,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Find the order
     const order = await Order.findOne({
       _id: orderId,
       userId: user.userId,
@@ -36,7 +32,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Order is already paid' }, { status: 400 });
     }
 
-    // Handle COD
     if (paymentMethod === 'cod') {
       const payment = await Payment.findOne({ orderId: order._id });
       if (payment) {
@@ -51,7 +46,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       });
     }
 
-    // Find existing payment or create new one
     let payment = await Payment.findOne({ orderId: order._id });
 
     if (!payment) {
@@ -65,15 +59,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       });
     }
 
-    // Mock Razorpay order creation (replace with actual Razorpay integration)
     const razorpayOrder = {
       id: `order_${Date.now()}`,
-      amount: order.totalAmount * 100, // Razorpay expects amount in paise
+      amount: order.totalAmount * 100,
       currency: 'INR',
       receipt: order.orderNumber,
     };
 
-    // In production, use actual Razorpay SDK:
     /*
     const Razorpay = require('razorpay');
     const razorpayInstance = new Razorpay({
@@ -88,7 +80,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     });
     */
 
-    // Update payment with Razorpay order ID
     payment.gatewayTransactionId = razorpayOrder.id;
     await payment.save();
 
@@ -105,7 +96,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         totalAmount: order.totalAmount,
       },
       customer: {
-        name: user.email.split('@')[0], // Extract name from email
+        name: user.email.split('@')[0],
         email: user.email,
       },
     });
@@ -115,7 +106,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   }
 });
 
-// PUT - Verify payment
 export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -128,7 +118,6 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
 
     await connectDB();
 
-    // Find the payment
     const payment = await Payment.findOne({
       paymentId,
       userId: user.userId,
@@ -140,10 +129,8 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
 
     const order = payment.orderId as any;
 
-    // Mock signature verification (replace with actual Razorpay verification)
     let isSignatureValid = true;
 
-    // In production, verify signature:
     /*
     const generatedSignature = crypto
       .createHmac('sha256', RAZORPAY_SECRET)
@@ -154,14 +141,12 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
     */
 
     if (isSignatureValid) {
-      // Payment successful
       await payment.markAsSuccess({
         transactionId: razorpayPaymentId,
         orderId: razorpayOrderId,
         signature: razorpaySignature,
       });
 
-      // Update order
       order.paymentStatus = 'paid';
       order.orderStatus = 'confirmed';
       await order.save();
@@ -177,7 +162,6 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
         },
       });
     } else {
-      // Payment failed
       await payment.markAsFailed('Invalid signature');
 
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
@@ -188,7 +172,6 @@ export const PUT = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// GET - Get payment status
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);

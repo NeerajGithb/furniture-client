@@ -1,4 +1,3 @@
-// types/address.ts
 export type AddressType = 'home' | 'work' | 'other';
 
 export interface Address {

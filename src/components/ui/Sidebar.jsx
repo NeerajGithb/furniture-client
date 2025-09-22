@@ -18,7 +18,6 @@ const quickLinkItems = [
   { href: '/contact', label: 'Contact/Help' },
 ];
 
-// Selectors
 const categoriesSelector = (state) => state.categories;
 const subcategoriesSelector = (state) => state.subcategories;
 const loadingCategoriesSelector = (state) => state.loadingCategories;
@@ -31,12 +30,10 @@ export default function Sidebar({ isOpen, onClose }) {
   const [activeInspiration, setActiveInspiration] = useState(null);
   const pathname = usePathname();
 
-  // Refs for auto-scroll functionality
   const sidebarRef = useRef(null);
   const inspirationRefs = useRef({});
   const headerSectionRef = useRef(null);
 
-  // Store selectors
   const categories = useProductStore(categoriesSelector);
   const subcategories = useProductStore(subcategoriesSelector);
   const loadingCategories = useProductStore(loadingCategoriesSelector);
@@ -51,7 +48,6 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   }, [fetchInspirations]);
 
-  // Transform inspirations data like in Header
   const transformedInspirations = useMemo(() => {
     if (!inspirations?.length) return [];
     return inspirations.map((insp) => ({
@@ -73,7 +69,6 @@ export default function Sidebar({ isOpen, onClose }) {
       setActiveInspiration(inspirationName);
 
       if (!wasExpanded) {
-        // Auto-expand all categories for this inspiration
         const inspiration = transformedInspirations.find((insp) => insp.name === inspirationName);
         if (inspiration?.categories) {
           const newExpandedCategories = {};
@@ -86,28 +81,24 @@ export default function Sidebar({ isOpen, onClose }) {
           }));
         }
 
-        // Scroll to position the opened inspiration at the top
         setTimeout(() => {
           const inspirationElement = inspirationRefs.current[inspirationName];
           const sidebarElement = sidebarRef.current;
           const headerElement = headerSectionRef.current;
 
           if (inspirationElement && sidebarElement && headerElement) {
-            // Get fresh positions after DOM updates
             const headerHeight = headerElement.offsetHeight;
             const inspirationRect = inspirationElement.getBoundingClientRect();
             const sidebarRect = sidebarElement.getBoundingClientRect();
 
-            // Calculate relative position within sidebar
             const relativeTop = inspirationRect.top - sidebarRect.top + sidebarElement.scrollTop;
 
-            // Scroll to position inspiration just below header
             sidebarElement.scrollTo({
-              top: relativeTop - headerHeight + 108, // Small padding
+              top: relativeTop - headerHeight + 108,
               behavior: 'smooth',
             });
           }
-        }, 200); // Longer delay for all animations to complete
+        }, 200);
       }
     },
     [transformedInspirations, expandedInspirations],

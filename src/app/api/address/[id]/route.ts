@@ -1,10 +1,8 @@
-// app/api/address/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Address from '@/models/Address';
 import { connectDB } from '@/lib/dbConnect';
 
-// PUT - Update address
 export const PUT = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: { params: { id: string } }) => {
     try {
@@ -26,7 +24,6 @@ export const PUT = withAuth(
         return NextResponse.json({ error: 'Address not found' }, { status: 404 });
       }
 
-      // If setting as default, unset other defaults first
       if (body.isDefault) {
         await Address.updateMany(
           { userId: user.userId, _id: { $ne: addressId } },
@@ -34,7 +31,6 @@ export const PUT = withAuth(
         );
       }
 
-      // Update address fields
       const updateFields = {
         ...(body.type && { type: body.type }),
         ...(body.fullName && { fullName: body.fullName.trim() }),
@@ -76,7 +72,6 @@ export const PUT = withAuth(
   },
 );
 
-// DELETE - Delete address
 export const DELETE = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: { params: { id: string } }) => {
     try {
@@ -99,10 +94,8 @@ export const DELETE = withAuth(
 
       const wasDefault = address.isDefault;
 
-      // Delete the address
       await Address.findByIdAndDelete(addressId);
 
-      // If deleted address was default, make another address default
       if (wasDefault) {
         const nextAddress = await Address.findOne({
           userId: user.userId,

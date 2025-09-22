@@ -28,7 +28,7 @@ const InspirationDetailPage = () => {
   } = useHomeStore();
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false); // track fetch completion
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     const initializePage = async () => {
@@ -46,7 +46,7 @@ const InspirationDetailPage = () => {
       } catch (error) {
         console.error('Error initializing inspiration page:', error);
       } finally {
-        setHasFetched(true); // mark fetch attempt completed
+        setHasFetched(true);
       }
     };
 
@@ -60,12 +60,10 @@ const InspirationDetailPage = () => {
     initialized,
   ]);
 
-  // Loading state
   if (inspirationLoading) {
     return <Loading fullScreen variant="spinner" size="lg" />;
   }
 
-  // Show explicit error UI
   if (inspirationError) {
     return (
       <div className="min-h-screen bg-white">
@@ -124,7 +122,6 @@ const InspirationDetailPage = () => {
     );
   }
 
-  // Show "Not Found" only after fetch attempt
   if (hasFetched && !currentInspiration) {
     return (
       <div className="min-h-screen bg-white">
@@ -164,7 +161,6 @@ const InspirationDetailPage = () => {
     );
   }
 
-  // Render the actual inspiration content
   return (
     <div className="min-h-screen bg-white">
       {currentInspiration && (

@@ -44,7 +44,7 @@ export default function CancelOrderModal({ isOpen, onClose, order }: CancelOrder
         ? otherReason
         : cancelReasons.find((r) => r.id === selectedReason)?.label || '';
 
-    setIsCancelling(true); // local loader ON
+    setIsCancelling(true);
     try {
       const success = await cancelOrder(order._id, reason);
       if (success) {
@@ -57,7 +57,7 @@ export default function CancelOrderModal({ isOpen, onClose, order }: CancelOrder
         }, 2000);
       }
     } finally {
-      setIsCancelling(false); // local loader OFF
+      setIsCancelling(false);
     }
   };
 

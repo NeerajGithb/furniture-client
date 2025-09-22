@@ -1,4 +1,3 @@
-// Updated stores/checkoutStore.ts - Fixed insurance calculation
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -40,17 +39,14 @@ interface CheckoutState {
 }
 
 interface CheckoutStore {
-  // State
   checkoutData: CheckoutState | null;
 
-  // Actions
   setCheckoutData: (data: Omit<CheckoutState, 'timestamp'>) => void;
   updateSelectedAddress: (addressId: string) => void;
   updateSelectedPaymentMethod: (method: string) => void;
   toggleInsurance: (productId: string) => void;
   clearCheckout: () => void;
 
-  // Getters
   getCheckoutData: () => CheckoutState | null;
   hasValidCheckout: () => boolean;
   getSelectedItems: () => CheckoutItem[];
@@ -69,7 +65,6 @@ const initialTotals: CheckoutTotals = {
   totalDiscount: 0,
 };
 
-// Helper function to calculate totals with proper insurance logic
 function calculateTotals(
   cartItems: CheckoutItem[],
   selectedItems: string[],
@@ -84,7 +79,6 @@ function calculateTotals(
   const subtotal = selectedCartItems.reduce((sum, item) => sum + item.itemTotal, 0);
   const selectedQuantity = selectedCartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Calculate total discount
   const totalDiscount = selectedCartItems.reduce((sum, item) => {
     if (item.product?.originalPrice) {
       return sum + (item.product.originalPrice - item.product.finalPrice) * item.quantity;
@@ -92,16 +86,14 @@ function calculateTotals(
     return sum;
   }, 0);
 
-  // Calculate insurance cost - FIXED: Use itemTotal instead of per-unit price
   const insuranceCost = selectedCartItems.reduce((sum, item) => {
     if (insuranceEnabled.includes(item.productId)) {
-      return sum + Math.round(item.itemTotal * 0.02); // 2% of total item cost
+      return sum + Math.round(item.itemTotal * 0.02);
     }
     return sum;
   }, 0);
 
-  // Calculate shipping cost
-  const shippingCost = subtotal >= 10000 ? 0 : 40; // Free shipping over ₹10,000
+  const shippingCost = subtotal >= 10000 ? 0 : 40;
 
   const totalAmount = subtotal + shippingCost + insuranceCost;
 
@@ -118,10 +110,8 @@ function calculateTotals(
 export const useCheckoutStore = create<CheckoutStore>()(
   persist(
     (set, get) => ({
-      // Initial state
       checkoutData: null,
 
-      // Set complete checkout data (called from cart page or single product)
       setCheckoutData: (data: Omit<CheckoutState, 'timestamp'>) => {
         console.log('Setting checkout data:', {
           selectedItems: data.selectedItems.length,
@@ -130,7 +120,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
           insuranceEnabled: data.insuranceEnabled.length,
         });
 
-        // Recalculate totals to ensure consistency
         const recalculatedTotals = calculateTotals(
           data.cartItems,
           data.selectedItems,
@@ -139,13 +128,12 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
         const checkoutState: CheckoutState = {
           ...data,
-          totals: recalculatedTotals, // Use recalculated totals
+          totals: recalculatedTotals,
           timestamp: Date.now(),
         };
 
         set({ checkoutData: checkoutState });
 
-        // Backup to sessionStorage for recovery
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.setItem('checkoutData', JSON.stringify(checkoutState));
@@ -155,7 +143,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         }
       },
 
-      // Update selected delivery address
       updateSelectedAddress: (addressId: string) => {
         const { checkoutData } = get();
         if (!checkoutData) {
@@ -171,7 +158,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
         set({ checkoutData: updatedData });
 
-        // Update sessionStorage
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.setItem('checkoutData', JSON.stringify(updatedData));
@@ -181,7 +167,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         }
       },
 
-      // Update selected payment method
       updateSelectedPaymentMethod: (method: string) => {
         const { checkoutData } = get();
         if (!checkoutData) {
@@ -197,7 +182,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
         set({ checkoutData: updatedData });
 
-        // Update sessionStorage
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.setItem('checkoutData', JSON.stringify(updatedData));
@@ -207,7 +191,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         }
       },
 
-      // Toggle insurance for a product - FIXED: Proper recalculation
       toggleInsurance: (productId: string) => {
         const { checkoutData } = get();
         if (!checkoutData) {
@@ -215,7 +198,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
           return;
         }
 
-        // Check if product is in selected items
         if (!checkoutData.selectedItems.includes(productId)) {
           console.warn(`Product ${productId} not in selected items`);
           return;
@@ -225,14 +207,11 @@ export const useCheckoutStore = create<CheckoutStore>()(
         const index = newInsuranceEnabled.indexOf(productId);
 
         if (index > -1) {
-          // Remove insurance
           newInsuranceEnabled.splice(index, 1);
         } else {
-          // Add insurance
           newInsuranceEnabled.push(productId);
         }
 
-        // FIXED: Recalculate totals properly
         const updatedTotals = calculateTotals(
           checkoutData.cartItems,
           checkoutData.selectedItems,
@@ -255,7 +234,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
         set({ checkoutData: updatedData });
 
-        // Update sessionStorage
         if (typeof window !== 'undefined') {
           try {
             sessionStorage.setItem('checkoutData', JSON.stringify(updatedData));
@@ -265,7 +243,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         }
       },
 
-      // Clear all checkout data
       clearCheckout: () => {
         if (typeof window !== 'undefined') {
           try {
@@ -278,23 +255,19 @@ export const useCheckoutStore = create<CheckoutStore>()(
         set({ checkoutData: null });
       },
 
-      // Get current checkout data with recovery
       getCheckoutData: () => {
         const { checkoutData } = get();
 
-        // Try to get from store first
         if (checkoutData) {
           return checkoutData;
         }
 
-        // Fallback to sessionStorage recovery
         if (typeof window !== 'undefined') {
           try {
             const savedData = sessionStorage.getItem('checkoutData');
             if (savedData) {
               const parsedData: CheckoutState = JSON.parse(savedData);
 
-              // Validate the data structure
               if (
                 parsedData.selectedItems &&
                 Array.isArray(parsedData.selectedItems) &&
@@ -303,7 +276,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
                 parsedData.totals &&
                 typeof parsedData.totals.totalAmount === 'number'
               ) {
-                // FIXED: Recalculate totals on recovery to ensure consistency
                 const recalculatedTotals = calculateTotals(
                   parsedData.cartItems,
                   parsedData.selectedItems,
@@ -321,7 +293,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
             }
           } catch (error) {
             console.error('Error recovering checkout data from sessionStorage:', error);
-            // Clear invalid data
+
             sessionStorage.removeItem('checkoutData');
           }
         }
@@ -329,7 +301,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         return null;
       },
 
-      // Check if checkout data is valid for proceeding
       hasValidCheckout: () => {
         const data = get().getCheckoutData();
         return !!(
@@ -341,7 +312,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
         );
       },
 
-      // Get selected items with product details
       getSelectedItems: () => {
         const data = get().getCheckoutData();
         if (!data) return [];
@@ -349,24 +319,20 @@ export const useCheckoutStore = create<CheckoutStore>()(
         return data.cartItems.filter((item) => data.selectedItems.includes(item.productId));
       },
 
-      // Check if payment method is selected
       isPaymentMethodSelected: () => {
         const data = get().getCheckoutData();
         return !!(data && data.selectedPaymentMethod);
       },
 
-      // Check if address is selected
       isAddressSelected: () => {
         const data = get().getCheckoutData();
         return !!(data && data.selectedAddressId);
       },
 
-      // Check if can proceed to payment page
       canProceedToPayment: () => {
         return get().hasValidCheckout() && get().isAddressSelected();
       },
 
-      // Check if can place order (for payment page)
       canPlaceOrder: () => {
         return get().canProceedToPayment() && get().isPaymentMethodSelected();
       },
@@ -376,7 +342,7 @@ export const useCheckoutStore = create<CheckoutStore>()(
       partialize: (state) => ({
         checkoutData: state.checkoutData,
       }),
-      // Handle data recovery on app start
+
       onRehydrateStorage: () => (state) => {
         if (state?.checkoutData) {
           console.log('Rehydrated checkout data:', {
@@ -385,7 +351,6 @@ export const useCheckoutStore = create<CheckoutStore>()(
             insuranceEnabled: state.checkoutData.insuranceEnabled?.length || 0,
           });
 
-          // FIXED: Recalculate totals on rehydration
           if (state.checkoutData.cartItems && state.checkoutData.selectedItems) {
             const recalculatedTotals = calculateTotals(
               state.checkoutData.cartItems,

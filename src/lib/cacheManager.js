@@ -1,19 +1,14 @@
-// lib/cacheManager.js
-
 class CacheManager {
   constructor() {
-    // In-memory caches with TTL
     this.searchCache = new Map();
     this.suggestionCache = new Map();
     this.rateLimitCache = new Map();
 
-    // Cache settings
-    this.SEARCH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-    this.SUGGESTION_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-    this.RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+    this.SEARCH_CACHE_TTL = 5 * 60 * 1000;
+    this.SUGGESTION_CACHE_TTL = 10 * 60 * 1000;
+    this.RATE_LIMIT_WINDOW = 60 * 1000;
     this.MAX_REQUESTS_PER_WINDOW = 30;
 
-    // Auto-cleanup intervals
     this.startCleanupIntervals();
   }
 
@@ -36,7 +31,6 @@ class CacheManager {
    * Get client identifier for rate limiting
    */
   getClientId(request) {
-    // Use multiple fallbacks for client identification
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
     const remoteAddress = request.headers.get('remote-addr');
@@ -58,23 +52,20 @@ class CacheManager {
 
       const requests = this.rateLimitCache.get(clientId);
 
-      // Remove old requests outside the window
       const recentRequests = requests.filter((timestamp) => timestamp > windowStart);
       this.rateLimitCache.set(clientId, recentRequests);
 
-      // Check if limit exceeded
       if (recentRequests.length >= this.MAX_REQUESTS_PER_WINDOW) {
         return true;
       }
 
-      // Add current request
       recentRequests.push(now);
       this.rateLimitCache.set(clientId, recentRequests);
 
       return false;
     } catch (error) {
       console.error('Rate limiting error:', error);
-      return false; // Allow request if rate limiting fails
+      return false;
     }
   }
 
@@ -90,13 +81,11 @@ class CacheManager {
         return { cacheHit: false };
       }
 
-      // Check TTL
       if (Date.now() - cached.timestamp > this.SEARCH_CACHE_TTL) {
         this.searchCache.delete(key);
         return { cacheHit: false };
       }
 
-      // Update hit count
       cached.hits = (cached.hits || 0) + 1;
       cached.lastAccess = Date.now();
 
@@ -119,7 +108,6 @@ class CacheManager {
     try {
       const key = this.generateSearchKey(query, page, pageSize);
 
-      // Only cache successful results with products
       if (data && data.ok && data.products && data.products.length > 0) {
         this.searchCache.set(key, {
           data,
@@ -128,7 +116,6 @@ class CacheManager {
           lastAccess: Date.now(),
         });
 
-        // Limit cache size (keep most recent 100 entries)
         if (this.searchCache.size > 100) {
           const oldest = Array.from(this.searchCache.entries()).sort(
             (a, b) => a[1].lastAccess - b[1].lastAccess,
@@ -153,13 +140,11 @@ class CacheManager {
         return { cacheHit: false };
       }
 
-      // Check TTL
       if (Date.now() - cached.timestamp > this.SUGGESTION_CACHE_TTL) {
         this.suggestionCache.delete(key);
         return { cacheHit: false };
       }
 
-      // Update hit count
       cached.hits = (cached.hits || 0) + 1;
       cached.lastAccess = Date.now();
 
@@ -189,7 +174,6 @@ class CacheManager {
         lastAccess: Date.now(),
       });
 
-      // Limit suggestion cache size
       if (this.suggestionCache.size > 200) {
         const oldest = Array.from(this.suggestionCache.entries()).sort(
           (a, b) => a[1].lastAccess - b[1].lastAccess,
@@ -220,21 +204,18 @@ class CacheManager {
     try {
       const now = Date.now();
 
-      // Clear expired search cache
       for (const [key, value] of this.searchCache.entries()) {
         if (now - value.timestamp > this.SEARCH_CACHE_TTL) {
           this.searchCache.delete(key);
         }
       }
 
-      // Clear expired suggestion cache
       for (const [key, value] of this.suggestionCache.entries()) {
         if (now - value.timestamp > this.SUGGESTION_CACHE_TTL) {
           this.suggestionCache.delete(key);
         }
       }
 
-      // Clear old rate limit records
       for (const [clientId, requests] of this.rateLimitCache.entries()) {
         const recentRequests = requests.filter(
           (timestamp) => now - timestamp <= this.RATE_LIMIT_WINDOW,
@@ -255,7 +236,6 @@ class CacheManager {
    * Start automatic cleanup intervals
    */
   startCleanupIntervals() {
-    // Clean every 2 minutes
     setInterval(() => {
       this.clearExpired();
     }, 2 * 60 * 1000);
@@ -278,9 +258,6 @@ class CacheManager {
       'leather sofa',
       'king bed',
     ];
-
-    // This could be called during app initialization
-    // Implementation would depend on your specific needs
   }
 
   /**
@@ -293,7 +270,6 @@ class CacheManager {
         return;
       }
 
-      // Clear cache entries matching pattern
       for (const key of this.searchCache.keys()) {
         if (key.includes(pattern)) {
           this.searchCache.delete(key);
@@ -305,6 +281,5 @@ class CacheManager {
   }
 }
 
-// Export singleton instance
 const cacheManager = new CacheManager();
 export default cacheManager;

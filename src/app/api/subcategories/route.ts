@@ -1,4 +1,3 @@
-// /api/subcategories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import SubCategory from '@/models/subcategory';
@@ -59,12 +58,11 @@ export async function GET() {
     if (result.success) {
       return NextResponse.json(result.data || []);
     } else {
-      // Return fallback empty array
       return NextResponse.json([]);
     }
   } catch (error) {
     console.error('Unexpected error in subcategories API:', error);
-    // Return fallback empty array
+
     return NextResponse.json([]);
   }
 }

@@ -10,7 +10,6 @@ import { useProductStore } from '@/stores/productStore';
 import GridSkeleton from '@/components/sceleton/GridSkeleton';
 import EmptyState from '@/components/state/EmptyState';
 
-// Cache stable selectors
 const selectProducts = (state: any) => state.products;
 const selectCategories = (state: any) => state.categories;
 const selectSubcategories = (state: any) => state.subcategories;
@@ -25,7 +24,6 @@ const selectInitializeProducts = (state: any) => state.initializeProducts;
 const selectFetchProducts = (state: any) => state.fetchProducts;
 const selectResetProductState = (state: any) => state.resetProductState;
 
-// Stable sort options
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
   { value: 'price-low', label: 'Price: Low to High' },
@@ -40,7 +38,6 @@ const ProductsPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Use cached selectors
   const products = useProductStore(selectProducts);
   const categories = useProductStore(selectCategories);
   const subcategories = useProductStore(selectSubcategories);
@@ -56,24 +53,20 @@ const ProductsPage = () => {
   const fetchProducts = useProductStore(selectFetchProducts);
   const resetProductState = useProductStore(selectResetProductState);
 
-  // Local state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Refs for stable actions
   const observerTarget = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<(() => Promise<void>) | null>(null);
   const isLoadingMoreRef = useRef(false);
 
-  // Initialize store once
   useEffect(() => {
     if (!isInitialized) {
       initializeProducts().then(() => setIsInitialized(true));
     }
   }, [initializeProducts, isInitialized]);
 
-  // Stable filter parameters - memoized with discount support
   const filterParams = useMemo(
     () => ({
       selectedCategory: searchParams.get('category') || '',
@@ -89,7 +82,6 @@ const ProductsPage = () => {
     [searchParams],
   );
 
-  // Check active filters with discount
   const hasActiveFilters = useMemo(() => {
     const {
       selectedCategory,
@@ -107,7 +99,7 @@ const ProductsPage = () => {
       selectedSubcategory ||
       selectedMaterial ||
       minPrice ||
-      maxPrice || // Treat price range as single filter
+      maxPrice ||
       inStockOnly ||
       onSaleOnly ||
       discountRange ||
@@ -115,7 +107,6 @@ const ProductsPage = () => {
     );
   }, [filterParams]);
 
-  // Clear products and fetch new ones when filters change
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -127,7 +118,6 @@ const ProductsPage = () => {
     fetchProducts(params.toString(), true);
   }, [searchParams.toString(), isInitialized, fetchProducts, resetProductState]);
 
-  // Load more function
   const loadMore = useCallback(async () => {
     if (
       isLoadingMoreRef.current ||
@@ -166,12 +156,10 @@ const ProductsPage = () => {
     fetchProducts,
   ]);
 
-  // Set load more ref
   useEffect(() => {
     loadMoreRef.current = loadMore;
   }, [loadMore]);
 
-  // Intersection Observer
   useEffect(() => {
     const target = observerTarget.current;
     if (!target || loadingProducts || !hasMore || products.length === 0 || loadingMore) {
@@ -199,7 +187,6 @@ const ProductsPage = () => {
     return () => observer.disconnect();
   }, [hasMore, loadingProducts, loadingMore, products.length]);
 
-  // Navigation functions
   const clearAllFilters = useCallback(() => {
     router.push('/products');
   }, [router]);
@@ -210,10 +197,9 @@ const ProductsPage = () => {
 
       if (filterKey === 'category') {
         params.delete('category');
-        params.delete('subcategory'); // Clear subcategory when category is removed
+        params.delete('subcategory');
       } else if (filterKey === 'subcategory') {
         params.delete('subcategory');
-        // Don't clear prices when removing subcategory
       } else if (filterKey === 'price') {
         params.delete('minPrice');
         params.delete('maxPrice');
@@ -226,7 +212,6 @@ const ProductsPage = () => {
     [router, searchParams],
   );
 
-  // Helper functions
   const findCategoryName = useCallback(
     (slug: any) => {
       if (!categories) return slug;
@@ -250,7 +235,6 @@ const ProductsPage = () => {
     return SORT_OPTIONS.find((opt) => opt.value === value)?.label || value;
   }, []);
 
-  // Get discount label
   const getDiscountLabel = useCallback((value: string) => {
     const discountOptions = [
       { value: '', label: 'All Products' },
@@ -262,7 +246,6 @@ const ProductsPage = () => {
     return discountOptions.find((opt) => opt.value === value)?.label || `${value}% or more`;
   }, []);
 
-  // Active filter count with discount
   const activeFilterCount = useMemo(() => {
     const {
       selectedCategory,
@@ -276,12 +259,11 @@ const ProductsPage = () => {
       sortBy,
     } = filterParams;
 
-    // Count each filter type as one, treating price range as single filter
     const filters = [
       selectedCategory,
       selectedSubcategory,
       selectedMaterial,
-      minPrice || maxPrice, // Price range as single filter
+      minPrice || maxPrice,
       inStockOnly,
       onSaleOnly,
       discountRange,
@@ -291,7 +273,6 @@ const ProductsPage = () => {
     return filters.filter(Boolean).length;
   }, [filterParams]);
 
-  // Filters object
   const filters = useMemo(
     () => ({
       categories: Array.isArray(categories)

@@ -1,4 +1,3 @@
-// app/api/auth/me/route.js
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/auth';
@@ -24,10 +23,7 @@ export async function GET() {
 
     const user = await User.findById(payload.userId).select('name email _id photoURL');
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found', user: null },
-        { status: 401 }, // Changed from 404 to 401 for security
-      );
+      return NextResponse.json({ error: 'User not found', user: null }, { status: 401 });
     }
 
     return NextResponse.json({ user }, { status: 200 });

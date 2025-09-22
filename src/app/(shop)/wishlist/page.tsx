@@ -26,7 +26,6 @@ const WishlistPage = () => {
 
   const [filterCategory, setFilterCategory] = useState('all');
 
-  // Initialize stores
   useEffect(() => {
     if (user?._id && !initialized) {
       initializeWishlists();
@@ -48,7 +47,6 @@ const WishlistPage = () => {
     }
   };
 
-  // Not logged in
   if (!user?._id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -67,7 +65,6 @@ const WishlistPage = () => {
     );
   }
 
-  // Loading state
   if (wishlistLoading && !initialized) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -76,7 +73,6 @@ const WishlistPage = () => {
     );
   }
 
-  // Empty wishlist
   if (!wishlist || wishlist.items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

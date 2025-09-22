@@ -1,6 +1,5 @@
 import { JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal } from 'react';
 
-// types/Product.ts
 export interface Product {
   _id: string;
   name: string;
@@ -11,13 +10,11 @@ export interface Product {
   createdAt: Date;
   updatedAt: Date;
 
-  // ✅ Optional / descriptive fields
   description?: string;
   brand?: string;
   warranty?: string;
   returnPolicy?: string;
 
-  // ✅ Categories
   categoryId?: {
     _id: string;
     name: string;
@@ -29,18 +26,15 @@ export interface Product {
     slug: string;
   };
 
-  // ✅ Pricing / stock
   emiPrice?: number;
   discountPercent?: number;
   inStockQuantity?: number;
 
-  // ✅ Options
   colorOptions?: string[];
   size?: string[];
   material?: string;
   tags?: string[];
 
-  // ✅ Media
   galleryImages?: Array<{
     url: string;
     alt?: string;
@@ -53,7 +47,6 @@ export interface Product {
   };
   badge?: string;
 
-  // ✅ Dimensions & weight
   dimensions?: {
     length?: number;
     width?: number;
@@ -61,14 +54,12 @@ export interface Product {
   };
   weight?: number;
 
-  // ✅ Status
   isPublished?: boolean;
   isActive?: boolean;
   isFeatured?: boolean;
   isNewArrival?: boolean;
   isBestSeller?: boolean;
 
-  // ✅ Ratings & reviews
   ratings?: number;
   reviews?: {
     average: number;
@@ -88,14 +79,12 @@ export interface Product {
     }>;
   };
 
-  // ✅ Shipping
   shippingInfo?: {
     freeShipping?: boolean;
     estimatedDays?: number;
     shippingCost?: number;
   };
 
-  // ✅ Variants
   variants?: Array<{
     color?: string;
     size?: string;
@@ -104,23 +93,19 @@ export interface Product {
     inStock?: number;
   }>;
 
-  // ✅ SEO
   slug?: string;
   metaTitle?: string;
   metaDescription?: string;
 
-  // ✅ NEW LIGHT SEO / FRONTEND FIELDS
   keywords?: string[];
   bulletPoints?: string[];
   highlights?: string[];
   faq?: Array<{ question: string; answer: string }>;
 
-  // ✅ Business / sales data
   totalSold?: number;
   viewCount?: number;
   wishlistCount?: number;
 
-  // ✅ SEARCH-SPECIFIC ENHANCEMENTS
   categorySlug?: string;
   subcategorySlug?: string;
   searchKeywords?: string[];
@@ -133,14 +118,12 @@ export interface Product {
     [key: string]: any;
   };
 
-  // ✅ Frontend compatibility fields
   images?: string;
   onSale?: string;
   price?: number;
   stock?: number;
 }
 
-// 🎯 Lightweight type for cards
 export interface ProductCardData
   extends Pick<
     Product,
@@ -157,7 +140,6 @@ export interface ProductCardData
     | 'inStockQuantity'
   > {}
 
-// 🎯 Filters type
 export interface ProductFilters {
   categories: Array<{
     _id: string;
@@ -203,7 +185,6 @@ export interface ProductFilters {
   };
 }
 
-// 🎯 API response type
 export interface ProductsApiResponse {
   products: Product[];
   pagination: {

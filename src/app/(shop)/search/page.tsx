@@ -1,28 +1,9 @@
 'use client';
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-} from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  Filter,
-  SlidersHorizontal,
-  Search,
-  AlertCircle,
-  ShoppingBag,
-  RefreshCw,
-} from 'lucide-react';
+import { X, SlidersHorizontal, Search, AlertCircle, ShoppingBag } from 'lucide-react';
 import ProductGrid from '@/components/product/ProductGrid';
 import FilterSidebar from '@/components/filter/FilterSidebar';
 import useSearchStore from '@/stores/searchStore';
@@ -30,7 +11,6 @@ import SearchEmptyState from '@/components/state/SearchEmptyState';
 import GridSkeleton from '@/components/sceleton/GridSkeleton';
 import { Category } from '@/types/Product';
 
-// Sort options matching slug page
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Most Relevant' },
   { value: 'newest', label: 'Newest First' },
@@ -42,7 +22,6 @@ const SORT_OPTIONS = [
   { value: 'discount', label: 'Highest Discount' },
 ];
 
-// Cache stable selectors
 const selectProducts = (state: any) => state.products;
 const selectCategories = (state: any) => state.categories;
 const selectSubcategories = (state: any) => state.subcategories;
@@ -57,7 +36,9 @@ const selectPagination = (state: any) => state.pagination;
 const selectSuggestion = (state: any) => state.suggestion;
 const selectRelatedCategories = (state: any) => state.relatedCategories;
 const selectSearchProducts = (state: any) => state.searchProducts;
+const selectFetchProducts = (state: any) => state.fetchProducts;
 const selectSetQuery = (state: any) => state.setQuery;
+const selectResetProductState = (state: any) => state.resetProductState;
 const selectFallback = (state: any) => state.fallback;
 const selectNoResults = (state: any) => state.noResults;
 
@@ -66,7 +47,6 @@ const SearchPage: React.FC = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Use cached selectors from search store
   const products = useSearchStore(selectProducts);
   const categories = useSearchStore(selectCategories);
   const subcategories = useSearchStore(selectSubcategories);
@@ -84,27 +64,24 @@ const SearchPage: React.FC = () => {
   const noResults = useSearchStore(selectNoResults);
 
   const searchProducts = useSearchStore(selectSearchProducts);
+  const fetchProducts = useSearchStore(selectFetchProducts);
   const setQuery = useSearchStore(selectSetQuery);
+  const resetProductState = useSearchStore(selectResetProductState);
 
-  // Local state
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const lastSearchRef = useRef<string>('');
 
-  // Refs for stable actions
   const observerTarget = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<(() => Promise<void>) | null>(null);
   const isLoadingMoreRef = useRef(false);
 
-  // Get current query
   const query: string = searchParams.get('q') || '';
 
-  // Update store query when URL changes
   useEffect(() => {
     setQuery(query);
   }, [query, setQuery]);
 
-  // Enhanced filter parameters - now includes discount
   const filterParams = useMemo(
     () => ({
       query: query,
@@ -121,7 +98,6 @@ const SearchPage: React.FC = () => {
     [query, searchParams],
   );
 
-  // Check active filters - now includes discount
   const hasActiveFilters = useMemo(() => {
     const {
       selectedCategory,
@@ -147,27 +123,36 @@ const SearchPage: React.FC = () => {
     );
   }, [filterParams]);
 
-  // Search products when query or filters change
   useEffect(() => {
-    // Create search key to detect if this is a new search
     const searchKey = `${query}-${searchParams.toString()}`;
 
-    if (!query.trim()) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('q');
+    params.delete('page');
+    params.delete('limit');
+    const hasFiltersOnly = Array.from(params.keys()).length > 0;
+
+    if (!query.trim() && !hasFiltersOnly) {
       lastSearchRef.current = '';
+      resetProductState();
       return;
     }
 
-    // Only search if this is a completely new search
     if (lastSearchRef.current !== searchKey) {
       lastSearchRef.current = searchKey;
       setCurrentPage(1);
       isLoadingMoreRef.current = false;
-      const params = new URLSearchParams(searchParams.toString());
-      searchProducts(query, params.toString(), true);
-    }
-  }, [searchParams.toString(), query, searchProducts]);
 
-  // Load more function - enhanced with all filter parameters
+      const urlParams = new URLSearchParams(searchParams.toString());
+
+      if (query.trim()) {
+        searchProducts(query, urlParams.toString(), true);
+      } else if (hasFiltersOnly) {
+        fetchProducts(urlParams.toString(), true);
+      }
+    }
+  }, [searchParams.toString(), query, searchProducts, fetchProducts, resetProductState]);
+
   const loadMore = useCallback(async () => {
     if (
       isLoadingMoreRef.current ||
@@ -175,7 +160,7 @@ const SearchPage: React.FC = () => {
       products.length === 0 ||
       loadingProducts ||
       loadingMore ||
-      !query.trim()
+      (!query.trim() && !hasActiveFilters)
     ) {
       return;
     }
@@ -185,9 +170,11 @@ const SearchPage: React.FC = () => {
 
     try {
       const params = new URLSearchParams();
-      params.set('q', query);
 
-      // Add all filter parameters
+      if (query.trim()) {
+        params.set('q', query);
+      }
+
       if (filterParams.selectedCategory) {
         params.set('category', filterParams.selectedCategory);
       }
@@ -219,10 +206,15 @@ const SearchPage: React.FC = () => {
       params.set('page', nextPage.toString());
       params.set('limit', '20');
 
-      await searchProducts(query, params.toString(), false);
+      if (query.trim()) {
+        await searchProducts(query, params.toString(), false);
+      } else {
+        await fetchProducts(params.toString(), false);
+      }
+
       setCurrentPage(nextPage);
     } catch (error) {
-      console.error('Error loading more search results:', error);
+      console.error('Error loading more results:', error);
     } finally {
       setTimeout(() => {
         isLoadingMoreRef.current = false;
@@ -237,14 +229,14 @@ const SearchPage: React.FC = () => {
     query,
     filterParams,
     searchProducts,
+    fetchProducts,
+    hasActiveFilters,
   ]);
 
-  // Set load more ref
   useEffect(() => {
     loadMoreRef.current = loadMore;
   }, [loadMore]);
 
-  // Intersection Observer for infinite scroll
   useEffect(() => {
     const target = observerTarget.current;
     if (
@@ -253,7 +245,7 @@ const SearchPage: React.FC = () => {
       !hasMore ||
       products.length === 0 ||
       loadingMore ||
-      !query.trim()
+      (!query.trim() && !hasActiveFilters)
     ) {
       return;
     }
@@ -277,12 +269,13 @@ const SearchPage: React.FC = () => {
 
     observer.observe(target);
     return () => observer.disconnect();
-  }, [hasMore, loadingProducts, loadingMore, products.length, query]);
+  }, [hasMore, loadingProducts, loadingMore, products.length, query, hasActiveFilters]);
 
-  // Navigation functions
   const clearAllFilters = useCallback(() => {
     const params = new URLSearchParams();
-    params.set('q', query);
+    if (query) {
+      params.set('q', query);
+    }
     router.push(`${pathname}?${params.toString()}`);
   }, [router, pathname, query]);
 
@@ -307,7 +300,6 @@ const SearchPage: React.FC = () => {
     [router, pathname, searchParams],
   );
 
-  // Helper functions
   const findCategoryName = useCallback(
     (slug: any) => {
       if (!categories) return slug;
@@ -351,7 +343,6 @@ const SearchPage: React.FC = () => {
     [router, pathname, searchParams],
   );
 
-  // Active filter count - now includes discount
   const activeFilterCount = useMemo(() => {
     const {
       selectedCategory,
@@ -369,7 +360,7 @@ const SearchPage: React.FC = () => {
       selectedCategory,
       selectedSubcategory,
       selectedMaterial,
-      // Count price range as single filter if either min or max is set
+
       minPrice || maxPrice ? true : false,
       inStockOnly,
       onSaleOnly,
@@ -380,7 +371,6 @@ const SearchPage: React.FC = () => {
     return filters.filter(Boolean).length;
   }, [filterParams]);
 
-  // Filters object
   const filters = useMemo(
     () => ({
       categories: Array.isArray(categories)
@@ -400,14 +390,13 @@ const SearchPage: React.FC = () => {
     [categories, subcategories, materials, priceRange],
   );
 
-  // Determine what to show - Fixed logic
   const shouldShowSkeleton = loadingProducts && products.length === 0;
   const shouldShowError = error && !loadingProducts;
   const shouldShowEmptyState =
     !loadingProducts &&
     !error &&
-    query.trim() &&
-    (noResults || (fallback && products.length === 0));
+    ((query.trim() && (noResults || (fallback && products.length === 0))) ||
+      (!query.trim() && hasActiveFilters && products.length === 0));
   const shouldShowProducts = !loadingProducts && !error && products.length > 0;
 
   return (
@@ -445,13 +434,15 @@ const SearchPage: React.FC = () => {
                   >
                     {query}
                   </span>
+                ) : hasActiveFilters ? (
+                  <span className="text-gray-500">Filtered Results</span>
                 ) : (
-                  <span className="text-gray-400">No search query</span>
+                  <span className="text-gray-400">Search</span>
                 )}
               </motion.nav>
 
-              {/* Unified Search Results Header */}
-              {query && !loadingProducts && !shouldShowError ? (
+              {/* UPDATED: Unified Search Results Header - support filter-only */}
+              {(query || hasActiveFilters) && !loadingProducts && !shouldShowError ? (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -473,15 +464,23 @@ const SearchPage: React.FC = () => {
                         <span className="font-bold text-gray-900">
                           {totalProducts?.toLocaleString() || 0}
                         </span>{' '}
-                        results for <span className="font-bold text-indigo-600">"{query}"</span>
-                        {fallback && (
-                          <span className="block text-xs text-orange-600 mt-1">
-                            (Related results - no exact matches found)
-                          </span>
+                        {query ? (
+                          <>
+                            results for <span className="font-bold text-indigo-600">"{query}"</span>
+                            {fallback && (
+                              <span className="block text-xs text-orange-600 mt-1">
+                                (Related results - no exact matches found)
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span>products</span>
                         )}
                       </>
-                    ) : (
+                    ) : query ? (
                       <span className="text-gray-600">Search results for "{query}"</span>
+                    ) : (
+                      <span className="text-gray-600">Filtered products</span>
                     )}
                   </h1>
                 </motion.div>
@@ -491,8 +490,8 @@ const SearchPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Suggestion */}
-              {suggestion && (
+              {/* Suggestion - only show for search queries */}
+              {suggestion && query && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -513,8 +512,8 @@ const SearchPage: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Related Categories */}
-              {relatedCategories.length > 0 && (
+              {/* Related Categories - only show for search queries */}
+              {relatedCategories.length > 0 && query && (
                 <motion.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -697,7 +696,7 @@ const SearchPage: React.FC = () => {
                   />
                 ) : shouldShowProducts ? (
                   <>
-                    {fallback && (
+                    {fallback && query && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -740,8 +739,8 @@ const SearchPage: React.FC = () => {
                       All results shown!
                     </div>
                     <div className="text-gray-600 text-[10px] text-center leading-tight">
-                      Found {totalProducts?.toLocaleString() || 0} results
-                      {fallback && (
+                      Found {totalProducts?.toLocaleString() || 0} {query ? 'results' : 'products'}
+                      {fallback && query && (
                         <span className="block text-orange-600 mt-0.5">(Related results only)</span>
                       )}
                     </div>

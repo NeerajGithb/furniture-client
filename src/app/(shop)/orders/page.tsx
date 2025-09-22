@@ -1,4 +1,3 @@
-// app/orders/page.tsx - Fully Responsive Version
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -62,7 +61,6 @@ interface DeleteConfirmModalProps {
   isDeleting: boolean;
 }
 
-// Delete confirmation modal component
 const DeleteConfirmModal = ({
   isOpen,
   onClose,
@@ -131,7 +129,6 @@ const DeleteConfirmModal = ({
   );
 };
 
-// Status configurations
 const statusConfig = {
   pending: {
     color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -226,7 +223,6 @@ export default function OrdersPage() {
     fetchOrders({ limit: 50 });
   }, [user, userLoading, fetchOrders, router]);
 
-  // Filter orders
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.orderNumber.toLowerCase().includes(search.toLowerCase()) ||

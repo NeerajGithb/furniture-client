@@ -1,4 +1,3 @@
-// components/ui/avatar.jsx
 'use client';
 
 import { useState } from 'react';

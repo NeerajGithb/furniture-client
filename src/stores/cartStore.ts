@@ -1,4 +1,3 @@
-// stores/cartStore.ts - Fixed Production Ready Version
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
@@ -42,7 +41,6 @@ export interface Cart {
   updatedAt: string;
 }
 
-// Simplified checkout totals for cart calculations
 export interface CheckoutTotals {
   subtotal: number;
   selectedQuantity: number;
@@ -52,7 +50,6 @@ export interface CheckoutTotals {
   totalDiscount: number;
 }
 
-// Minimal checkout state for cart selection only
 export interface CartCheckoutState {
   selectedItems: Set<string>;
   insuranceEnabled: Set<string>;
@@ -60,16 +57,13 @@ export interface CartCheckoutState {
 }
 
 interface CartStore {
-  // Cart state
   cart: Cart | null;
   initialized: boolean;
   loading: boolean;
   updatingItems: Set<string>;
 
-  // Cart selection state (for checkout preparation)
   checkout: CartCheckoutState;
 
-  // Cart actions
   initializeCart: () => Promise<void>;
   addToCart: (productId: string, quantity?: number, selectedVariant?: any) => Promise<boolean>;
   updateQuantity: (productId: string, quantity: number) => Promise<boolean>;
@@ -77,7 +71,6 @@ interface CartStore {
   clearCart: () => Promise<boolean>;
   refreshCart: () => Promise<void>;
 
-  // Cart selection actions (for checkout preparation)
   setSelectedItems: (items: string[]) => void;
   toggleItemSelection: (productId: string) => void;
   selectAllItems: () => void;
@@ -85,7 +78,6 @@ interface CartStore {
   toggleInsurance: (productId: string) => void;
   calculateCheckoutTotals: () => void;
 
-  // Checkout data preparation
   getCheckoutData: () => {
     selectedItems: string[];
     insuranceEnabled: string[];
@@ -93,7 +85,6 @@ interface CartStore {
     cartItems: CartItem[];
   } | null;
 
-  // Getters
   isInCart: (productId: string) => boolean;
   getCartItem: (productId: string) => CartItem | undefined;
   getCartItemIds: () => Set<string>;
@@ -124,14 +115,12 @@ const initialCheckoutState: CartCheckoutState = {
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
-      // Initial state
       cart: null,
       initialized: false,
       loading: false,
       updatingItems: new Set<string>(),
       checkout: { ...initialCheckoutState },
 
-      // Initialize cart on app start
       initializeCart: async () => {
         if (get().initialized) return;
 
@@ -150,7 +139,6 @@ export const useCartStore = create<CartStore>()(
 
           const cartData: Cart = await handleApiResponse(response);
 
-          // Ensure cart data is valid
           if (!cartData || !Array.isArray(cartData.items)) {
             console.warn('Invalid cart data received:', cartData);
             set({ cart: null, initialized: true, loading: false });
@@ -163,7 +151,6 @@ export const useCartStore = create<CartStore>()(
             loading: false,
           });
 
-          // Auto-select all items and enable insurance by default
           const allItemIds = cartData.items.map((item) => item.productId);
           if (allItemIds.length > 0) {
             set((state) => ({
@@ -179,7 +166,6 @@ export const useCartStore = create<CartStore>()(
           console.error('Cart initialization error:', error);
           const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 
-          // Don't show toast for auth errors
           if (!errorMessage.includes('401')) {
             toast.error('Failed to load cart');
           }
@@ -192,7 +178,6 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      // Refresh cart data
       refreshCart: async () => {
         try {
           const response = await fetchWithCredentials('/api/cart');
@@ -207,7 +192,6 @@ export const useCartStore = create<CartStore>()(
 
             set({ cart: cartData });
 
-            // Update selected items if some items were removed
             const currentItemIds = new Set(cartData.items.map((item) => item.productId));
             const { checkout } = get();
 
@@ -232,17 +216,14 @@ export const useCartStore = create<CartStore>()(
           }
         } catch (error) {
           console.error('Cart refresh error:', error);
-          // Don't show error toast for refresh failures to avoid spam
         }
       },
 
-      // Add to cart with optimistic updates
       addToCart: async (productId, quantity = 1, selectedVariant = null): Promise<boolean> => {
         const { updatingItems, cart } = get();
 
         if (updatingItems.has(productId)) return false;
 
-        // Check if item already exists
         const existingItem = cart?.items.find((item) => item.productId === productId);
         if (existingItem) {
           return await get().updateQuantity(productId, existingItem.quantity + quantity);
@@ -281,7 +262,6 @@ export const useCartStore = create<CartStore>()(
           updatingItems: new Set([...updatingItems, productId]),
         });
 
-        // Auto-select and enable insurance for new item
         set((state) => ({
           checkout: {
             ...state.checkout,
@@ -302,7 +282,6 @@ export const useCartStore = create<CartStore>()(
             throw new Error(data.error || `HTTP Error: ${response.status}`);
           }
 
-          // Refresh to get accurate server data
           await get().refreshCart();
           toast.success('Added to cart');
           return true;
@@ -311,7 +290,6 @@ export const useCartStore = create<CartStore>()(
           const errorMessage = error instanceof Error ? error.message : 'Failed to add to cart';
           toast.error(errorMessage);
 
-          // Rollback optimistic update
           set({ cart: originalCart });
           return false;
         } finally {
@@ -321,7 +299,6 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      // Update quantity with optimistic updates
       updateQuantity: async (productId, quantity): Promise<boolean> => {
         const { updatingItems, cart } = get();
 
@@ -336,7 +313,6 @@ export const useCartStore = create<CartStore>()(
         const originalCart = cart;
         const quantityDiff = quantity - existingItem.quantity;
 
-        // Optimistic update
         const optimisticCart: Cart = {
           ...cart,
           items:
@@ -355,7 +331,6 @@ export const useCartStore = create<CartStore>()(
           updatingItems: new Set([...updatingItems, productId]),
         });
 
-        // Remove from checkout if quantity becomes 0
         if (quantity === 0) {
           set((state) => ({
             checkout: {
@@ -382,7 +357,6 @@ export const useCartStore = create<CartStore>()(
             throw new Error(data.error || `HTTP Error: ${response.status}`);
           }
 
-          // Refresh to get accurate server data
           await get().refreshCart();
 
           if (quantity === 0) {
@@ -396,7 +370,6 @@ export const useCartStore = create<CartStore>()(
           const errorMessage = error instanceof Error ? error.message : 'Failed to update cart';
           toast.error(errorMessage);
 
-          // Rollback optimistic update
           set({ cart: originalCart });
           return false;
         } finally {
@@ -407,17 +380,14 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      // Remove item (set quantity to 0)
       removeFromCart: async (productId): Promise<boolean> => {
         return await get().updateQuantity(productId, 0);
       },
 
-      // Clear entire cart
       clearCart: async (): Promise<boolean> => {
         const { cart } = get();
         const originalCart = cart;
 
-        // Optimistic update
         const clearedCart: Cart | null = cart
           ? {
               ...cart,
@@ -453,7 +423,6 @@ export const useCartStore = create<CartStore>()(
           const errorMessage = error instanceof Error ? error.message : 'Failed to clear cart';
           toast.error(errorMessage);
 
-          // Rollback optimistic update
           set({ cart: originalCart });
           return false;
         } finally {
@@ -461,7 +430,6 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      // Cart selection actions
       setSelectedItems: (items: string[]) => {
         set((state) => ({
           checkout: {
@@ -597,7 +565,6 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
-      // Get checkout data for navigation to checkout
       getCheckoutData: () => {
         const { cart, checkout } = get();
 
@@ -617,7 +584,6 @@ export const useCartStore = create<CartStore>()(
         };
       },
 
-      // Getters
       isInCart: (productId) => {
         const { cart } = get();
         return cart?.items.some((item) => item.productId === productId) ?? false;
@@ -677,7 +643,6 @@ export const useCartStore = create<CartStore>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.checkout) {
-          // Convert arrays back to Sets after rehydration
           const persistedCheckout = state.checkout as any;
           if (Array.isArray(persistedCheckout.selectedItems)) {
             state.checkout.selectedItems = new Set(persistedCheckout.selectedItems);

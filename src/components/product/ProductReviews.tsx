@@ -22,7 +22,6 @@ interface ProductReviewsProps {
   userId?: string;
 }
 
-// Skeleton Components
 const ReviewSkeleton = () => (
   <div className="bg-white border border-gray-200 rounded-sm p-4 space-y-3 animate-pulse">
     <div className="flex items-start gap-3">
@@ -75,7 +74,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadSuccess, setUploadSuccess] = useState('');
-  // Track voting state per review and vote type
+
   const [votingStates, setVotingStates] = useState<
     Record<string, { helpful: boolean; unhelpful: boolean }>
   >({});
@@ -133,7 +132,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     return () => clearReviews();
   }, [productId]);
 
-  // Clear messages after 5 seconds for better UX
   useEffect(() => {
     if (successMessage || errorMessage || uploadSuccess) {
       const timer = setTimeout(() => {
@@ -149,7 +147,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    // Validate file types
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     const invalidFiles = files.filter((file) => !validTypes.includes(file.type));
     if (invalidFiles.length > 0) {
@@ -158,8 +155,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
       return;
     }
 
-    // Validate file sizes (5MB max per file)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     const oversizedFiles = files.filter((file) => file.size > maxSize);
     if (oversizedFiles.length > 0) {
       setErrorMessage('Each image must be less than 5MB');
@@ -224,7 +220,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
 
     const voteType = isHelpful ? 'helpful' : 'unhelpful';
 
-    // Prevent multiple rapid clicks on the same button
     if (votingStates[reviewId]?.[voteType]) {
       return;
     }
@@ -752,7 +747,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, userId }) =>
                     <div
                       className="w-16 h-16 bg-gray-100 border border-gray-200 rounded flex items-center justify-center cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
                       onClick={() => {
-                        // Open all remaining images in new tabs
                         review.images.slice(4).forEach((image) => {
                           const imageUrl = typeof image === 'string' ? image : image.url;
                           window.open(imageUrl, '_blank', 'noopener,noreferrer');

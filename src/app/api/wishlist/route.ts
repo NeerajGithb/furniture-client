@@ -1,11 +1,9 @@
-// app/api/wishlist/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import { connectDB } from '@/lib/dbConnect';
 import Wishlist from '@/models/Wishlist';
 import Product from '@/models/product';
 
-// GET - Fetch user's wishlist
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -25,10 +23,8 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       wishlist = await Wishlist.create({ userId: user.userId, items: [] });
     }
 
-    // Filter out invalid products and format response
     const allValidItems = wishlist.items.filter((item: any) => item.productId);
 
-    // Apply pagination
     const paginatedItems = allValidItems.slice(skip, skip + limit).map((item: any) => ({
       _id: item._id,
       productId: (item.productId as any)._id,
@@ -51,7 +47,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       addedAt: item.addedAt,
     }));
 
-    // Clean up invalid items if any found
     if (allValidItems.length !== wishlist.items.length) {
       wishlist.items = allValidItems;
       await wishlist.save();
@@ -75,7 +70,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// POST - Add item to wishlist
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -87,19 +81,16 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Verify product exists
     const product = await Product.findById(productId);
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Find or create wishlist
     let wishlist = await Wishlist.findOne({ userId: user.userId });
     if (!wishlist) {
       wishlist = new Wishlist({ userId: user.userId, items: [] });
     }
 
-    // Check if item already exists
     const existingItem = wishlist.items.find(
       (item: any) => item.productId.toString() === productId,
     );
@@ -108,7 +99,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Product already in wishlist' }, { status: 400 });
     }
 
-    // Add item to wishlist
     wishlist.items.unshift({
       productId,
       addedAt: new Date(),
@@ -116,13 +106,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await wishlist.save();
 
-    // Update product's wishlist count (optional analytics)
     try {
       await Product.findByIdAndUpdate(productId, {
         $inc: { wishlistCount: 1 },
       });
     } catch (updateError) {
-      // Don't fail the request if this update fails
       console.warn('Failed to update wishlist count:', updateError);
     }
 
@@ -140,7 +128,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   }
 });
 
-// DELETE - Remove item from wishlist
 export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -162,14 +149,11 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
     }
 
     if (clearAll) {
-      // Get all product IDs before clearing for analytics
       const productIds = wishlist.items.map((item: any) => item.productId);
 
-      // Clear wishlist
       wishlist.items = [];
       await wishlist.save();
 
-      // Update wishlist count for all products (optional analytics)
       try {
         await Product.updateMany({ _id: { $in: productIds } }, { $inc: { wishlistCount: -1 } });
       } catch (updateError) {
@@ -184,7 +168,6 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
         { status: 200 },
       );
     } else {
-      // Remove specific item
       const initialLength = wishlist.items.length;
       wishlist.items = wishlist.items.filter(
         (item: any) => item.productId.toString() !== productId,
@@ -196,7 +179,6 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
 
       await wishlist.save();
 
-      // Update product's wishlist count (optional analytics)
       try {
         await Product.findByIdAndUpdate(productId, {
           $inc: { wishlistCount: -1 },

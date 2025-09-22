@@ -35,7 +35,6 @@ const Page = () => {
     const initializePage = async () => {
       if (!inspirationSlug) return;
 
-      // Prevent multiple initializations
       if (isInitialized) return;
 
       try {
@@ -43,12 +42,10 @@ const Page = () => {
         setIsInitialized(true);
         clearInspirationError();
 
-        // Ensure inspirations are loaded first
         if (!initialized) {
           await fetchInspirations();
         }
 
-        // Fetch by slug now
         await fetchInspirationBySlug(inspirationSlug);
       } catch (error) {
         console.error('Error initializing inspiration page:', error);
@@ -61,12 +58,10 @@ const Page = () => {
     initializePage();
   }, [inspirationSlug]);
 
-  // Show loading while fetching or haven't finished initial load
   if (isLoading || inspirationLoading || !hasAttemptedFetch) {
     return <Loading fullScreen />;
   }
 
-  // Show error only after fetch attempt is complete and there's an actual error
   if (inspirationError && hasAttemptedFetch && !inspirationLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -110,7 +105,6 @@ const Page = () => {
     );
   }
 
-  // Show not available only if we've attempted fetch, not loading, no error, but no data
   if (!currentInspiration && !inspirationLoading && !inspirationError && hasAttemptedFetch) {
     return (
       <div className="min-h-screen bg-white">
@@ -154,7 +148,6 @@ const Page = () => {
     );
   }
 
-  // Show content only when we have data
   return (
     <div className="min-h-screen bg-white">
       {currentInspiration && (

@@ -19,13 +19,12 @@ export async function POST(req) {
   }
   const name = user.name || 'there';
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins from now
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
   const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
 
   user.resetCode = hashedCode;
   user.resetCodeExpires = expires;
 
-  // Ensure mongoose tracks these changes
   user.markModified('resetCode');
   user.markModified('resetCodeExpires');
 
@@ -44,7 +43,7 @@ export async function POST(req) {
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // Gmail app password
+      pass: process.env.EMAIL_PASS,
     },
   });
 

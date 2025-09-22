@@ -26,7 +26,6 @@ import {
 
 import ConfettiEffect from '@/components/ui/ConfettiEffect';
 
-// Order flow status
 const STATUS_ORDER: OrderStatus[] = [
   'pending',
   'confirmed',
@@ -47,7 +46,6 @@ const LABELS: Record<OrderStatus, string> = {
   returned: 'Order Returned',
 };
 
-// Status-based configurations with professional messaging
 const STATUS_CONFIG: Record<
   OrderStatus,
   {
@@ -132,7 +130,6 @@ const STATUS_CONFIG: Record<
   },
 };
 
-// Helper function to get readable payment method
 const getReadablePaymentMethod = (method: string) => {
   const methods: Record<string, string> = {
     cod: 'Cash on Delivery',
@@ -145,7 +142,6 @@ const getReadablePaymentMethod = (method: string) => {
   return methods[method.toLowerCase()] || method;
 };
 
-// Helper function to get readable payment status
 const getReadablePaymentStatus = (status: string, paymentMethod: string) => {
   if (paymentMethod.toLowerCase() === 'cod') {
     return 'Cash on Delivery';
@@ -160,7 +156,6 @@ const getReadablePaymentStatus = (status: string, paymentMethod: string) => {
   return statuses[status.toLowerCase()] || status;
 };
 
-// Compact Card UI
 const Card = ({
   title,
   icon,
@@ -183,7 +178,6 @@ const Card = ({
   </div>
 );
 
-// Status-specific action buttons with professional labels
 const StatusActions = ({
   status,
   orderNumber,
@@ -292,7 +286,6 @@ const StatusActions = ({
   }
 };
 
-// Professional delivery information with clear messaging
 const DeliveryInfo = ({
   status,
   deliveryDate,

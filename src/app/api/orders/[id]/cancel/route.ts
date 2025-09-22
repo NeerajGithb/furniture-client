@@ -1,4 +1,3 @@
-// app/api/orders/[id]/cancel/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -12,7 +11,6 @@ interface RouteParams {
   };
 }
 
-// PUT - Cancel order
 export const PUT = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
@@ -27,7 +25,6 @@ export const PUT = withAuth(
 
       await connectDB();
 
-      // Find the order
       const order = await Order.findOne({
         _id: id,
         userId: user.userId,
@@ -37,7 +34,6 @@ export const PUT = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Check if order can be cancelled
       if (!['pending', 'confirmed'].includes(order.orderStatus)) {
         return NextResponse.json(
           { error: 'Order cannot be cancelled at this stage' },
@@ -45,12 +41,10 @@ export const PUT = withAuth(
         );
       }
 
-      // If order is already cancelled
       if (order.orderStatus === 'cancelled') {
         return NextResponse.json({ error: 'Order is already cancelled' }, { status: 400 });
       }
 
-      // Restore product stock
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
           $inc: {
@@ -60,14 +54,12 @@ export const PUT = withAuth(
         });
       }
 
-      // Update order status
       order.orderStatus = 'cancelled';
       order.cancelledAt = new Date();
       if (reason) {
         order.cancellationReason = reason;
       }
 
-      // If payment was made, mark for refund
       if (order.paymentStatus === 'paid') {
         order.paymentStatus = 'refunded';
         order.refundAmount = order.totalAmount;
@@ -76,14 +68,12 @@ export const PUT = withAuth(
 
       await order.save();
 
-      // Update payment record if exists
       const payment = await Payment.findOne({ orderId: order._id });
       if (payment) {
         payment.status = order.paymentStatus === 'refunded' ? 'refunded' : 'cancelled';
         await payment.save();
       }
 
-      // Return updated order data
       const updatedOrder = await Order.findById(id).populate({
         path: 'items.productId',
         select: 'name mainImage',

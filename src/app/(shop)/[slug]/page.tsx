@@ -99,7 +99,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
             ? matchedSubcategory.categoryId._id
             : matchedSubcategory.categoryId;
 
-        // only compare if categoryId exists
         return categoryId != null && cat._id === categoryId;
       });
 
@@ -374,7 +373,6 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
   const activeFilterCount = useMemo(() => {
     const filters = [
       filterParams.selectedMaterial,
-      // Count price range as single filter if either min or max is set
       filterParams.minPrice || filterParams.maxPrice ? true : false,
       filterParams.inStockOnly,
       filterParams.onSaleOnly,
@@ -421,7 +419,7 @@ const SlugPage = ({ params }: { params: Promise<{ slug: string }> }) => {
     if (pageType === 'subcategory' && pageData && pageData.description) {
       return pageData.description;
     }
-    return null; // Return null instead of default text when no description
+    return null;
   };
 
   if (!isInitialized || !pageType) {

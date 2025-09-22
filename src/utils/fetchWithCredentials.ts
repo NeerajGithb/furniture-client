@@ -23,7 +23,6 @@ async function refreshAccessToken(): Promise<boolean> {
         'Content-Type': 'application/json',
       },
     });
-
     return response.ok;
   } catch {
     return false;
@@ -70,7 +69,7 @@ export async function fetchWithCredentials(
       const response = await fetch(input, options);
       lastResponse = response;
 
-      if (response.ok || response.status !== 401) {
+      if (response.ok) {
         return response;
       }
 
@@ -84,14 +83,10 @@ export async function fetchWithCredentials(
 
         if (refreshed) {
           retryCount++;
-
           if (retryDelay > 0) {
             await new Promise((resolve) => setTimeout(resolve, retryDelay));
           }
-
           continue;
-        } else {
-          return response;
         }
       }
 
@@ -99,7 +94,6 @@ export async function fetchWithCredentials(
     } catch {
       if (retryCount < maxRetries && !skipRetry) {
         retryCount++;
-
         if (retryDelay > 0) {
           await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }

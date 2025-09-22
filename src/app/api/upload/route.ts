@@ -5,7 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const contentType = request.headers.get('content-type');
 
-    // ✅ New JSON-based upload logic (base64 image)
     if (contentType?.includes('application/json')) {
       const body = await request.json();
       const { image, folder } = body;
@@ -21,7 +20,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url: result.secure_url, publicId: result.public_id });
     }
 
-    // ✅ Old form-data upload logic (File)
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -59,4 +57,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-// This code handles file uploads to Cloudinary, supporting both JSON-based uploads with base64 images

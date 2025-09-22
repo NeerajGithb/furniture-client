@@ -1,4 +1,3 @@
-// app/api/reviews/vote/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Review from '@/models/Review';
@@ -6,7 +5,6 @@ import UserVote from '@/models/UserVote';
 import { connectDB } from '@/lib/dbConnect';
 import { Types } from 'mongoose';
 
-// POST - Handle review voting (auth required)
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -34,18 +32,15 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Review not found' }, { status: 404 });
     }
 
-    // Check if user has already voted on this review
     const existingVote = await UserVote.findOne({
       userId: new Types.ObjectId(user.userId),
       reviewId: new Types.ObjectId(reviewId),
     });
 
     if (existingVote) {
-      // If same vote type, remove the vote (toggle off)
       if (existingVote.voteType === action) {
         await UserVote.deleteOne({ _id: existingVote._id });
 
-        // Decrease the corresponding vote count
         if (action === 'helpful') {
           review.helpfulVotes = Math.max(0, (review.helpfulVotes || 0) - 1);
         } else {
@@ -61,12 +56,10 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           userVote: null,
         });
       } else {
-        // If different vote type, update the vote
         const oldVoteType = existingVote.voteType;
         existingVote.voteType = action;
         await existingVote.save();
 
-        // Update vote counts: decrease old, increase new
         if (oldVoteType === 'helpful') {
           review.helpfulVotes = Math.max(0, (review.helpfulVotes || 0) - 1);
           review.unhelpfulVotes = (review.unhelpfulVotes || 0) + 1;
@@ -85,7 +78,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         });
       }
     } else {
-      // Create new vote
       const newVote = new UserVote({
         userId: new Types.ObjectId(user.userId),
         reviewId: new Types.ObjectId(reviewId),
@@ -94,7 +86,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
       await newVote.save();
 
-      // Increase the corresponding vote count
       if (action === 'helpful') {
         review.helpfulVotes = (review.helpfulVotes || 0) + 1;
       } else {
@@ -113,7 +104,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   } catch (error) {
     console.error('Review vote error:', error);
 
-    // Handle duplicate vote error
     if (
       typeof error === 'object' &&
       error !== null &&

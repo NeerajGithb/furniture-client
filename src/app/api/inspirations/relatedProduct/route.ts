@@ -1,4 +1,3 @@
-// app/api/inspirations/relatedProduct/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import Inspiration from '@/models/Inspiration';
@@ -7,7 +6,6 @@ import Category from '@/models/category';
 import SubCategory from '@/models/subcategory';
 import { SortOrder } from 'mongoose';
 
-// ------------------ Interfaces ------------------
 interface PopulatedCategory {
   _id: string;
   name: string;
@@ -47,7 +45,6 @@ interface ProductDoc {
   createdAt: Date;
 }
 
-// ------------------ Handler ------------------
 export async function GET(request: Request) {
   try {
     await connectDB();
@@ -59,13 +56,12 @@ export async function GET(request: Request) {
     );
     const slug = searchParams.get('slug');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const sort = searchParams.get('sort'); // no default
+    const sort = searchParams.get('sort');
 
     if (!slug) {
       return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
     }
 
-    // ------------------ Sort Option ------------------
     let sortOption: Record<string, SortOrder> | null = null;
     if (sort) {
       switch (sort) {
@@ -89,7 +85,6 @@ export async function GET(request: Request) {
     let products: ProductDoc[] = [];
     let searchStrategy = 'unknown';
 
-    // ------------------ Strategy 1: By Inspiration ------------------
     try {
       const inspiration = await Inspiration.findOne({ slug })
         .populate<{ categories: PopulatedCategory[] }>('categories', 'name slug _id')
@@ -124,7 +119,6 @@ export async function GET(request: Request) {
       console.warn('Inspiration lookup failed:', err);
     }
 
-    // ------------------ Strategy 2: By Category ------------------
     if (!products.length) {
       try {
         const category = await Category.findOne({ slug }).lean<CategoryDoc>();
@@ -150,7 +144,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // ------------------ Strategy 3: By SubCategory ------------------
     if (!products.length) {
       try {
         const subcategory = await SubCategory.findOne({ slug }).lean<SubCategoryDoc>();
@@ -179,7 +172,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // ------------------ Strategy 4: Fuzzy Search ------------------
     if (!products.length) {
       try {
         searchStrategy = 'fuzzy';
@@ -222,7 +214,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // ------------------ Strategy 5: Random fallback ------------------
     if (!products.length) {
       searchStrategy = 'random_fallback';
 

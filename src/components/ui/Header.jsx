@@ -414,7 +414,6 @@ const Header = () => {
   const [dataLoaded, setDataLoaded] = useState(false);
   const initializeRef = useRef(false);
 
-  // Initialize data with immediate default display
   useEffect(() => {
     setIsMounted(true);
 
@@ -423,19 +422,15 @@ const Header = () => {
       initializeRef.current = true;
 
       try {
-        // Initialize products store (this loads defaults immediately)
         await useProductStore.getState().initializeProducts();
 
-        // Check if we have default data immediately after initialization
         const state = useProductStore.getState();
         if (state.categories.length > 0 && state.subcategories.length > 0) {
-          setDataLoaded(true); // Set immediately when default data exists
+          setDataLoaded(true);
         }
 
-        // Fetch inspirations
         await fetchInspirations();
 
-        // Always ensure dataLoaded is true after initialization
         setDataLoaded(true);
       } catch (error) {
         console.error('Initialization error:', error);
@@ -459,7 +454,6 @@ const Header = () => {
 
   const timeoutRef = useRef();
 
-  // Only create transformedInspirations when data is loaded
   const transformedInspirations = useMemo(() => {
     if (!inspirations?.length || !categories?.length) return [];
 
@@ -572,11 +566,9 @@ const Header = () => {
   }, []);
 
   const InspirationNavigation = useMemo(() => {
-    // Show navigation immediately if we have categories and inspirations
     const hasCategories = categories?.length > 0;
     const hasInspirations = inspirations?.length > 0;
 
-    // Only show loading if we don't have any data at all
     if ((!hasCategories && loadingCategories) || (!hasInspirations && loadingInspirations)) {
       return (
         <div className="flex items-center justify-center gap-3 py-2 h-12 overflow-hidden">

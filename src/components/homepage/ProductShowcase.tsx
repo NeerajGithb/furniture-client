@@ -25,10 +25,8 @@ const ProductShowcase = ({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Use store state
   const { showcaseProducts, loadingShowcase, error, fetchShowcaseProducts } = useProductStore();
 
-  // Use provided data or store data
   const products = productsData || showcaseProducts;
   const loading = !productsData ? loadingShowcase : false;
 
@@ -62,7 +60,6 @@ const ProductShowcase = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-scroll for mobile
   useEffect(() => {
     if (!isMobile || isUserInteracting || products.length === 0) return;
 
@@ -85,7 +82,6 @@ const ProductShowcase = ({
     return () => clearInterval(interval);
   }, [isMobile, isUserInteracting, products.length, itemsPerView]);
 
-  // Fetch showcase products if not provided and store is empty
   useEffect(() => {
     if (!productsData && showcaseProducts.length === 0 && !loadingShowcase) {
       fetchShowcaseProducts();
@@ -272,7 +268,6 @@ const ProductShowcase = ({
     );
   };
 
-  // Handle retry action through store
   const handleRetry = () => {
     if (!productsData) {
       fetchShowcaseProducts();

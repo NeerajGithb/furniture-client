@@ -62,7 +62,6 @@ export default function OrderTrackingPage() {
   const [fetchOrder, setFetchOrder] = useState(false);
   const { order, fetchOrderByNumber, loading, error, clearError } = useOrderStore();
 
-  // Fetch order when component mounts or orderNumber changes
   useEffect(() => {
     if (!orderNumber) {
       console.error('No order number provided');
@@ -75,14 +74,12 @@ export default function OrderTrackingPage() {
     });
   }, [orderNumber, fetchOrderByNumber, clearError]);
 
-  // Redirect to login if user is not authenticated
   useEffect(() => {
     if (!userLoading && !user) {
       return;
     }
   }, [user, userLoading, router, orderNumber]);
 
-  // Copy order number function
   const copyOrderNumber = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(order?.orderNumber || '');
@@ -93,28 +90,23 @@ export default function OrderTrackingPage() {
     }
   }, [order?.orderNumber]);
 
-  // Check if order is completed
   const isOrderCompleted = useMemo(() => {
     return order?.orderStatus === 'delivered';
   }, [order?.orderStatus]);
 
-  // Check if order is cancelled
   const isOrderCancelled = useMemo(() => {
     return order?.orderStatus === 'cancelled';
   }, [order?.orderStatus]);
 
-  // Check if order is returned
   const isOrderReturned = useMemo(() => {
     return order?.orderStatus === ('returned' as OrderStatus);
   }, [order?.orderStatus]);
 
-  // Check if order is active (not in final state)
   const isOrderActive = useMemo(() => {
     const finalStates = ['delivered', 'cancelled', 'returned'];
     return !finalStates.includes(order?.orderStatus || 'pending');
   }, [order?.orderStatus]);
 
-  // Memoized status steps calculation
   const statusSteps = useMemo((): StatusStep[] => {
     const steps: Array<{
       key: OrderStatus;
@@ -154,7 +146,6 @@ export default function OrderTrackingPage() {
       },
     ];
 
-    // Handle cancelled orders
     if (isOrderCancelled) {
       const cancelIndex = steps.findIndex((step) => step.key === order?.orderStatus);
       return steps.map((step, idx) => ({
@@ -181,7 +172,6 @@ export default function OrderTrackingPage() {
     }));
   }, [order?.orderStatus, isOrderCancelled, isOrderActive]);
 
-  // Memoized payment method display
   const paymentMethodDisplay = useMemo((): string => {
     if (!order?.paymentMethod) return '';
 
@@ -196,7 +186,6 @@ export default function OrderTrackingPage() {
     return methodMap[order.paymentMethod] || order.paymentMethod;
   }, [order?.paymentMethod]);
 
-  // Memoized expected delivery date (only show for active orders)
   const expectedDeliveryDisplay = useMemo((): string => {
     if (!isOrderActive) return '';
 
@@ -213,7 +202,6 @@ export default function OrderTrackingPage() {
     }
   }, [order?.expectedDeliveryDate, isOrderActive]);
 
-  // Delivered date display
   const deliveredDateDisplay = useMemo((): string => {
     if (!isOrderCompleted || !order?.deliveredAt) return '';
 
@@ -229,7 +217,6 @@ export default function OrderTrackingPage() {
     }
   }, [order?.deliveredAt, isOrderCompleted]);
 
-  // Payment status styling
   const paymentStatusStyle = useMemo((): string => {
     const status: PaymentStatus = order?.paymentStatus || 'pending';
 
@@ -256,7 +243,6 @@ export default function OrderTrackingPage() {
     return statusLabels[status] || 'Payment Pending';
   }, [order?.paymentStatus]);
 
-  // Order status message and color
   const orderStatusDisplay = useMemo(() => {
     const status = order?.orderStatus || 'pending';
 
@@ -301,7 +287,6 @@ export default function OrderTrackingPage() {
     return statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
   }, [order?.orderStatus]);
 
-  // Loading state
   if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-6">
@@ -316,7 +301,6 @@ export default function OrderTrackingPage() {
     );
   }
 
-  // Error or no order state
   if (error || (!loading && !order && fetchOrder)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -348,7 +332,6 @@ export default function OrderTrackingPage() {
     );
   }
 
-  // Ensure order exists before rendering
   if (!order) {
     return null;
   }

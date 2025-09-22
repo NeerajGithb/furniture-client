@@ -11,7 +11,7 @@ const NewsletterSignup = () => {
     e.preventDefault();
     if (email) {
       setIsSubmitted(true);
-      // Reset after 3 seconds
+
       setTimeout(() => {
         setIsSubmitted(false);
         setEmail('');

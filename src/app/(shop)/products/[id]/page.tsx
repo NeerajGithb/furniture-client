@@ -21,7 +21,6 @@ const SingleProductPage = () => {
   const router = useRouter();
   const { user } = useCurrentUser();
 
-  // Store hooks
   const { isInCart, addToCart, getCartItem, updatingItems: cartUpdatingItems } = useCartStore();
   const {
     isWishlisted,
@@ -31,7 +30,6 @@ const SingleProductPage = () => {
   } = useWishlistStore();
   const { setCheckoutData } = useCheckoutStore();
 
-  // Product store
   const {
     product,
     relatedProducts,
@@ -50,17 +48,14 @@ const SingleProductPage = () => {
   const slugWithId = params?.id as string | undefined;
   const productId = slugWithId?.split('-').slice(-1)[0];
 
-  // Track fetch attempts to distinguish between loading and not found
   const [hasFetched, setHasFetched] = useState(false);
   const [fetchAttempted, setFetchAttempted] = useState(false);
 
-  // Local states for actions
   const [buyingNow, setBuyingNow] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [addingToWishlist, setAddingToWishlist] = useState(false);
   const [removingFromWishlist, setRemovingFromWishlist] = useState(false);
 
-  // Desktop carousel states
   const [isDesktop, setIsDesktop] = useState(false);
   const [relatedIndex, setRelatedIndex] = useState(0);
   const [allProductsIndex, setAllProductsIndex] = useState(0);
@@ -73,19 +68,19 @@ const SingleProductPage = () => {
       setIsDesktop(width >= 768);
 
       if (width >= 1536) {
-        setItemsPerView(6); // 2xl
+        setItemsPerView(6);
       } else if (width >= 1280) {
-        setItemsPerView(5); // xl
+        setItemsPerView(5);
       } else if (width >= 1024) {
-        setItemsPerView(4); // lg
+        setItemsPerView(4);
       } else if (width >= 768) {
-        setItemsPerView(3); // md
+        setItemsPerView(3);
       } else {
-        setItemsPerView(2); // fallback
+        setItemsPerView(2);
       }
     };
 
-    handleResize(); // Apply immediately on mount
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => window.removeEventListener('resize', handleResize);
@@ -322,7 +317,6 @@ const SingleProductPage = () => {
     );
   };
 
-  // Calculate derived state - only if product exists
   const isOutOfStock = product
     ? product.inStockQuantity !== undefined && product.inStockQuantity <= 0
     : false;
@@ -335,7 +329,6 @@ const SingleProductPage = () => {
     ? wishlistUpdatingItems.has(product._id) || addingToWishlist || removingFromWishlist
     : false;
 
-  // Show loading only if we're currently fetching and haven't fetched yet
   if (loading && !hasFetched) {
     return (
       <div className="min-h-screen bg-white">
@@ -378,7 +371,6 @@ const SingleProductPage = () => {
     );
   }
 
-  // Show error only if there's an error and we've attempted to fetch
   if (error && hasFetched) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -401,7 +393,6 @@ const SingleProductPage = () => {
     );
   }
 
-  // Show not found only if we've fetched but no product exists and no error
   if (hasFetched && !product && !loading && !error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -424,7 +415,6 @@ const SingleProductPage = () => {
     );
   }
 
-  // Don't render the main content until we have a product
   if (!product) {
     return <div className="min-h-screen bg-white"></div>;
   }

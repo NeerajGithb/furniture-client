@@ -1,4 +1,3 @@
-// stores/reviewStore.ts - Production-ready version with universal voting capability
 import { handleApiResponse } from '@/utils/fetchWithCredentials';
 import { create } from 'zustand';
 
@@ -37,7 +36,6 @@ export interface ReviewFormData {
 }
 
 export interface ReviewStore {
-  // State
   reviews: Review[];
   loading: boolean;
   submitting: boolean;
@@ -54,7 +52,6 @@ export interface ReviewStore {
   userHasReviewed: boolean;
   currentUserId: string | null;
 
-  // Actions
   setLoading: (loading: boolean) => void;
   setSubmitting: (submitting: boolean) => void;
   setUploading: (uploading: boolean) => void;
@@ -67,7 +64,6 @@ export interface ReviewStore {
   setFilter: (filter: string) => void;
   setCurrentUserId: (userId: string | null) => void;
 
-  // API Actions
   fetchReviews: (productId: string, pageNum?: number, reset?: boolean) => Promise<void>;
   submitReview: (productId: string, userId: string) => Promise<any>;
   uploadImages: (files: FileList | File[]) => Promise<{ url: string; publicId: string }[]>;
@@ -96,7 +92,6 @@ const defaultFormData: ReviewFormData = {
   images: [],
 };
 
-// Helper function to safely parse error responses
 const parseErrorResponse = async (response: Response): Promise<string> => {
   try {
     const contentType = response.headers.get('content-type');
@@ -113,14 +108,12 @@ const parseErrorResponse = async (response: Response): Promise<string> => {
   }
 };
 
-// Helper function to safely parse JSON responses
 const safeJsonParse = async (response: Response) => {
   try {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       return await handleApiResponse(response);
     } else {
-      // If no JSON content, return a default success response
       return { message: 'Operation completed successfully' };
     }
   } catch (parseError) {
@@ -129,7 +122,6 @@ const safeJsonParse = async (response: Response) => {
   }
 };
 
-// Helper function to calculate new average rating
 const calculateAverageRating = (breakdown: { [key: number]: number }): number => {
   const total = Object.values(breakdown).reduce((sum, count) => sum + count, 0);
   if (total === 0) return 0;
@@ -142,7 +134,6 @@ const calculateAverageRating = (breakdown: { [key: number]: number }): number =>
 };
 
 const useReviewStore = create<ReviewStore>((set, get) => ({
-  // State
   reviews: [],
   loading: false,
   submitting: false,
@@ -159,7 +150,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
   userHasReviewed: false,
   currentUserId: null,
 
-  // Actions
   setLoading: (loading) => set({ loading }),
   setSubmitting: (submitting) => set({ submitting }),
   setUploading: (uploading) => set({ uploading }),
@@ -172,10 +162,9 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
   setFilter: (filter) => set({ currentFilter: filter, currentPage: 1 }),
   setCurrentUserId: (userId) => set({ currentUserId: userId }),
 
-  // Helper methods - FIXED: Now allows all logged-in users to vote on any review
   canUserVote: (review: Review) => {
     const { currentUserId } = get();
-    // Allow any logged-in user to vote on any review (including their own)
+
     return !!currentUserId;
   },
 
@@ -277,7 +266,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
 
       const data = await safeJsonParse(response);
 
-      // Immediately update local state with optimistic UI update
       if (data.review) {
         const newBreakdown = { ...get().stats.breakdown };
         newBreakdown[data.review.rating] = (newBreakdown[data.review.rating] || 0) + 1;
@@ -299,7 +287,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
 
       get().resetForm();
 
-      // Refresh to get accurate server stats (don't throw on failure)
       try {
         await get().fetchReviews(productId, 1, true);
       } catch (refreshError) {
@@ -326,7 +313,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
       const uploadPromises = Array.from(files).map(
         (file) =>
           new Promise<{ url: string; publicId: string }>((resolve, reject) => {
-            // Validate file type
             const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!validTypes.includes(file.type)) {
               reject(
@@ -335,7 +321,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
               return;
             }
 
-            // Validate file size (5MB max)
             const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
               reject(
@@ -419,24 +404,20 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
   voteHelpful: async (reviewId, isHelpful = true) => {
     const { currentUserId, reviews } = get();
 
-    // Check if user is logged in
     if (!currentUserId) {
       throw new Error('Please log in to vote on reviews');
     }
 
-    // Find the review
     const review = reviews.find((r) => r._id === reviewId);
     if (!review) {
       throw new Error('Review not found');
     }
 
-    // Store original values for potential rollback
     const originalHelpfulVotes = review.helpfulVotes || 0;
     const originalUnhelpfulVotes = review.unhelpfulVotes || 0;
     const originalUserVote = review.userVote;
 
     try {
-      // Optimistically update UI first
       const action = isHelpful ? 'helpful' : 'unhelpful';
       const currentVote = review.userVote;
 
@@ -444,9 +425,7 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
       let newUnhelpfulVotes = originalUnhelpfulVotes;
       let newUserVote: 'helpful' | 'unhelpful' | null = action;
 
-      // Calculate new vote counts based on current state
       if (currentVote === action) {
-        // User is removing their vote (toggle off)
         if (action === 'helpful') {
           newHelpfulVotes = Math.max(0, newHelpfulVotes - 1);
         } else {
@@ -454,7 +433,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         }
         newUserVote = null;
       } else if (currentVote && currentVote !== action) {
-        // User is changing their vote
         if (currentVote === 'helpful') {
           newHelpfulVotes = Math.max(0, newHelpfulVotes - 1);
           newUnhelpfulVotes = newUnhelpfulVotes + 1;
@@ -463,7 +441,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
           newHelpfulVotes = newHelpfulVotes + 1;
         }
       } else {
-        // User is adding a new vote
         if (action === 'helpful') {
           newHelpfulVotes = newHelpfulVotes + 1;
         } else {
@@ -471,7 +448,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         }
       }
 
-      // Update UI immediately (optimistic update)
       set((state) => ({
         reviews: state.reviews.map((r) =>
           r._id === reviewId
@@ -485,7 +461,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         ),
       }));
 
-      // Make API call
       const response = await fetch('/api/reviews/vote', {
         method: 'POST',
         headers: {
@@ -500,7 +475,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
       });
 
       if (!response.ok) {
-        // Revert optimistic update on error
         set((state) => ({
           reviews: state.reviews.map((r) =>
             r._id === reviewId
@@ -518,10 +492,8 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         throw new Error(errorMessage);
       }
 
-      // Parse response and sync with server data if available
       const data = await safeJsonParse(response);
 
-      // Update with server response to ensure consistency (if server returns updated counts)
       if (
         data &&
         (typeof data.helpfulVotes === 'number' || typeof data.unhelpfulVotes === 'number')
@@ -546,7 +518,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
     } catch (error) {
       console.error('Vote error:', error);
 
-      // Ensure UI is reverted on any error
       set((state) => ({
         reviews: state.reviews.map((r) =>
           r._id === reviewId
@@ -597,10 +568,8 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         throw new Error(errorMessage);
       }
 
-      // Try to parse response, but don't fail if it's empty
       await safeJsonParse(response);
 
-      // Immediately update local state with optimistic update
       const newBreakdown = { ...get().stats.breakdown };
       newBreakdown[review.rating] = Math.max(0, (newBreakdown[review.rating] || 0) - 1);
 
@@ -617,7 +586,6 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
         stats: newStats,
       }));
 
-      // Refresh reviews to get updated stats from server (don't throw on failure)
       try {
         await get().fetchReviews(review.productId, 1, true);
       } catch (refreshError) {
@@ -668,7 +636,7 @@ const useReviewStore = create<ReviewStore>((set, get) => ({
       await get().fetchReviews(productId, 1, true);
     } catch (error) {
       console.error('Apply filter error:', error);
-      // Reset filter on error to prevent broken state
+
       set({ currentFilter: 'all' });
       throw error;
     }

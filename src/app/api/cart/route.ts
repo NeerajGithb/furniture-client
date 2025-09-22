@@ -1,11 +1,9 @@
-// app/api/cart/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Cart from '@/models/Cart';
 import Product from '@/models/product';
 import { connectDB } from '@/lib/dbConnect';
 
-// GET - Fetch user's cart
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     await connectDB();
@@ -19,7 +17,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       cart = await Cart.create({ userId: user.userId, items: [] });
     }
 
-    // Calculate totals and prepare response
     let subtotal = 0;
     const validItems = [];
 
@@ -50,7 +47,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       }
     }
 
-    // Remove invalid items (products that no longer exist)
     if (validItems.length !== cart.items.length) {
       cart.items = cart.items.filter((item: any) => item.productId);
       await cart.save();
@@ -62,7 +58,7 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       itemCount: validItems.length,
       totalQuantity: validItems.reduce((sum, item) => sum + item.quantity, 0),
       subtotal,
-      estimatedTotal: subtotal, // Can add shipping, tax later
+      estimatedTotal: subtotal,
       updatedAt: cart.updatedAt,
     };
 
@@ -73,7 +69,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// POST - Add item to cart
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -89,7 +84,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Verify product exists and is in stock
     const product = await Product.findById(productId);
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -99,19 +93,16 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Insufficient stock' }, { status: 400 });
     }
 
-    // Find or create cart
     let cart = await Cart.findOne({ userId: user.userId });
     if (!cart) {
       cart = new Cart({ userId: user.userId, items: [] });
     }
 
-    // Check if item already exists in cart
     const existingItemIndex = cart.items.findIndex(
       (item: any) => item.productId.toString() === productId,
     );
 
     if (existingItemIndex >= 0) {
-      // Update quantity
       const newQuantity = cart.items[existingItemIndex].quantity + quantity;
 
       if (product.inStockQuantity !== undefined && product.inStockQuantity < newQuantity) {
@@ -123,7 +114,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
       cart.items[existingItemIndex].quantity = newQuantity;
     } else {
-      // Add new item
       cart.items.push({
         productId,
         quantity,
@@ -147,7 +137,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   }
 });
 
-// PATCH - Update cart item quantity
 export const PATCH = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -169,10 +158,8 @@ export const PATCH = withAuth(async (request: NextRequest, user: AuthenticatedUs
     }
 
     if (quantity === 0) {
-      // Remove item
       cart.items = cart.items.filter((item: any) => item.productId.toString() !== productId);
     } else {
-      // Verify stock
       const product = await Product.findById(productId);
       if (!product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -182,7 +169,6 @@ export const PATCH = withAuth(async (request: NextRequest, user: AuthenticatedUs
         return NextResponse.json({ error: 'Insufficient stock' }, { status: 400 });
       }
 
-      // Update quantity
       const itemIndex = cart.items.findIndex(
         (item: any) => item.productId.toString() === productId,
       );
@@ -209,7 +195,6 @@ export const PATCH = withAuth(async (request: NextRequest, user: AuthenticatedUs
   }
 });
 
-// DELETE - Remove item from cart or clear cart
 export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -224,10 +209,8 @@ export const DELETE = withAuth(async (request: NextRequest, user: AuthenticatedU
     }
 
     if (clearAll) {
-      // Clear entire cart
       cart.items = [];
     } else if (productId) {
-      // Remove specific item
       const initialLength = cart.items.length;
       cart.items = cart.items.filter((item: any) => item.productId.toString() !== productId);
 

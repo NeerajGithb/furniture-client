@@ -1,10 +1,8 @@
-// app/api/cart/check/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import { connectDB } from '@/lib/dbConnect';
 import Cart from '@/models/Cart';
 
-// POST - Check if products are in cart
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -23,7 +21,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       });
     }
 
-    // Return only the productIds that are in the cart
     const cartProducts = productIds.filter((productId) =>
       cart.items.some((item: any) => item.productId.toString() === productId),
     );

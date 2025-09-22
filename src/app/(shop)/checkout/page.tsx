@@ -25,15 +25,14 @@ import {
   Info,
   Star,
 } from 'lucide-react';
+import Loading from '@/components/ui/Loader';
 
-// Validation patterns - moved outside component to prevent recreation
 const VALIDATION_PATTERNS = {
   phone: /^[6-9]\d{9}$/,
   postalCode: /^[1-9][0-9]{5}$/,
   name: /^[a-zA-Z\s]{2,50}$/,
 } as const;
 
-// Validation messages - moved outside component
 const VALIDATION_MESSAGES = {
   fullName: {
     required: 'Full name is required',
@@ -61,7 +60,6 @@ const VALIDATION_MESSAGES = {
   },
 } as const;
 
-// Validation function outside component
 const validateField = (fieldName: string, value: string): string => {
   const trimmedValue = value.trim();
 
@@ -103,7 +101,6 @@ const validateField = (fieldName: string, value: string): string => {
   return '';
 };
 
-// Separate InputField component to prevent re-renders
 interface InputFieldProps {
   label: string;
   name: string;
@@ -169,7 +166,6 @@ const InputField = memo<InputFieldProps>(
 
 InputField.displayName = 'InputField';
 
-// Separate AddressCard component for the address list
 interface AddressCardProps {
   address: any;
   isSelected: boolean;
@@ -245,7 +241,6 @@ const CheckoutPage = () => {
   const priceCardRef = useRef(null);
   const [showFixedCheckout, setShowFixedCheckout] = useState(false);
 
-  // Checkout store
   const checkoutStore = useCheckoutStore();
   const getCheckoutData = useCallback(() => checkoutStore.getCheckoutData(), [checkoutStore]);
   const hasValidCheckout = useCallback(() => checkoutStore.hasValidCheckout(), [checkoutStore]);
@@ -263,7 +258,6 @@ const CheckoutPage = () => {
     [checkoutStore],
   );
 
-  // Address store
   const addressStore = useAddressStore();
   const addresses = addressStore.addresses;
   const addressLoading = addressStore.loading;
@@ -292,13 +286,11 @@ const CheckoutPage = () => {
   );
   const isValidForm = useCallback(() => addressStore.isValidForm(), [addressStore]);
 
-  // Local state
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const [showAllAddresses, setShowAllAddresses] = useState(false);
 
-  // Memoize computed values
   const checkoutData = useMemo(() => getCheckoutData(), [getCheckoutData]);
   const selectedItems = useMemo(() => getSelectedItems(), [getSelectedItems]);
   const selectedAddress = useMemo(
@@ -310,21 +302,18 @@ const CheckoutPage = () => {
     [addresses],
   );
 
-  // Initialize addresses when component mounts
   useEffect(() => {
     if (user?._id && !addressInitialized) {
       initializeAddresses();
     }
   }, [user?._id, addressInitialized, initializeAddresses]);
 
-  // Auto-select default address if none selected
   useEffect(() => {
     if (checkoutData && !checkoutData.selectedAddressId && defaultAddress) {
       updateSelectedAddress(defaultAddress._id);
     }
   }, [checkoutData, defaultAddress, updateSelectedAddress]);
 
-  // Intersection Observer for checkout button visibility
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -347,7 +336,6 @@ const CheckoutPage = () => {
     };
   }, [checkoutData]);
 
-  // Stable field change handler
   const handleFieldChange = useCallback(
     (fieldName: string, value: string) => {
       updateAddressForm({ [fieldName]: value });
@@ -363,7 +351,6 @@ const CheckoutPage = () => {
     [updateAddressForm],
   );
 
-  // Create stable handlers
   const fieldHandlers = useMemo(
     () => ({
       fullName: (value: string) => handleFieldChange('fullName', value),
@@ -377,7 +364,6 @@ const CheckoutPage = () => {
     [handleFieldChange, updateAddressForm],
   );
 
-  // Form submission handler
   const handleAddressSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -439,7 +425,6 @@ const CheckoutPage = () => {
     [addressForm, editingAddressId, updateAddress, addAddress, addresses, updateSelectedAddress],
   );
 
-  // Event handlers
   const handleProceedToPayment = useCallback(() => {
     if (!canProceedToPayment()) {
       if (!checkoutData?.selectedAddressId) {
@@ -510,7 +495,6 @@ const CheckoutPage = () => {
     [toggleInsurance],
   );
 
-  // Authentication check
   if (!user?._id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -528,19 +512,10 @@ const CheckoutPage = () => {
     );
   }
 
-  // Show loading if no checkout data
   if (!checkoutData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <p className="text-gray-600 text-sm">Loading checkout...</p>
-        </div>
-      </div>
-    );
+    return <Loading size="lg" />;
   }
 
-  // Show error if no items selected
   if (!selectedItems.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

@@ -1,4 +1,3 @@
-// app/api/saveDefaultInspirations/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -11,7 +10,6 @@ export async function POST(req: NextRequest) {
     const publicFolder = path.join(process.cwd(), 'public');
     const filePath = path.join(publicFolder, 'inspirations.json');
 
-    // Ensure /public exists
     await fs.mkdir(publicFolder, { recursive: true });
 
     let shouldSave = false;
@@ -23,7 +21,6 @@ export async function POST(req: NextRequest) {
         shouldSave = true;
       }
     } catch {
-      // File doesn't exist or invalid JSON → save new
       shouldSave = true;
     }
 

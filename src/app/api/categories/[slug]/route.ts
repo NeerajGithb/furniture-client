@@ -1,4 +1,3 @@
-// /api/categories/[slug]/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import Category from '@/models/category';
@@ -19,7 +18,6 @@ async function fetchCategoryWithRetry(
     try {
       await connectDB();
 
-      // Find category by slug
       const category = await Category.findOne({ slug }).lean();
 
       if (!category) {
@@ -29,13 +27,12 @@ async function fetchCategoryWithRetry(
         };
       }
 
-      // Fetch products belonging to this category
       const products = await Product.find({
         categoryId: (category as { _id: unknown })._id,
         isPublished: true,
       })
         .select('name slug finalPrice mainImage inStockQuantity')
-        .limit(20) // Limit for performance
+        .limit(20)
         .lean();
 
       return {
@@ -106,7 +103,6 @@ export async function GET(request: Request, { params }: { params: { slug: string
         { status: 404 },
       );
     } else {
-      // Return fallback data for other errors
       return NextResponse.json(
         {
           success: false,

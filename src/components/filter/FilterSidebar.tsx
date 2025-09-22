@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, X, SlidersHorizontal } from 'lucide-react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useProductStore } from '@/stores/productStore';
-
 interface Category {
   _id: string;
   name: string;
@@ -25,6 +32,9 @@ interface Filters {
     minPrice: number;
     maxPrice: number;
   };
+}
+interface DualRangeSliderRef {
+  resetToDefault: () => void;
 }
 
 interface FilterSidebarProps {
@@ -75,23 +85,26 @@ const FilterSection = ({
   </div>
 );
 
-const DualRangeSlider = ({
-  min,
-  max,
-  value,
-  onChange,
-  step = 1,
-}: {
-  min: number;
-  max: number;
-  value: [number, number];
-  onChange: (value: [number, number]) => void;
-  step?: number;
-}) => {
+const DualRangeSlider = forwardRef<
+  DualRangeSliderRef,
+  {
+    min: number;
+    max: number;
+    value: [number, number];
+    onChange: (value: [number, number]) => void;
+    step?: number;
+  }
+>(({ min, max, value, onChange, step = 1 }, ref) => {
   const [localValue, setLocalValue] = useState<[number, number]>(value);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Apply changes when user stops dragging
+  useImperativeHandle(ref, () => ({
+    resetToDefault: () => {
+      setLocalValue([min, max]);
+      onChange([min, max]);
+    },
+  }));
+
   const applyChanges = useCallback(() => {
     onChange(localValue);
     setIsDragging(false);
@@ -113,7 +126,6 @@ const DualRangeSlider = ({
     [max, localValue, step],
   );
 
-  // Mouse events
   const handleMouseDown = useCallback(() => {
     setIsDragging(true);
   }, []);
@@ -124,7 +136,6 @@ const DualRangeSlider = ({
     }
   }, [applyChanges, isDragging]);
 
-  // Touch events
   const handleTouchStart = useCallback(() => {
     setIsDragging(true);
   }, []);
@@ -250,12 +261,15 @@ const DualRangeSlider = ({
       </div>
     </div>
   );
-};
+});
+DualRangeSlider.displayName = 'DualRangeSlider';
+
 const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProps) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const sliderRef = useRef<DualRangeSliderRef | null>(null);
 
   const currentSlug = pathname.slice(1);
 
@@ -452,14 +466,11 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
     return safeFilters.categories.find((cat) => cat.slug === urlParams.selectedCategory);
   }, [safeFilters.categories, urlParams.selectedCategory]);
 
-  // Fix: Improved subcategory filtering logic
   const availableSubcategories = useMemo(() => {
-    // If no category is selected, return empty array
     if (!urlParams.selectedCategory) {
       return [];
     }
 
-    // Find the selected category
     const currentCategory = safeFilters.categories.find(
       (cat) => cat.slug === urlParams.selectedCategory,
     );
@@ -468,7 +479,6 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       return [];
     }
 
-    // Filter subcategories that belong to the selected category
     return safeFilters.subcategories.filter((sub) => {
       const categoryId = typeof sub.categoryId === 'object' ? sub.categoryId._id : sub.categoryId;
       return categoryId === currentCategory._id;
@@ -490,7 +500,6 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       if (!subcategorySlug) {
         return;
       } else {
-        // If subcategory is selected
         router.push(`/${subcategorySlug}`);
       }
     },
@@ -502,7 +511,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       updateFilters({
         material: material || null,
       });
-      // Close mobile sidebar when filter is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
@@ -521,7 +530,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
         minPrice: shouldUpdateMin ? validMin.toString() : null,
         maxPrice: shouldUpdateMax ? validMax.toString() : null,
       });
-      // Close mobile sidebar when price filter is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 500);
       }
@@ -534,7 +543,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       updateFilters({
         [key]: value ? 'true' : null,
       });
-      // Close mobile sidebar when checkbox filter is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
@@ -547,7 +556,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       updateFilters({
         sort: value === 'newest' ? null : value,
       });
-      // Close mobile sidebar when sort is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
@@ -569,7 +578,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
           maxPrice: max !== DEFAULT_MAX_PRICE ? max.toString() : null,
         });
       }
-      // Close mobile sidebar when quick price filter is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
@@ -582,7 +591,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
       updateFilters({
         discount: discount || null,
       });
-      // Close mobile sidebar when discount filter is applied
+
       if (isMobile && onClose) {
         setTimeout(() => onClose(), 150);
       }
@@ -592,19 +601,44 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
 
   const clearAllFilters = useCallback(() => {
     try {
-      router.push(`/${currentSlug || 'products'}`);
+      sliderRef.current?.resetToDefault();
+
+      const params = new URLSearchParams(searchParams.toString());
+
+      const filterParamsToRemove = [
+        'material',
+        'minPrice',
+        'maxPrice',
+        'inStock',
+        'onSale',
+        'sort',
+        'discount',
+        'page',
+        'limit',
+        'category',
+        'subcategory',
+      ];
+
+      filterParamsToRemove.forEach((param) => {
+        params.delete(param);
+      });
+
+      const queryString = params.toString();
+      const newUrl = `${pathname}${queryString ? `?${queryString}` : ''}`;
+
+      router.push(newUrl);
       onClose?.();
     } catch (error) {
       console.error('Error clearing filters:', error);
     }
-  }, [router, currentSlug, onClose]);
+  }, [router, searchParams, pathname, onClose]);
 
   const hasActiveFilters = useMemo(() => {
     return !!(
       (urlParams.selectedSubcategory && slugAnalysis.type === 'category') ||
       urlParams.selectedMaterial ||
       urlParams.minPrice ||
-      urlParams.maxPrice || // Treat as single filter
+      urlParams.maxPrice ||
       urlParams.inStockOnly ||
       urlParams.onSaleOnly ||
       urlParams.discountRange ||
@@ -646,7 +680,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
     const filters = [
       urlParams.selectedSubcategory && slugAnalysis.type === 'category',
       urlParams.selectedMaterial,
-      urlParams.minPrice || urlParams.maxPrice, // Single price filter
+      urlParams.minPrice || urlParams.maxPrice,
       urlParams.inStockOnly,
       urlParams.onSaleOnly,
       urlParams.discountRange,
@@ -720,6 +754,7 @@ const FilterSidebar = ({ filters, isMobile = false, onClose }: FilterSidebarProp
         >
           <div className="py-2">
             <DualRangeSlider
+              ref={sliderRef}
               min={DEFAULT_MIN_PRICE}
               max={DEFAULT_MAX_PRICE}
               value={

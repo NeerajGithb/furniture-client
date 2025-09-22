@@ -3,7 +3,6 @@ import { ICategory } from '@/models/category';
 import Inspiration, { IInspiration } from '@/models/Inspiration';
 import { NextResponse } from 'next/server';
 
-// After populate, categories should ALWAYS be ICategory[]
 type PopulatedInspiration = Omit<IInspiration, 'categories'> & {
   categories: ICategory[];
 };
@@ -30,7 +29,6 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
       return NextResponse.json({ error: 'Inspiration not found' }, { status: 404 });
     }
 
-    // ✅ Now categories is guaranteed to be ICategory[]
     const transformed: PopulatedInspiration & { imageUrl: string } = {
       ...inspiration,
       categories: inspiration.categories ?? [],

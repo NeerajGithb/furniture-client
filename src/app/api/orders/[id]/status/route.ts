@@ -1,4 +1,3 @@
-// app/api/orders/[id]/status/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -11,7 +10,6 @@ interface RouteParams {
   };
 }
 
-// PUT - Update order status
 export const PUT = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
@@ -42,7 +40,6 @@ export const PUT = withAuth(
 
       await connectDB();
 
-      // Find the order
       const order = await Order.findOne({
         _id: id,
         userId: user.userId,
@@ -52,13 +49,11 @@ export const PUT = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Update order status
       order.orderStatus = status;
 
-      // Handle special status updates
       if (status === 'delivered') {
         order.deliveredAt = new Date();
-        // If COD, mark payment as paid
+
         if (order.paymentMethod === 'cod') {
           order.paymentStatus = 'paid';
         }
@@ -66,7 +61,6 @@ export const PUT = withAuth(
 
       await order.save();
 
-      // Update payment record if needed
       if (status === 'delivered' && order.paymentMethod === 'cod') {
         const payment = await Payment.findOne({ orderId: order._id });
         if (payment) {
@@ -75,7 +69,6 @@ export const PUT = withAuth(
         }
       }
 
-      // Return updated order data
       const updatedOrder = await Order.findById(id).populate({
         path: 'items.productId',
         select: 'name mainImage',

@@ -1,4 +1,3 @@
-// app/api/reviews/[reviewId]/route.ts - Fixed version
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Review from '@/models/Review';
@@ -7,7 +6,6 @@ import UserVote from '@/models/UserVote';
 import { connectDB } from '@/lib/dbConnect';
 import { Types } from 'mongoose';
 
-// DELETE - Delete user's own review (auth required)
 export const DELETE = withAuth(
   async (
     request: NextRequest,
@@ -32,7 +30,6 @@ export const DELETE = withAuth(
         return NextResponse.json({ error: 'Review not found' }, { status: 404 });
       }
 
-      // Check if user owns this review
       if (review.userId.toString() !== user.userId) {
         return NextResponse.json(
           { error: 'You can only delete your own reviews' },
@@ -42,13 +39,10 @@ export const DELETE = withAuth(
 
       const productId = review.productId.toString();
 
-      // Delete associated user votes for this review
       await UserVote.deleteMany({ reviewId: new Types.ObjectId(reviewId) });
 
-      // Delete the review
       await Review.findByIdAndDelete(reviewId);
 
-      // Update product rating (async - don't await to avoid blocking response)
       updateProductRating(productId).catch((error) => {
         console.error('Error updating product rating after delete:', error);
       });
@@ -66,7 +60,6 @@ export const DELETE = withAuth(
   },
 );
 
-// Helper function to update product rating asynchronously
 async function updateProductRating(productId: string) {
   try {
     await connectDB();

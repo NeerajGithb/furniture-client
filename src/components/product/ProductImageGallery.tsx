@@ -15,7 +15,7 @@ interface ProductImageGalleryProps {
 
 const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [actualIndex, setActualIndex] = useState(1); // Start at 1 (first real image)
+  const [actualIndex, setActualIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 });
   const [isZooming, setIsZooming] = useState(false);
@@ -31,7 +31,6 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
     const timer = setTimeout(() => {
       setIsTransitioning(false);
 
-      // Handle infinite scroll wrapping
       if (actualIndex === 0) {
         setActualIndex(images.length);
       } else if (actualIndex === images.length + 1) {
@@ -70,7 +69,6 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
     const newActualIndex = actualIndex - 1;
     setActualIndex(newActualIndex);
 
-    // Update the selected index for thumbnails
     const newSelectedIndex = selectedImageIndex === 0 ? images.length - 1 : selectedImageIndex - 1;
     setSelectedImageIndex(newSelectedIndex);
   };
@@ -82,7 +80,6 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
     const newActualIndex = actualIndex + 1;
     setActualIndex(newActualIndex);
 
-    // Update the selected index for thumbnails
     const newSelectedIndex = (selectedImageIndex + 1) % images.length;
     setSelectedImageIndex(newSelectedIndex);
   };
@@ -130,11 +127,11 @@ const ProductImageGallery = ({ images, productName }: ProductImageGalleryProps) 
             <div
               className="border border-gray-300 shadow-2xl bg-white transition-all duration-300 ease-out"
               style={{
-                width: '700px', // fixed width
-                height: '700px', // fixed height
-                position: 'fixed', // fixed relative to viewport
-                top: '60px', // distance from top
-                right: '5vw', // distance from right
+                width: '700px',
+                height: '700px',
+                position: 'fixed',
+                top: '60px',
+                right: '5vw',
                 backgroundImage: `url(${currentImage.url})`,
                 backgroundSize: '170% 170%',
                 backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%`,

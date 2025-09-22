@@ -1,10 +1,8 @@
-// app/api/user/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import User from '@/models/User';
 import { connectDB } from '@/lib/dbConnect';
 
-// GET - Fetch user profile
 export const GET = withAuth(async (req: NextRequest, user: AuthenticatedUser) => {
   try {
     await connectDB();
@@ -30,7 +28,6 @@ export const GET = withAuth(async (req: NextRequest, user: AuthenticatedUser) =>
   }
 });
 
-// PATCH - Update user profile
 export const PATCH = withAuth(async (req: NextRequest, user: AuthenticatedUser) => {
   try {
     const { name, phone, photoURL } = await req.json();

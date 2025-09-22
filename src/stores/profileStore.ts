@@ -1,4 +1,3 @@
-// stores/profileStore.ts
 import { create } from 'zustand';
 import { fetchWithCredentials, handleApiResponse } from '@/utils/fetchWithCredentials';
 import toast from 'react-hot-toast';
@@ -18,14 +17,12 @@ export interface ProfileFormData {
 }
 
 interface ProfileState {
-  // State
   user: User | null;
   loading: boolean;
   editing: boolean;
   uploadingImage: boolean;
   form: ProfileFormData;
 
-  // Actions
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   setEditing: (editing: boolean) => void;
@@ -33,7 +30,6 @@ interface ProfileState {
   updateForm: (form: Partial<ProfileFormData>) => void;
   resetForm: () => void;
 
-  // API Actions
   initializeProfile: () => Promise<boolean>;
   initializeForm: (user: User) => void;
   cancelEdit: () => void;
@@ -42,14 +38,12 @@ interface ProfileState {
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
-  // Initial state
   user: null,
   loading: false,
   editing: false,
   uploadingImage: false,
   form: { name: '', phone: '' },
 
-  // Basic setters
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
   setEditing: (editing) => set({ editing }),
@@ -88,7 +82,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     });
   },
 
-  // ✅ New Initialization action
   initializeProfile: async () => {
     set({ loading: true });
 
@@ -120,7 +113,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     }
   },
 
-  // ✅ Profile Update action
   updateProfile: async () => {
     const { form, user } = get();
     if (!user) {
@@ -154,7 +146,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     }
   },
 
-  // ✅ Profile Image Upload action
   uploadProfileImage: async (file: File) => {
     const { user } = get();
     if (!user) {

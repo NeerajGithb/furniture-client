@@ -1,13 +1,11 @@
-// pages/api/products/showcase/[categoryId].ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
-import ProductModel from '@/models/product'; // ✅ Explicit import of Category
+import ProductModel from '@/models/product';
 import { Product } from '@/types/Product';
 import Inspiration, { IInspiration } from '@/models/Inspiration';
 import category from '@/models/category';
-void category; // To ensure the model is registered
+void category;
 
-// Fetch an inspiration slug associated with the category
 async function getInspirationSlugByCategory(categoryId: string) {
   const inspiration = await Inspiration.findOne({
     categories: categoryId,
@@ -43,7 +41,7 @@ export async function GET(request: NextRequest, context: { params: { id: string 
       isPublished: { $ne: false },
       inStockQuantity: { $gt: 0 },
     })
-      .populate('categoryId', 'name slug') // ✅ Safe now
+      .populate('categoryId', 'name slug')
       .populate('subCategoryId', 'name slug')
       .sort({ createdAt: -1 })
       .lean()
@@ -88,7 +86,6 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   }
 }
 
-// Properly typed diversity selection
 function selectDiverseProducts(products: Product[], maxCount = 50): Product[] {
   if (products.length <= maxCount) return products;
 

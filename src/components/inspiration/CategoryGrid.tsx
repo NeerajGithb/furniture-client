@@ -27,7 +27,6 @@ const categoryImages: Record<string, string> = {
   default: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop',
 };
 
-// Default card size for desktop
 const CARD_WIDTH = 'w-[220px] md:w-[220px]';
 const CARD_HEIGHT = 'h-[260px] md:h-[260px]';
 
@@ -151,6 +150,8 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
                           alt={category.mainImage?.alt || `${category.name} category`}
                           fill
                           className="object-cover grayscale-[1%] contrast-110 transition-transform duration-500 group-hover:scale-105"
+                          sizes="(max-width: 640px) 160px, (max-width: 768px) 180px, 200px"
+                          loading="lazy"
                         />
                       </div>
                       <div className="flex-1 flex items-center justify-center mt-2">
@@ -188,6 +189,8 @@ const CategoryGrid = ({ inspiration, loading }: CategoryGridProps) => {
                       alt={category.mainImage?.alt || `${category.name} category`}
                       fill
                       className="object-cover grayscale-[1%] contrast-110 transition-transform duration-500 group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      loading="lazy"
                     />
                   </div>
                   <div className="flex-1 flex items-center justify-center mt-2">

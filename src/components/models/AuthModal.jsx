@@ -34,10 +34,8 @@ export default function AuthModal({ isOpen, onClose }) {
   const [passError, setPassError] = useState(null);
   const [isOAuth, setIsOAuth] = useState(false);
 
-  // Smooth, natural easing
-  const smoothEasing = [0.4, 0, 0.2, 1]; // Natural cubic-bezier
+  const smoothEasing = [0.4, 0, 0.2, 1];
 
-  // Modal variants with smooth horizontal sliding
   const modalVariants = {
     hidden: {
       x: '100%',
@@ -45,20 +43,19 @@ export default function AuthModal({ isOpen, onClose }) {
     visible: {
       x: 0,
       transition: {
-        duration: 0.4, // Smooth entrance
+        duration: 0.4,
         ease: smoothEasing,
       },
     },
     exit: {
       x: '100%',
       transition: {
-        duration: 0.3, // Smooth exit
+        duration: 0.3,
         ease: smoothEasing,
       },
     },
   };
 
-  // Form slide transitions
   const slideVariants = {
     enter: (direction) => ({
       x: direction > 0 ? '100%' : '-100%',
@@ -69,7 +66,7 @@ export default function AuthModal({ isOpen, onClose }) {
       opacity: 1,
       transition: {
         x: {
-          duration: 0.4, // Smooth slide
+          duration: 0.4,
           ease: smoothEasing,
         },
         opacity: {
@@ -88,7 +85,6 @@ export default function AuthModal({ isOpen, onClose }) {
     }),
   };
 
-  // Step transitions for forgot password flow
   const stepVariants = {
     enter: {
       x: '20%',
@@ -1141,10 +1137,11 @@ export default function AuthModal({ isOpen, onClose }) {
               >
                 <Image
                   src="/offer.jpeg"
-                  alt="Authentication visual"
+                  alt="Offer Poster"
                   fill
                   className="object-cover"
                   priority
+                  sizes="45vw"
                 />
                 <div className="absolute inset-0 bg-black/5" />
               </motion.div>

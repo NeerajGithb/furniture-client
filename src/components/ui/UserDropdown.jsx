@@ -29,7 +29,6 @@ const Avatar = ({ src, alt, fallbackText }) => {
     setMounted(true);
   }, []);
 
-  // Don't render image until mounted to avoid hydration mismatch
   if (!mounted || !src || imageError) {
     return (
       <motion.div
@@ -73,7 +72,6 @@ export default function UserDropdown({ isOpen, onClose }) {
   const pathname = usePathname();
   const [navigatingTo, setNavigatingTo] = useState(null);
 
-  // Initialize mounted state
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -98,7 +96,7 @@ export default function UserDropdown({ isOpen, onClose }) {
     {
       id: 'cart',
       label: 'Cart',
-      icon: ShoppingCart, // better icon for cart
+      icon: ShoppingCart,
       href: '/cart',
     },
     {
@@ -154,23 +152,17 @@ export default function UserDropdown({ isOpen, onClose }) {
     setNavigatingTo(null);
   }, []);
 
-  // Enhanced outside click detection with multiple event types
   useEffect(() => {
     if (!mounted) return;
 
     const handleOutsideInteraction = (event) => {
-      // Check if dropdown exists and is open
       if (!dropdownRef.current || !isOpen) return;
 
-      // Check if the click/touch is outside the dropdown
       const isOutsideDropdown = !dropdownRef.current.contains(event.target);
 
-      // Check if the click/touch is not on the dropdown trigger
       const isNotOnTrigger = !event.target.closest('[data-dropdown-trigger]');
 
-      // If both conditions are met, close the dropdown
       if (isOutsideDropdown && isNotOnTrigger) {
-        // Prevent any interference with other event handlers
         event.stopPropagation();
         onClose();
       }
@@ -198,15 +190,12 @@ export default function UserDropdown({ isOpen, onClose }) {
     };
 
     if (isOpen) {
-      // Use both mousedown and touchstart for comprehensive coverage
-      // mousedown catches regular clicks
       document.addEventListener('mousedown', handleOutsideInteraction, true);
-      // touchstart catches touch interactions
+
       document.addEventListener('touchstart', handleOutsideInteraction, true);
-      // click as a fallback for any missed interactions
+
       document.addEventListener('click', handleOutsideInteraction, true);
 
-      // Scroll and resize handlers
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleResize);
     }
@@ -332,7 +321,6 @@ export default function UserDropdown({ isOpen, onClose }) {
     }
   }, [user, fetchOrders, mounted, storesInitialized]);
 
-  // Don't render dropdown content until mounted
   if (!mounted) {
     return null;
   }

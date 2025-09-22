@@ -1,4 +1,3 @@
-// app/api/reviews/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, withOptionalAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Review from '@/models/Review';
@@ -8,7 +7,6 @@ import UserVote from '@/models/UserVote';
 import { connectDB } from '@/lib/dbConnect';
 import { Types } from 'mongoose';
 
-// GET - Fetch product reviews (no auth required)
 export const GET = withOptionalAuth(
   async (request: NextRequest, user: AuthenticatedUser | null) => {
     try {
@@ -29,7 +27,6 @@ export const GET = withOptionalAuth(
 
       await connectDB();
 
-      // Build query
       let query: any = {
         productId: new Types.ObjectId(productId),
         status: 'approved',
@@ -42,7 +39,6 @@ export const GET = withOptionalAuth(
         }
       }
 
-      // Build sort
       let sort: any = { createdAt: -1 };
 
       switch (sortBy) {
@@ -62,7 +58,6 @@ export const GET = withOptionalAuth(
 
       const skip = (page - 1) * limit;
 
-      // Fetch reviews with proper error handling
       const reviews = await Review.find(query)
         .populate('userId', 'name photoURL')
         .sort(sort)
@@ -73,10 +68,8 @@ export const GET = withOptionalAuth(
       const totalReviews = await Review.countDocuments(query);
       const totalPages = Math.ceil(totalReviews / limit);
 
-      // Get review statistics
       const stats = await Review.getReviewStats(productId);
 
-      // Check if user has already reviewed this product (if authenticated)
       let userHasReviewed = false;
       let userVotes: any = {};
 
@@ -87,7 +80,6 @@ export const GET = withOptionalAuth(
         });
         userHasReviewed = !!userReview;
 
-        // Get user votes for the current reviews
         if (reviews.length > 0) {
           const reviewIds = reviews.map((r) => r._id);
           const votes = await UserVote.find({
@@ -136,13 +128,11 @@ export const GET = withOptionalAuth(
   },
 );
 
-// POST - Add new review (auth required)
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
     const { productId, orderId, rating, title, comment, images } = body;
 
-    // Validation
     if (!productId || !rating || !comment) {
       return NextResponse.json(
         { error: 'Product ID, rating, and comment are required' },
@@ -168,13 +158,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Check if user already reviewed this product
     const existingReview = await Review.findOne({
       userId: new Types.ObjectId(user.userId),
       productId: new Types.ObjectId(productId),
@@ -187,7 +175,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       );
     }
 
-    // Verify purchase if orderId is provided
     let isVerifiedPurchase = false;
     if (orderId && Types.ObjectId.isValid(orderId)) {
       const order = await Order.findOne({
@@ -201,7 +188,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       }
     }
 
-    // Create review
     const review = new Review({
       userId: new Types.ObjectId(user.userId),
       productId: new Types.ObjectId(productId),
@@ -211,15 +197,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       comment: comment.trim(),
       images: images || [],
       isVerifiedPurchase,
-      status: 'approved', // Auto-approve for now
+      status: 'approved',
     });
 
     await review.save();
 
-    // Populate user data for response
     await review.populate('userId', 'name photoURL');
 
-    // Update product rating (async - don't await to avoid blocking response)
     updateProductRating(productId).catch((error) => {
       console.error('Error updating product rating after creation:', error);
     });
@@ -250,7 +234,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   }
 });
 
-// Helper function to update product rating asynchronously
 async function updateProductRating(productId: string) {
   try {
     await connectDB();

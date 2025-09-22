@@ -123,7 +123,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const { setQuery: setSearchQuery } = useSearchStore();
 
-  // Memoize default suggestions to prevent recalculation
   const defaultSuggestions = useMemo(() => {
     const maxItems = 8;
     const hasRecent = recentSearches.length > 0;
@@ -179,7 +178,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (initialQuery && initialQuery !== query) {
       setQuery(initialQuery);
-      // Set suggestions based on initial query
+
       if (initialQuery.trim()) {
         const instantSuggestions = getInstantSuggestions(initialQuery.trim());
         setSuggestions(instantSuggestions);

@@ -1,4 +1,3 @@
-// app/api/auth/refresh/route.js
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import {
@@ -44,7 +43,6 @@ export async function POST() {
       return response;
     }
 
-    // Create new tokens
     const newAccessToken = createAccessToken(user);
     const newRefreshToken = createRefreshToken(user);
 

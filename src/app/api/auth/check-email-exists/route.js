@@ -1,5 +1,3 @@
-// /app/api/auth/check-email-exists/route.js
-
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import User from '@/models/User';

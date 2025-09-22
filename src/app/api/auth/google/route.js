@@ -19,7 +19,6 @@ export async function POST(req) {
     const isFirstTime = !user;
 
     if (!user) {
-      // New Google user — create with dummy password and photo
       user = await User.create({
         name,
         email,
@@ -30,13 +29,11 @@ export async function POST(req) {
     } else {
       let shouldUpdate = false;
 
-      // Update hasOAuth if needed
       if (!user.hasOAuth) {
         user.hasOAuth = true;
         shouldUpdate = true;
       }
 
-      // Update photoURL if it's different
       if (photoURL && user.photoURL !== photoURL) {
         user.photoURL = photoURL;
         shouldUpdate = true;

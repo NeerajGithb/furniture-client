@@ -1,4 +1,3 @@
-// /api/categories/route.ts
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/dbConnect';
 import Category from '@/models/category';
@@ -25,14 +24,12 @@ async function fetchCategoriesWithRetry(retryCount = 3): Promise<CategoryRespons
 
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      // Check if it's a connection error that might benefit from retry
       const isRetryableError =
         errorMessage.includes('connection') ||
         errorMessage.includes('timeout') ||
         errorMessage.includes('ECONNREFUSED') ||
         errorMessage.includes('MongoNetworkError');
 
-      // If this is the last attempt or error is not retryable
       if (attempt === retryCount || !isRetryableError) {
         return {
           success: false,
@@ -41,7 +38,6 @@ async function fetchCategoriesWithRetry(retryCount = 3): Promise<CategoryRespons
         };
       }
 
-      // Wait before retrying (exponential backoff)
       await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt - 1) * 1000));
     }
   }
@@ -59,12 +55,11 @@ export async function GET() {
     if (result.success) {
       return NextResponse.json(result.data || []);
     } else {
-      // Return fallback empty array
       return NextResponse.json([]);
     }
   } catch (error) {
     console.error('Unexpected error in categories API:', error);
-    // Return fallback empty array
+
     return NextResponse.json([]);
   }
 }

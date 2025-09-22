@@ -11,11 +11,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(request.url);
 
-    // Parse parameters with better defaults
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '24')));
 
-    // Essential filters
     const category = searchParams.get('category')?.trim();
     const subcategory = searchParams.get('subcategory')?.trim();
     const minPrice = searchParams.get('minPrice')
@@ -27,7 +25,7 @@ export async function GET(request: NextRequest) {
     const material = searchParams.get('material')?.trim();
     const inStock = searchParams.get('inStock') === 'true';
     const onSale = searchParams.get('onSale') === 'true';
-    const discount = searchParams.get('discount')?.trim(); // New discount parameter
+    const discount = searchParams.get('discount')?.trim();
     const sort = searchParams.get('sort') || 'newest';
 
     console.log(`[API] Processing request with params:`, {
@@ -44,20 +42,16 @@ export async function GET(request: NextRequest) {
       sort,
     });
 
-    // Build query object
     const query: any = {};
 
-    // Only show published products
     query.isPublished = { $ne: false };
 
-    // Price range filter
     if (minPrice !== null || maxPrice !== null) {
       query.finalPrice = {};
       if (minPrice !== null && minPrice > 0) query.finalPrice.$gte = minPrice;
       if (maxPrice !== null && maxPrice > 0) query.finalPrice.$lte = maxPrice;
     }
 
-    // Category filter
     if (category) {
       const categoryDoc = await Category.findOne({ slug: category }).lean();
       if (categoryDoc && typeof categoryDoc === 'object' && '_id' in categoryDoc) {
@@ -72,7 +66,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Subcategory filter
     if (subcategory) {
       const subCategoryDoc = await SubCategory.findOne({ slug: subcategory }).lean();
       if (subCategoryDoc && !Array.isArray(subCategoryDoc) && '_id' in subCategoryDoc) {
@@ -87,22 +80,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Material filter
     if (material) {
       query.material = { $regex: material, $options: 'i' };
     }
 
-    // Stock filter
     if (inStock) {
       query.inStockQuantity = { $gt: 0 };
     }
 
-    // Sale filter
     if (onSale) {
       query.discountPercent = { $gt: 0 };
     }
 
-    // NEW: Discount filter
     if (discount && discount !== '') {
       const discountValue = parseInt(discount);
       if (!isNaN(discountValue) && discountValue > 0) {
@@ -110,7 +99,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sorting options
     let sortQuery: any = { createdAt: -1 };
     switch (sort) {
       case 'price-low':
@@ -137,7 +125,6 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Execute queries in parallel for better performance
     const [products, total] = await Promise.all([
       Product.find(query)
         .populate('categoryId', 'name slug')
@@ -150,7 +137,6 @@ export async function GET(request: NextRequest) {
       Product.countDocuments(query),
     ]);
 
-    // Get filters data only on first page or when no filters applied
     type CategoryType = { name: string; slug: string };
     type FiltersDataType = {
       categories: CategoryType[];
@@ -206,7 +192,7 @@ export async function GET(request: NextRequest) {
           minPrice !== null || maxPrice !== null ? { min: minPrice, max: maxPrice } : null,
         inStock: inStock || null,
         onSale: onSale || null,
-        discount: discount || null, // NEW: Include discount in applied filters
+        discount: discount || null,
         sort,
       },
       meta: {
@@ -216,7 +202,6 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // Add cache headers for better performance
     const response = NextResponse.json(responseData);
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 

@@ -13,7 +13,6 @@ const MoreInspirationIdeas = ({ currentInspirationId }: { currentInspirationId: 
     fetchInspirations();
   }, [fetchInspirations]);
 
-  // filter out current inspiration
   const filteredInspirations = inspirations.filter((insp) => insp._id !== currentInspirationId);
 
   if (loading) {

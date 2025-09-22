@@ -1,4 +1,3 @@
-// app/api/orders/[id]/route.ts - Enhanced with complete price details
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -13,16 +12,13 @@ interface RouteParams {
   }>;
 }
 
-// Validation schema
 const orderIdSchema = z.string().min(1, 'Order ID is required');
 
-// Helper function to format complete order response
 function formatCompleteOrderResponse(order: any, payment?: any) {
   return {
     _id: order._id,
     orderNumber: order.orderNumber,
 
-    // Enhanced items with complete product details
     items: order.items.map((item: any) => ({
       _id: item._id,
       productId: item.productId?._id,
@@ -38,7 +34,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
       discount: item.discount || 0,
       discountPercent: item.discountPercent || 0,
 
-      // Calculated item totals for display
       itemTotal: item.price * item.quantity,
       originalItemTotal: (item.originalPrice || item.price) * item.quantity,
       itemSavings: ((item.originalPrice || item.price) - item.price) * item.quantity,
@@ -53,7 +48,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
         : null,
     })),
 
-    // Enhanced price breakdown for tracking page
     priceDetails: order.priceDetails
       ? {
           subtotal: order.priceDetails.subtotal,
@@ -66,7 +60,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           finalAmount: order.priceDetails.finalAmount,
           savings: order.priceDetails.savings,
 
-          // Additional calculated fields for UI
           subtotalWithInsurance: order.priceDetails.subtotal + order.priceDetails.totalInsurance,
           totalBeforeDiscount:
             order.priceDetails.originalSubtotal +
@@ -76,7 +69,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           grandTotal: order.priceDetails.finalAmount,
         }
       : {
-          // Fallback to legacy calculation if priceDetails not available
           subtotal: order.subtotal,
           originalSubtotal: order.subtotal,
           totalDiscount: order.discount || 0,
@@ -96,22 +88,18 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
           grandTotal: order.totalAmount,
         },
 
-    // Legacy fields for backward compatibility
     subtotal: order.subtotal,
     shippingCost: order.shippingCost,
     tax: order.tax,
     discount: order.discount,
     totalAmount: order.totalAmount,
 
-    // Address and shipping details
     shippingAddress: order.shippingAddress,
 
-    // Payment and order status
     paymentMethod: order.paymentMethod,
     paymentStatus: order.paymentStatus,
     orderStatus: order.orderStatus,
 
-    // Tracking information
     trackingNumber: order.trackingNumber,
     expectedDeliveryDate: order.expectedDeliveryDate,
     deliveredAt: order.deliveredAt,
@@ -121,15 +109,12 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
     refundedAt: order.refundedAt,
     notes: order.notes,
 
-    // Additional order details
     insuranceEnabled: order.insuranceEnabled || [],
     couponCode: order.couponCode,
 
-    // Timestamps
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
 
-    // Payment information
     payment: payment
       ? {
           _id: payment._id,
@@ -143,7 +128,6 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
         }
       : null,
 
-    // Order summary for tracking display
     orderSummary: {
       totalItems: order.items.length,
       totalQuantity: order.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
@@ -154,22 +138,20 @@ function formatCompleteOrderResponse(order: any, payment?: any) {
       canReturn:
         order.orderStatus === 'delivered' &&
         order.deliveredAt &&
-        new Date().getTime() - new Date(order.deliveredAt).getTime() <= 30 * 24 * 60 * 60 * 1000, // 30 days
+        new Date().getTime() - new Date(order.deliveredAt).getTime() <= 30 * 24 * 60 * 60 * 1000,
       estimatedDelivery: order.expectedDeliveryDate,
       orderAge: Math.floor(
         (new Date().getTime() - new Date(order.createdAt).getTime()) / (24 * 60 * 60 * 1000),
-      ), // days
+      ),
     },
   };
 }
 
-// GET - Get order by ID with complete details
 export const GET = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
       const { id } = await params;
 
-      // Validate order ID
       const validatedId = orderIdSchema.parse(id);
 
       await connectDB();
@@ -186,7 +168,6 @@ export const GET = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Get payment details
       const payment = await Payment.findOne({ orderId: order._id });
 
       const orderDetails = formatCompleteOrderResponse(order, payment);
@@ -207,7 +188,6 @@ export const GET = withAuth(
   },
 );
 
-// PUT - Update order (for notes, cancellation, etc.)
 export const PUT = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
@@ -227,7 +207,6 @@ export const PUT = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Handle cancellation
       if (body.action === 'cancel') {
         if (!order.canCancel()) {
           return NextResponse.json(
@@ -239,10 +218,8 @@ export const PUT = withAuth(
           );
         }
 
-        // Cancel the order
         await order.cancel(body.reason);
 
-        // Restore product stock
         for (const item of order.items) {
           await product.findByIdAndUpdate(item.productId, {
             $inc: {
@@ -252,7 +229,6 @@ export const PUT = withAuth(
           });
         }
       } else {
-        // Update allowed fields
         const allowedUpdates = ['notes'];
         const updates: any = {};
 
@@ -278,7 +254,6 @@ export const PUT = withAuth(
         }
       }
 
-      // Get updated payment details
       const payment = await Payment.findOne({ orderId: order._id });
 
       const orderDetails = formatCompleteOrderResponse(order, payment);
@@ -307,13 +282,11 @@ export const PUT = withAuth(
   },
 );
 
-// DELETE - Delete order (only cancelled/returned orders)
 export const DELETE = withAuth(
   async (request: NextRequest, user: AuthenticatedUser, { params }: RouteParams) => {
     try {
       const { id } = await params;
 
-      // Validate order ID
       const validatedId = orderIdSchema.parse(id);
 
       await connectDB();
@@ -327,7 +300,6 @@ export const DELETE = withAuth(
         return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       }
 
-      // Only allow deletion of cancelled or returned orders
       if (order.orderStatus !== 'cancelled' && order.orderStatus !== 'returned') {
         return NextResponse.json(
           {
@@ -338,10 +310,8 @@ export const DELETE = withAuth(
         );
       }
 
-      // Delete related payment records
       await Payment.deleteMany({ orderId: order._id });
 
-      // Delete the order
       await Order.findByIdAndDelete(order._id);
 
       return NextResponse.json({

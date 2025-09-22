@@ -69,12 +69,10 @@ interface HomeStore {
   clearCategoryError: (categoryId: string) => void;
 }
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
-// Internal query client for store operations
 let queryClient: any = null;
 
-// Set query client reference
 export const setQueryClient = (client: any) => {
   queryClient = client;
 };
@@ -114,7 +112,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
     const { initialized, loading } = get();
     if (initialized || loading) return;
 
-    // Try React Query first if available
     if (queryClient) {
       const cachedData = queryClient.getQueryData(['inspirations']);
       if (cachedData) {
@@ -154,7 +151,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       if (Array.isArray(data)) inspirations = data;
       else if (Array.isArray(data.inspirations)) inspirations = data.inspirations;
 
-      // Cache in React Query if available
       if (queryClient) {
         queryClient.setQueryData(['inspirations'], inspirations);
       }
@@ -184,7 +180,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   fetchInspirationBySlug: async (slug: string) => {
     const state = get();
 
-    // Try React Query cache first
     if (queryClient) {
       const cachedData = queryClient.getQueryData(['inspiration', slug]);
       if (cachedData) {
@@ -216,7 +211,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
 
       const inspiration: IInspiration = await handleApiResponse(res);
 
-      // Cache in React Query if available
       if (queryClient) {
         queryClient.setQueryData(['inspiration', slug], inspiration);
       }
@@ -251,7 +245,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   fetchCategoryProducts: async (categoryId: string) => {
     const state = get();
 
-    // Try React Query cache first
     if (queryClient) {
       const cachedData = queryClient.getQueryData(['categoryProducts', categoryId]);
       if (cachedData) {
@@ -294,7 +287,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       const slug = data.slug || null;
       const result = { products, slug };
 
-      // Cache in React Query if available
       if (queryClient) {
         queryClient.setQueryData(['categoryProducts', categoryId], result);
       }
@@ -327,7 +319,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   fetchRelatedProducts: async (inspirationSlug: string, limit = 20, sort = '') => {
     const state = get();
 
-    // Try React Query cache first
     if (queryClient) {
       const cachedData = queryClient.getQueryData([
         'relatedProducts',
@@ -372,7 +363,6 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
       const data = await handleApiResponse(res);
       const products = data.products || [];
 
-      // Cache in React Query if available
       if (queryClient) {
         queryClient.setQueryData(['relatedProducts', inspirationSlug, limit, sort], products);
       }
@@ -432,20 +422,16 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   },
 }));
 
-// Track connected query clients
 const connectedClients = new WeakSet();
 
-// Hook to connect React Query with the store
 export const useHomeStoreWithReactQuery = () => {
   const queryClient = useQueryClient();
 
-  // Set the query client reference for the store
   if (queryClient && !connectedClients.has(queryClient)) {
     setQueryClient(queryClient);
     connectedClients.add(queryClient);
   }
 
-  // Prefetch queries for better performance
   useQuery({
     queryKey: ['inspirations'],
     queryFn: async () => {

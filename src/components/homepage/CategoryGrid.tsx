@@ -47,7 +47,7 @@ const CategoryGrid = () => {
     const container = scrollRef.current;
     if (!container) return;
 
-    updateScrollButtons(); // initial check
+    updateScrollButtons();
     const onScroll = () => updateScrollButtons();
     container.addEventListener('scroll', onScroll);
     window.addEventListener('resize', updateScrollButtons);
@@ -119,6 +119,7 @@ const CategoryGrid = () => {
                           fill
                           className="object-cover"
                           loading="lazy"
+                          sizes="(max-width: 768px) 120px"
                         />
                       </div>
                       <h3 className="text-xs font-medium text-black w-28 truncate">
@@ -165,6 +166,7 @@ const CategoryGrid = () => {
                       fill
                       className="object-cover"
                       loading="lazy"
+                      sizes="(max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                     />
                   </div>
                   <div className="py-3 text-center">

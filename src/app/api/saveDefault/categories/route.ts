@@ -1,4 +1,3 @@
-// app/api/saveDefault/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -31,7 +30,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         shouldSave = true;
       }
     } catch {
-      // File doesn't exist or invalid JSON → allow save
       shouldSave = true;
     }
 

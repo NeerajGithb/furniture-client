@@ -1,4 +1,3 @@
-// app/api/orders/route.ts - Order creation with welcome email
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Order from '@/models/Order';
@@ -281,7 +280,6 @@ const sendWelcomeEmail = async (order: any, userEmail: string) => {
   }
 };
 
-// GET - Fetch user's orders (UNCHANGED)
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const { searchParams } = new URL(request.url);
@@ -323,15 +321,15 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
         _id: item._id,
         name: item.name,
         price: item.price,
-        originalPrice: item.originalPrice, // NEW
+        originalPrice: item.originalPrice,
         quantity: item.quantity,
         insuranceCost: item.insuranceCost || 0,
         productImage: item.productImage,
         selectedVariant: item.selectedVariant || null,
-        sku: item.sku, // NEW
-        itemId: item.itemId, // NEW
-        discount: item.discount || 0, // NEW
-        discountPercent: item.discountPercent || 0, // NEW
+        sku: item.sku,
+        itemId: item.itemId,
+        discount: item.discount || 0,
+        discountPercent: item.discountPercent || 0,
         product: item.productId
           ? {
               _id: item.productId._id,
@@ -351,7 +349,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
 
-      // NEW FIELDS - Add price breakdown if available
       priceBreakdown: order.priceBreakdown,
       insuranceEnabled: order.insuranceEnabled,
       couponCode: order.couponCode,
@@ -372,7 +369,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// POST - Create new order - MINIMAL FIX: Just fix orderNumber and add new fields
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -384,7 +380,7 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       cartData,
       totals,
       insuranceEnabled = [],
-      couponCode, // NEW
+      couponCode,
     } = body;
 
     console.log('Order creation request:', {
@@ -402,7 +398,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       );
     }
 
-    // Validate that we have selected items from frontend
     if (!selectedItems || !Array.isArray(selectedItems) || selectedItems.length === 0) {
       return NextResponse.json({ error: 'No items selected for checkout' }, { status: 400 });
     }
@@ -413,7 +408,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Get shipping address
     const address = await Address.findOne({
       _id: addressId,
       userId: user.userId,
@@ -423,11 +417,9 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
-    // Process only selected items instead of entire cart
     const orderItems = [];
 
     for (const productId of selectedItems) {
-      // Find the item in cartData
       const cartItem = cartData.find((item) => item.productId === productId);
 
       if (!cartItem) {
@@ -438,7 +430,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         );
       }
 
-      // Verify product exists and has sufficient stock
       const product = await Product.findById(productId);
 
       if (!product) {
@@ -452,21 +443,19 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         );
       }
 
-      // Create order item from cart item data
       const orderItem: any = {
         productId: product._id,
         name: product.name,
         price: product.finalPrice,
-        originalPrice: product.originalPrice, // NEW - from your product schema
+        originalPrice: product.originalPrice,
         quantity: cartItem.quantity,
         productImage: product.mainImage?.url,
-        sku: product.sku, // NEW
-        itemId: product.itemId, // NEW
-        discount: (product.originalPrice || product.finalPrice) - product.finalPrice, // NEW - calculate discount
-        discountPercent: product.discountPercent || 0, // NEW
+        sku: product.sku,
+        itemId: product.itemId,
+        discount: (product.originalPrice || product.finalPrice) - product.finalPrice,
+        discountPercent: product.discountPercent || 0,
       };
 
-      // Include selected variant if available
       if (
         cartItem.selectedVariant &&
         typeof cartItem.selectedVariant === 'object' &&
@@ -478,14 +467,12 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         orderItem.selectedVariant = cartItem.selectedVariant;
       }
 
-      // NEW - Add insurance cost if this product has insurance enabled
       if (insuranceEnabled.includes(productId)) {
-        orderItem.insuranceCost = Math.round(product.finalPrice * cartItem.quantity * 0.02); // 2% insurance
+        orderItem.insuranceCost = Math.round(product.finalPrice * cartItem.quantity * 0.02);
       }
 
       orderItems.push(orderItem);
 
-      // Update product stock
       await Product.findByIdAndUpdate(product._id, {
         $inc: {
           inStockQuantity: -cartItem.quantity,
@@ -494,18 +481,15 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       });
     }
 
-    // Use totals from frontend instead of recalculating
     let subtotal = totals?.subtotal || 0;
     let shippingCost = totals?.shippingCost || 0;
     let insuranceCost = totals?.insuranceCost || 0;
     let totalAmount = totals?.totalAmount || 0;
 
-    // Fallback calculation if totals not provided
     if (!totals || totalAmount === 0) {
       subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      shippingCost = subtotal >= 500 ? 0 : 40; // Free shipping above ₹500
+      shippingCost = subtotal >= 500 ? 0 : 40;
 
-      // Calculate insurance cost
       insuranceCost = 0;
       if (insuranceEnabled && Array.isArray(insuranceEnabled)) {
         for (const item of orderItems) {
@@ -518,19 +502,17 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       totalAmount = subtotal + shippingCost + insuranceCost;
     }
 
-    // FIX: Generate orderNumber explicitly before creating order
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();
     const orderNumber = `ORD${timestamp}${random}`;
 
-    // Create order
     const orderData = {
       userId: user.userId,
-      orderNumber, // FIX: Explicitly set orderNumber
+      orderNumber,
       items: orderItems,
       subtotal,
       shippingCost,
-      tax: 0, // Included in product price
+      tax: 0,
       discount: 0,
       totalAmount,
       shippingAddress: {
@@ -544,10 +526,9 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
         country: address.country,
       },
       paymentMethod,
-      expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       trackingNumber: `TRK-${Date.now()}`,
 
-      // NEW FIELDS
       insuranceEnabled,
       couponCode,
     };
@@ -555,7 +536,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
     const order = new Order(orderData);
     await order.save();
 
-    // Create payment record
     const payment = await Payment.create({
       paymentId: `PAY-${Date.now()}`,
       orderId: order._id,
@@ -566,13 +546,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       status: paymentMethod === 'cod' ? 'pending' : 'pending',
     });
 
-    // For COD, mark order as confirmed
     if (paymentMethod === 'cod') {
       order.orderStatus = 'confirmed';
       await order.save();
     }
 
-    // Send welcome email
     const userDoc = await User.findById(user.userId);
     if (userDoc?.email) {
       await sendWelcomeEmail(order, userDoc.email);
@@ -593,14 +571,13 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
           name: item.name,
           quantity: item.quantity,
           price: item.price,
-          originalPrice: item.originalPrice, // NEW
-          sku: item.sku, // NEW
-          itemId: item.itemId, // NEW
-          discount: item.discount, // NEW
-          discountPercent: item.discountPercent, // NEW
+          originalPrice: item.originalPrice,
+          sku: item.sku,
+          itemId: item.itemId,
+          discount: item.discount,
+          discountPercent: item.discountPercent,
         })),
 
-        // NEW - Include price breakdown in response
         priceBreakdown: order.priceBreakdown,
         insuranceEnabled: order.insuranceEnabled,
         couponCode: order.couponCode,
@@ -610,7 +587,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
   } catch (error) {
     console.error('Order creation error:', error);
 
-    // Handle specific mongoose validation errors
     if ((error as any).name === 'ValidationError') {
       const validationErrors = Object.values((error as any).errors).map((err: any) => err.message);
       return NextResponse.json(
@@ -619,7 +595,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       );
     }
 
-    // Handle cast errors (like invalid ObjectId)
     if ((error as any).name === 'CastError') {
       return NextResponse.json(
         { error: `Invalid data format: ${(error as any).message}` },

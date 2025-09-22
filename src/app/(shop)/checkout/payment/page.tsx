@@ -1,5 +1,3 @@
-// PaymentPage.tsx - Fixed version with responsive design and fixed bottom button
-
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef, JSX } from 'react';
@@ -42,7 +40,6 @@ const PaymentPage = () => {
   const priceCardRef = useRef(null);
   const [showFixedCheckout, setShowFixedCheckout] = useState(false);
 
-  // Checkout store
   const {
     getCheckoutData,
     hasValidCheckout,
@@ -52,23 +49,18 @@ const PaymentPage = () => {
     getSelectedItems,
   } = useCheckoutStore();
 
-  //cart store
   const { removeFromCart } = useCartStore();
 
-  // Address store
   const { addresses } = useAddressStore();
 
-  // Local state
   const [showUPIForm, setShowUPIForm] = useState(false);
   const [upiId, setUpiId] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
 
-  // Get checkout data
   const checkoutData = getCheckoutData();
   const selectedCartItems = getSelectedItems();
   const selectedAddress = addresses.find((addr) => addr._id === checkoutData?.selectedAddressId);
 
-  // Payment methods configuration
   const paymentMethods: PaymentMethod[] = useMemo(
     () => [
       {
@@ -78,7 +70,7 @@ const PaymentPage = () => {
         description: 'Pay using your UPI ID',
         popular: true,
         offers: ['Get 5% cashback', 'Instant payment'],
-        available: false, // Disabled for now
+        available: false,
       },
       {
         id: 'cards',
@@ -86,14 +78,14 @@ const PaymentPage = () => {
         icon: <CreditCard className="w-5 h-5" />,
         description: 'Visa, Mastercard, Rupay & more',
         offers: ['EMI available', '2% cashback on select cards'],
-        available: false, // Disabled for now
+        available: false,
       },
       {
         id: 'netbanking',
         name: 'Net Banking',
         icon: <Building2 className="w-5 h-5" />,
         description: 'All major banks supported',
-        available: false, // Disabled for now
+        available: false,
       },
       {
         id: 'cod',
@@ -102,13 +94,12 @@ const PaymentPage = () => {
         description: 'Pay when your order is delivered',
         popular: true,
         offers: ['No advance payment', 'Pay after receiving product'],
-        available: true, // Only COD is available
+        available: true,
       },
     ],
     [],
   );
 
-  // Intersection Observer for checkout button visibility
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -133,31 +124,27 @@ const PaymentPage = () => {
 
   useEffect(() => {
     if (!hasValidCheckout()) {
-      router.replace('/'); // redirect if checkout data missing
+      router.replace('/');
       return;
     }
   }, [hasValidCheckout, router]);
 
-  // FIXED: Improved redirect checks with better error handling
   useEffect(() => {
     if (!user?._id) {
       router.push('/auth/signin?returnUrl=/checkout/payment');
       return;
     }
 
-    // Only redirect if we have no valid checkout data
     if (!hasValidCheckout()) {
       return;
     }
 
-    // Only redirect if we have checkout data but no address selected
     if (checkoutData && !checkoutData.selectedAddressId) {
       toast.error('Please select a delivery address');
       return;
     }
   }, [user?._id, hasValidCheckout, checkoutData?.selectedAddressId, router]);
 
-  // Handle payment method selection
   const handlePaymentMethodSelect = useCallback(
     (methodId: string) => {
       const method = paymentMethods.find((m) => m.id === methodId);
@@ -173,7 +160,6 @@ const PaymentPage = () => {
     [updateSelectedPaymentMethod, paymentMethods],
   );
 
-  // FIXED: Remove only ordered items from cart
   const removeOrderedItemsFromCart = useCallback(
     async (orderedItems: any[]) => {
       if (!orderedItems || orderedItems.length === 0) {
@@ -222,7 +208,6 @@ const PaymentPage = () => {
     [removeFromCart],
   );
 
-  // FIXED: Improved order placement with proper cart item removal
   const handlePlaceOrder = useCallback(async () => {
     if (!checkoutData || !selectedCartItems.length) {
       toast.error('No items selected for checkout');
@@ -239,7 +224,6 @@ const PaymentPage = () => {
       return;
     }
 
-    // Validate UPI ID if UPI is selected
     if (checkoutData.selectedPaymentMethod === 'upi') {
       if (!upiId.trim()) {
         toast.error('Please enter your UPI ID');
@@ -255,7 +239,6 @@ const PaymentPage = () => {
     setPlacingOrder(true);
 
     try {
-      // Prepare order payload
       const orderPayload = {
         addressId: checkoutData.selectedAddressId,
         paymentMethod: checkoutData.selectedPaymentMethod,
@@ -271,7 +254,6 @@ const PaymentPage = () => {
         cartData: `${orderPayload.cartData.length} items`,
       });
 
-      // Create order
       const orderResponse = await fetchWithCredentials('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -290,27 +272,20 @@ const PaymentPage = () => {
         throw new Error('Order created but no order number received');
       }
 
-      // Handle Cash on Delivery vs Other Payment Methods
       if (checkoutData.selectedPaymentMethod === 'cod') {
-        // For COD, order is complete - no payment processing needed
-
         try {
-          // FIXED: Remove only the items that were ordered from cart
           await removeOrderedItemsFromCart(selectedCartItems);
         } catch (cartError) {
           console.error('Error removing ordered items from cart:', cartError);
-          // Don't block order success if cart update fails
+
           toast.error('Order placed but failed to update cart. Please refresh your cart.');
         }
-
-        // Clear checkout data
 
         clearCheckout();
 
         window.location.href = `/order-success?orderNumber=${orderNumber}`;
         return;
       } else {
-        // For other payment methods, initiate payment processing
         try {
           const paymentResponse = await fetchWithCredentials('/api/payment', {
             method: 'POST',
@@ -325,10 +300,8 @@ const PaymentPage = () => {
           if (paymentResponse.ok) {
             toast.success('Processing payment...');
 
-            // Simulate payment processing time
             await new Promise((resolve) => setTimeout(resolve, 2000));
 
-            // FIXED: Remove only ordered items from cart
             try {
               await removeOrderedItemsFromCart(selectedCartItems);
             } catch (cartError) {
@@ -338,7 +311,6 @@ const PaymentPage = () => {
               );
             }
 
-            // Clear checkout data
             clearCheckout();
 
             toast.success('Payment successful! Order placed.');
@@ -361,7 +333,6 @@ const PaymentPage = () => {
     }
   }, [checkoutData, selectedCartItems, upiId, router, clearCheckout, removeOrderedItemsFromCart]);
 
-  // FIXED: Better loading state handling
   if (!user?._id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -379,7 +350,6 @@ const PaymentPage = () => {
     );
   }
 
-  // Loading state
   if (!checkoutData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -391,7 +361,6 @@ const PaymentPage = () => {
     );
   }
 
-  // No items selected
   if (!selectedCartItems.length) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -413,7 +382,6 @@ const PaymentPage = () => {
     );
   }
 
-  // No address selected
   if (!selectedAddress) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

@@ -1,10 +1,8 @@
-// app/api/address/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, AuthenticatedUser } from '@/lib/middleware/auth';
 import Address from '@/models/Address';
 import { connectDB } from '@/lib/dbConnect';
 
-// GET - Fetch user's addresses
 export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     await connectDB();
@@ -36,7 +34,6 @@ export const GET = withAuth(async (request: NextRequest, user: AuthenticatedUser
   }
 });
 
-// POST - Add new address
 export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUser) => {
   try {
     const body = await request.json();
@@ -53,7 +50,6 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       isDefault,
     } = body;
 
-    // Validate required fields
     if (
       !fullName?.trim() ||
       !phone?.trim() ||
@@ -65,13 +61,11 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
       return NextResponse.json({ error: 'Required fields are missing' }, { status: 400 });
     }
 
-    // Validate phone number (Indian format)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(phone.trim().replace(/\s+/g, ''))) {
       return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
     }
 
-    // Validate postal code (Indian PIN code)
     const pinCodeRegex = /^[0-9]{6}$/;
     if (!pinCodeRegex.test(postalCode.trim())) {
       return NextResponse.json({ error: 'Invalid postal code format' }, { status: 400 });
@@ -79,14 +73,12 @@ export const POST = withAuth(async (request: NextRequest, user: AuthenticatedUse
 
     await connectDB();
 
-    // Check if this is the first address or if setting as default
     const existingAddressCount = await Address.countDocuments({
       userId: user.userId,
     });
 
     const shouldBeDefault = existingAddressCount === 0 || isDefault;
 
-    // If setting as default, unset other defaults first
     if (shouldBeDefault) {
       await Address.updateMany({ userId: user.userId }, { isDefault: false });
     }

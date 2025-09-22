@@ -6,81 +6,118 @@ import { initializeApp, resetApp } from '@/stores/globalStoreManager';
 
 const AuthContext = createContext();
 
-const LOCAL_STORAGE_USER_KEY = 'vf_current_user';
+const userCache = {
+  data: null,
+  timestamp: null,
+  ttl: 5 * 60 * 1000,
+};
 
-// Helper function to safely get from localStorage (SSR safe)
-const getStoredUser = () => {
+const getSessionUser = () => {
   if (typeof window === 'undefined') return null;
   try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch (err) {
-    console.warn('Failed to parse user from localStorage:', err);
-    localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+    const stored = sessionStorage.getItem('vf_user_cache');
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    const now = Date.now();
+
+    if (now - parsed.timestamp > userCache.ttl) {
+      sessionStorage.removeItem('vf_user_cache');
+      return null;
+    }
+
+    return parsed.user;
+  } catch {
+    sessionStorage.removeItem('vf_user_cache');
     return null;
   }
 };
 
+const setSessionUser = (user) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const cacheData = { user, timestamp: Date.now() };
+    sessionStorage.setItem('vf_user_cache', JSON.stringify(cacheData));
+    userCache.data = user;
+    userCache.timestamp = Date.now();
+  } catch {
+    userCache.data = user;
+    userCache.timestamp = Date.now();
+  }
+};
+
+const clearUserCache = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.removeItem('vf_user_cache');
+    } catch {}
+  }
+  userCache.data = null;
+  userCache.timestamp = null;
+};
+
+const getCachedUser = () => {
+  if (userCache.data && userCache.timestamp) {
+    const now = Date.now();
+    if (now - userCache.timestamp <= userCache.ttl) {
+      return userCache.data;
+    }
+  }
+  return getSessionUser();
+};
+
 export const AuthProvider = ({ children }) => {
-  // Initialize user from localStorage immediately (no flash)
-  const [user, setUser] = useState(() => getStoredUser());
-  const [loading, setLoading] = useState(!getStoredUser()); // Only loading if no stored user
+  const [user, setUser] = useState(() => getCachedUser());
+  const [loading, setLoading] = useState(!getCachedUser());
   const [storesInitialized, setStoresInitialized] = useState(false);
   const refreshIntervalRef = useRef(null);
   const initializationRef = useRef(false);
 
-  const fetchUser = async (forceServer = false) => {
-    // If we have a user from localStorage and not forcing server, init stores and return
-    if (!forceServer && user && !initializationRef.current) {
-      initializationRef.current = true;
-      await initializeStores();
-      startAutoRefresh();
-      return user;
-    }
-
-    // Fetch from server
+  const fetchUser = async (skipCache = false) => {
     try {
+      if (!skipCache && user && !initializationRef.current) {
+        initializationRef.current = true;
+        await initializeStores();
+        startAutoRefresh();
+        setLoading(false);
+        return user;
+      }
+
+      if (!skipCache) {
+        const cachedUser = getCachedUser();
+        if (cachedUser) {
+          setUser(cachedUser);
+          await initializeStores();
+          startAutoRefresh();
+          setLoading(false);
+          return cachedUser;
+        }
+      }
+
       const res = await fetchWithCredentials('/api/auth/me', {
         method: 'GET',
         credentials: 'include',
       });
 
-      if (res.status === 401) {
-        const refreshed = await attemptTokenRefresh();
-        if (!refreshed) {
-          setUser(null);
-          await resetStores();
-          setLoading(false);
-          return null;
+      if (res.ok) {
+        const data = await handleApiResponse(res);
+        if (data?.user) {
+          setUser(data.user);
+          setSessionUser(data.user);
+          startAutoRefresh();
+          await initializeStores();
+          return data.user;
         }
-        return await fetchUser(true);
       }
 
-      if (!res.ok) {
-        setUser(null);
-        await resetStores();
-        setLoading(false);
-        return null;
-      }
-
-      const data = await handleApiResponse(res);
-      if (data?.user) {
-        setUser(data.user);
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(data.user));
-        startAutoRefresh();
-        await initializeStores();
-        return data.user;
-      } else {
-        setUser(null);
-        await resetStores();
-        localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
-        return null;
-      }
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
       setUser(null);
+      clearUserCache();
       await resetStores();
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      return null;
+    } catch (err) {
+      setUser(null);
+      clearUserCache();
+      await resetStores();
       return null;
     } finally {
       setLoading(false);
@@ -103,18 +140,6 @@ export const AuthProvider = ({ children }) => {
     } catch {}
   };
 
-  const attemptTokenRefresh = async () => {
-    try {
-      const res = await fetchWithCredentials('/api/auth/refresh', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      return res.ok;
-    } catch {
-      return false;
-    }
-  };
-
   const startAutoRefresh = () => {
     if (refreshIntervalRef.current) return;
 
@@ -129,19 +154,24 @@ export const AuthProvider = ({ children }) => {
           clearInterval(refreshIntervalRef.current);
           refreshIntervalRef.current = null;
           setUser(null);
-          localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+          clearUserCache();
           await resetStores();
         }
       } catch {
         clearInterval(refreshIntervalRef.current);
         refreshIntervalRef.current = null;
         setUser(null);
-        localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+        clearUserCache();
         await resetStores();
       }
-    }, 13 * 60 * 1000); // refresh every 13 min
+    }, 13 * 60 * 1000);
 
     refreshIntervalRef.current = interval;
+  };
+
+  const updateUser = (newUserData) => {
+    setUser(newUserData);
+    setSessionUser(newUserData);
   };
 
   const logout = async () => {
@@ -152,7 +182,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setUser(null);
-      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
+      clearUserCache();
       await resetStores();
 
       await fetchWithCredentials('/api/auth/logout', {
@@ -167,18 +197,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Only fetch from server if we don't have a user or need to verify
     if (typeof window !== 'undefined') {
-      if (user && !initializationRef.current) {
-        // We have user from localStorage, just initialize
-        initializationRef.current = true;
-        initializeStores();
-        startAutoRefresh();
-        setLoading(false);
-      } else if (!user) {
-        // No user, fetch from server
-        fetchUser();
-      }
+      fetchUser();
     }
 
     return () => {
@@ -189,29 +209,17 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Additional effect to handle hydration mismatches
-  useEffect(() => {
-    // This ensures client-side hydration matches server-side rendering
-    if (typeof window !== 'undefined' && !user) {
-      const storedUser = getStoredUser();
-      if (storedUser) {
-        setUser(storedUser);
-        setLoading(false);
-      }
-    }
-  }, []);
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         storesInitialized,
-        setUser,
-        refetch: fetchUser,
+        setUser: updateUser,
+        refetch: () => fetchUser(true),
         logout,
-        initializeStores: () => initializeStores(),
-        resetStores: () => resetStores(),
+        initializeStores,
+        resetStores,
       }}
     >
       {children}

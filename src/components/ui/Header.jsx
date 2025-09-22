@@ -413,7 +413,22 @@ const Header = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
   const initializeRef = useRef(false);
-
+  console.log(
+    'Header render - dataLoaded:',
+    dataLoaded,
+    'isMounted:',
+    isMounted,
+    'categories:',
+    categories,
+    'subcategories:',
+    subcategories,
+    'inspirations:',
+    inspirations,
+    'loadingCategories:',
+    loadingCategories,
+    'loadingInspirations:',
+    loadingInspirations,
+  );
   // Critical: Fix hydration and data loading
   useEffect(() => {
     setIsMounted(true);

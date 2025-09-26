@@ -249,6 +249,24 @@ interface OrderStore {
 
 const CACHE_DURATION = 5 * 60 * 1000;
 
+// Query keys for React Query caching
+const orderKeys = {
+  all: ['orders'] as const,
+  lists: () => [...orderKeys.all, 'list'] as const,
+  list: (filters: OrderFilters) => [...orderKeys.lists(), filters] as const,
+  details: () => [...orderKeys.all, 'detail'] as const,
+  detail: (id: string) => [...orderKeys.details(), id] as const,
+  byNumber: (orderNumber: string) => [...orderKeys.details(), 'number', orderNumber] as const,
+};
+
+// Get React Query client if available
+const getQueryClient = () => {
+  if (typeof window !== 'undefined') {
+    return (window as any).__reactQueryClient;
+  }
+  return null;
+};
+
 const processOrderData = (order: any): Order => {
   const processedItems = (order.items || []).map((item: any) => {
     const itemPrice = item.price || 0;
@@ -340,6 +358,168 @@ const processOrderData = (order: any): Order => {
   };
 };
 
+// API functions that can use React Query or fallback to direct calls
+const fetchOrdersApi = async (filters: OrderFilters = {}) => {
+  const queryParams = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+  const url = `/api/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await fetchWithCredentials(url);
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to fetch orders');
+  }
+
+  const data = await handleApiResponse(response);
+  return {
+    orders: Array.isArray(data.orders) ? data.orders.map(processOrderData) : [],
+    pagination: {
+      totalOrders: data.pagination?.totalOrders || data.total || 0,
+      currentPage: data.pagination?.currentPage || data.page || 1,
+      totalPages: data.pagination?.totalPages || data.pages || 1,
+      hasMore:
+        data.pagination?.hasMore !== undefined
+          ? data.pagination.hasMore
+          : (Array.isArray(data.orders) ? data.orders.length : 0) === (filters.limit || 50),
+    },
+  };
+};
+
+const fetchOrderByIdApi = async (id: string) => {
+  const response = await fetchWithCredentials(`/api/orders/${id}`);
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to fetch order');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const fetchOrderByNumberApi = async (orderNumber: string) => {
+  const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`);
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to fetch order');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const createOrderApi = async (orderData: CreateOrderData) => {
+  const response = await fetchWithCredentials('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderData),
+  });
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to create order');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const updateOrderStatusApi = async (id: string, status: OrderStatus) => {
+  const response = await fetchWithCredentials(`/api/orders/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ orderStatus: status }),
+  });
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to update status');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const updateOrderNotesApi = async (orderNumber: string, notes: string) => {
+  const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ notes }),
+  });
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to update notes');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const cancelOrderApi = async (id: string, reason?: string) => {
+  const response = await fetchWithCredentials(`/api/orders/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'cancel', reason }),
+  });
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to cancel order');
+  }
+
+  const data = await handleApiResponse(response);
+  return processOrderData(data.order);
+};
+
+const deleteOrderApi = async (orderNumber: string) => {
+  const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    const errorData = await handleApiResponse(response);
+    throw new Error(errorData.error || 'Failed to delete order');
+  }
+
+  await handleApiResponse(response);
+  return { success: true, orderNumber };
+};
+
+// Helper function to execute query with React Query or fallback
+const executeQuery = async <T>(
+  queryKey: readonly unknown[],
+  queryFn: () => Promise<T>,
+  staleTime: number = CACHE_DURATION,
+): Promise<T> => {
+  const queryClient = getQueryClient();
+
+  if (queryClient) {
+    return queryClient.fetchQuery({
+      queryKey,
+      queryFn,
+      staleTime,
+    });
+  }
+
+  return queryFn();
+};
+
+// Helper function to invalidate queries
+const invalidateQueries = (queryKey: readonly unknown[]) => {
+  const queryClient = getQueryClient();
+  if (queryClient) {
+    queryClient.invalidateQueries({ queryKey });
+  }
+};
+
 export const useOrderStore = create<OrderStore>((set, get) => ({
   orders: [],
   order: null,
@@ -362,11 +542,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const filters: OrderFilters = {
-        limit: 20,
-        page: 1,
-      };
-
+      const filters: OrderFilters = { limit: 20, page: 1 };
       await get().fetchOrders(filters, true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to initialize orders';
@@ -392,36 +568,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const queryParams = new URLSearchParams();
+      const data = await executeQuery(orderKeys.list(filters), () => fetchOrdersApi(filters));
 
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          queryParams.append(key, value.toString());
-        }
-      });
-
-      const url = `/api/orders${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-      const response = await fetchWithCredentials(url);
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to fetch orders');
-      }
-
-      const data = await handleApiResponse(response);
-
-      const newOrders = Array.isArray(data.orders) ? data.orders.map(processOrderData) : [];
       const currentOrders = filters.skip ? state.orders : [];
 
       set({
-        orders: filters.skip ? [...currentOrders, ...newOrders] : newOrders,
-        totalOrders: data.pagination?.totalOrders || data.total || 0,
-        currentPage: data.pagination?.currentPage || data.page || 1,
-        totalPages: data.pagination?.totalPages || data.pages || 1,
-        hasMore:
-          data.pagination?.hasMore !== undefined
-            ? data.pagination.hasMore
-            : newOrders.length === (filters.limit || 50),
+        orders: filters.skip ? [...currentOrders, ...data.orders] : data.orders,
+        totalOrders: data.pagination.totalOrders,
+        currentPage: data.pagination.currentPage,
+        totalPages: data.pagination.totalPages,
+        hasMore: data.pagination.hasMore,
         lastFetchTime: Date.now(),
         loading: false,
         error: null,
@@ -449,17 +605,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/${id}`);
+      const order = await executeQuery(orderKeys.detail(id), () => fetchOrderByIdApi(id));
 
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to fetch order');
-      }
-
-      const data = await handleApiResponse(response);
-
-      const processedOrder = processOrderData(data.order);
-      set({ order: processedOrder, loading: false, error: null });
+      set({ order, loading: false, error: null });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error fetching order';
       console.error('Order fetch error:', errorMessage);
@@ -477,17 +625,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`);
+      const order = await executeQuery(orderKeys.byNumber(orderNumber), () =>
+        fetchOrderByNumberApi(orderNumber),
+      );
 
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to fetch order');
-      }
-
-      const data = await handleApiResponse(response);
-
-      const processedOrder = processOrderData(data.order);
-      set({ order: processedOrder, loading: false, error: null });
+      set({ order, loading: false, error: null });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error fetching order';
       console.error('Order fetch by number error:', errorMessage);
@@ -497,6 +639,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   },
 
   createOrder: async (orderData: CreateOrderData) => {
+    console.log('Creating order with data:', orderData);
     const tempOrder: Order = {
       _id: `temp-${Date.now()}`,
       orderNumber: 'TEMP',
@@ -536,14 +679,12 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       },
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-
       subtotal: orderData.totals.subtotal,
       shippingCost: orderData.totals.shippingCost,
       tax: 0,
       discount: 0,
       insuranceEnabled: orderData.insuranceEnabled || [],
       couponCode: orderData.couponCode,
-
       priceBreakdown: {
         originalSubtotal: orderData.totals.subtotal,
         itemDiscount: 0,
@@ -564,27 +705,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }));
 
     try {
-      const response = await fetchWithCredentials('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData),
-      });
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to create order');
-      }
-
-      const data = await handleApiResponse(response);
-
-      const newOrder = processOrderData(data.order);
-
+      const newOrder = await createOrderApi(orderData);
+      console.log('Order created successfully:', newOrder);
       set((state) => ({
         orders: state.orders.map((o) => (o._id === tempOrder._id ? newOrder : o)),
         order: newOrder,
         lastFetchTime: Date.now(),
       }));
 
+      invalidateQueries(orderKeys.lists());
       toast.success('Order created successfully');
       return newOrder;
     } catch (error) {
@@ -603,6 +732,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   updateOrderStatus: async (id: string, status: OrderStatus) => {
     const prevState = { orders: get().orders, order: get().order };
 
+    // Optimistic update
     set((state) => ({
       orders: state.orders.map((o) =>
         o._id === id ? { ...o, orderStatus: status, updatedAt: new Date().toISOString() } : o,
@@ -614,25 +744,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }));
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderStatus: status }),
-      });
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to update status');
-      }
-
-      const data = await handleApiResponse(response);
-      const updatedOrder = processOrderData(data.order);
+      const updatedOrder = await updateOrderStatusApi(id, status);
 
       set((state) => ({
         orders: state.orders.map((o) => (o._id === id ? updatedOrder : o)),
         order: state.order?._id === id ? updatedOrder : state.order,
       }));
 
+      invalidateQueries(orderKeys.lists());
+      invalidateQueries(orderKeys.detail(id));
       toast.success('Order status updated');
       return true;
     } catch (error) {
@@ -645,25 +765,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
   updateOrderNotes: async (orderNumber: string, notes: string) => {
     try {
-      const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes }),
-      });
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to update notes');
-      }
-
-      const data = await handleApiResponse(response);
-      const updatedOrder = processOrderData(data.order);
+      const updatedOrder = await updateOrderNotesApi(orderNumber, notes);
 
       set((state) => ({
         orders: state.orders.map((o) => (o.orderNumber === orderNumber ? updatedOrder : o)),
         order: state.order?.orderNumber === orderNumber ? updatedOrder : state.order,
       }));
 
+      invalidateQueries(orderKeys.lists());
+      invalidateQueries(orderKeys.byNumber(orderNumber));
       toast.success('Order notes updated');
       return true;
     } catch (error) {
@@ -677,6 +787,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     const prevState = { orders: get().orders, order: get().order };
     const cancelledAt = new Date().toISOString();
 
+    // Optimistic update
     set((state) => ({
       orders: state.orders.map((o) =>
         o._id === id
@@ -702,25 +813,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }));
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'cancel', reason }),
-      });
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to cancel order');
-      }
-
-      const data = await handleApiResponse(response);
-      const updatedOrder = processOrderData(data.order);
+      const updatedOrder = await cancelOrderApi(id, reason);
 
       set((state) => ({
         orders: state.orders.map((o) => (o._id === id ? updatedOrder : o)),
         order: state.order?._id === id ? updatedOrder : state.order,
       }));
 
+      invalidateQueries(orderKeys.lists());
+      invalidateQueries(orderKeys.detail(id));
       toast.success('Order cancelled successfully');
       return true;
     } catch (error) {
@@ -742,14 +843,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }));
 
     try {
-      const response = await fetchWithCredentials(`/api/orders/number/${orderNumber}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await handleApiResponse(response);
-        throw new Error(errorData.error || 'Failed to delete order');
-      }
+      await deleteOrderApi(orderNumber);
 
       set((state) => ({
         orders: state.orders.filter((o) => o.orderNumber !== orderNumber),
@@ -758,6 +852,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         deletingOrders: state.deletingOrders.filter((on) => on !== orderNumber),
       }));
 
+      invalidateQueries(orderKeys.lists());
+      invalidateQueries(orderKeys.byNumber(orderNumber));
       toast.success('Order deleted successfully');
       return true;
     } catch (error) {

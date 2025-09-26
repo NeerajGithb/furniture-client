@@ -7,10 +7,8 @@ import { useCheckoutStore } from '@/stores/checkoutStore';
 import { useAddressStore } from '@/stores/addressStore';
 import PriceSummaryCard from '@/components/ui/PriceSummaryCard';
 import {
-  Smartphone,
-  Banknote,
   CreditCard,
-  Building2,
+  Banknote,
   Shield,
   ArrowLeft,
   Loader2,
@@ -24,6 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { fetchWithCredentials } from '@/utils/fetchWithCredentials';
 import { useCartStore } from '@/stores/cartStore';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { OrderFilters, useOrderStore } from '@/stores/orderStore';
 
 interface PaymentMethod {
   id: string;
@@ -35,13 +34,20 @@ interface PaymentMethod {
   available: boolean;
 }
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const PaymentPage = () => {
   const [orderError, setOrderError] = useState<string | null>(null);
   const { user } = useCurrentUser();
   const router = useRouter();
   const priceCardRef = useRef(null);
   const [showFixedCheckout, setShowFixedCheckout] = useState(false);
-
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const filters: OrderFilters = { limit: 20, page: 1 };
   const {
     getCheckoutData,
     hasValidCheckout,
@@ -50,14 +56,9 @@ const PaymentPage = () => {
     clearCheckout,
     getSelectedItems,
   } = useCheckoutStore();
-
+  const { fetchOrders } = useOrderStore();
   const { removeFromCart } = useCartStore();
-
   const { addresses } = useAddressStore();
-
-  const [showUPIForm, setShowUPIForm] = useState(false);
-  const [upiId, setUpiId] = useState('');
-  const [placingOrder, setPlacingOrder] = useState(false);
 
   const checkoutData = getCheckoutData();
   const selectedCartItems = getSelectedItems();
@@ -66,28 +67,13 @@ const PaymentPage = () => {
   const paymentMethods: PaymentMethod[] = useMemo(
     () => [
       {
-        id: 'upi',
-        name: 'UPI',
-        icon: <Smartphone className="w-5 h-5" />,
-        description: 'Pay using your UPI ID',
-        popular: true,
-        offers: ['Get 5% cashback', 'Instant payment'],
-        available: false,
-      },
-      {
-        id: 'cards',
-        name: 'Credit/Debit Cards',
+        id: 'razorpay',
+        name: 'Online Payment',
         icon: <CreditCard className="w-5 h-5" />,
-        description: 'Visa, Mastercard, Rupay & more',
-        offers: ['EMI available', '2% cashback on select cards'],
-        available: false,
-      },
-      {
-        id: 'netbanking',
-        name: 'Net Banking',
-        icon: <Building2 className="w-5 h-5" />,
-        description: 'All major banks supported',
-        available: false,
+        description: 'UPI, Cards, Net Banking & Wallets',
+        popular: true,
+        offers: ['Instant payment', 'Secure & encrypted'],
+        available: true,
       },
       {
         id: 'cod',
@@ -101,6 +87,20 @@ const PaymentPage = () => {
     ],
     [],
   );
+
+  // Load Razorpay script
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -149,17 +149,10 @@ const PaymentPage = () => {
 
   const handlePaymentMethodSelect = useCallback(
     (methodId: string) => {
-      const method = paymentMethods.find((m) => m.id === methodId);
-      if (!method?.available) {
-        setOrderError(`${method?.name || 'This payment method'} is coming soon!`);
-        return;
-      }
-
       updateSelectedPaymentMethod(methodId);
-      setShowUPIForm(methodId === 'upi');
-      if (methodId !== 'upi') setUpiId('');
+      setOrderError(null);
     },
-    [updateSelectedPaymentMethod, paymentMethods],
+    [updateSelectedPaymentMethod],
   );
 
   const removeOrderedItemsFromCart = useCallback(
@@ -171,17 +164,12 @@ const PaymentPage = () => {
       const removePromises = orderedItems.map(async (item) => {
         try {
           const success = await removeFromCart(item.productId);
-          if (success) {
-          } else {
+          if (!success) {
             console.warn(`Failed to remove ${item.productId} from cart`);
           }
           return success;
         } catch (error) {
-          setOrderError(
-            `Error removing ${item.productId} from cart: ${
-              error instanceof Error ? error.message : String(error)
-            }`,
-          );
+          console.error(`Error removing ${item.productId} from cart:`, error);
           return false;
         }
       });
@@ -193,21 +181,89 @@ const PaymentPage = () => {
         ).length;
         const failed = results.length - successful;
 
-        if (successful > 0) {
-        }
         if (failed > 0) {
           console.warn(`Failed to remove ${failed} items from cart`);
         }
       } catch (error) {
-        setOrderError(
-          `Error in bulk cart item removal: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
+        console.error('Error in bulk cart item removal:', error);
       }
     },
     [removeFromCart],
   );
+
+  const handleRazorpayPayment = useCallback(async (orderData: any, paymentData: any) => {
+    console.log('🔹 Starting Razorpay payment process', { orderData, paymentData });
+
+    return new Promise((resolve, reject) => {
+      const options = {
+        key: paymentData.key,
+        amount: paymentData.amount,
+        currency: paymentData.currency,
+        name: 'V-Furniture',
+        description: `Order ${orderData.orderNumber}`,
+        order_id: paymentData.orderId,
+
+        handler: async function (response: any) {
+          console.log('✅ Razorpay payment successful', response);
+
+          try {
+            const verifyResponse = await fetchWithCredentials('/api/payment', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                paymentId: paymentData.paymentId,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+
+            if (verifyResponse.ok) {
+              const verifyData = await verifyResponse.json();
+              console.log('✅ Payment verification successful', verifyData);
+              resolve(verifyData);
+            } else {
+              const errorData = await verifyResponse.json().catch(() => ({}));
+              console.error('❌ Payment verification failed', errorData);
+              reject(new Error(errorData.error || 'Payment verification failed'));
+            }
+          } catch (error) {
+            console.error('💥 Error during payment verification', error);
+            reject(error);
+          }
+        },
+
+        prefill: {
+          name: paymentData.customer?.name || 'Customer',
+          email: paymentData.customer?.email || '',
+        },
+
+        theme: {
+          color: '#3B82F6',
+        },
+
+        modal: {
+          ondismiss: function () {
+            console.warn('⚠️ Razorpay payment modal dismissed by user');
+            reject(new Error('Payment cancelled by user'));
+          },
+        },
+      };
+
+      if (!window.Razorpay) {
+        reject(new Error('Razorpay SDK not loaded. Please refresh and try again.'));
+        return;
+      }
+
+      try {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } catch (error) {
+        console.error('💥 Error initializing Razorpay', error);
+        reject(error);
+      }
+    });
+  }, []);
 
   const handlePlaceOrder = useCallback(async () => {
     if (!checkoutData || !selectedCartItems.length) {
@@ -225,21 +281,13 @@ const PaymentPage = () => {
       return;
     }
 
-    if (checkoutData.selectedPaymentMethod === 'upi') {
-      if (!upiId.trim()) {
-        setOrderError('Please enter your UPI ID');
-        return;
-      }
-      const upiRegex = /^[\w.-]+@[\w.-]+$/;
-      if (!upiRegex.test(upiId)) {
-        setOrderError('Please enter a valid UPI ID');
-        return;
-      }
-    }
-
     setPlacingOrder(true);
+    setOrderError(null);
 
     try {
+      console.log('🚀 Starting order placement process');
+
+      // Step 1: Create Order
       const orderPayload = {
         addressId: checkoutData.selectedAddressId,
         paymentMethod: checkoutData.selectedPaymentMethod,
@@ -247,8 +295,9 @@ const PaymentPage = () => {
         insuranceEnabled: checkoutData.insuranceEnabled,
         totals: checkoutData.totals,
         cartData: selectedCartItems,
-        upiId: checkoutData.selectedPaymentMethod === 'upi' ? upiId : undefined,
       };
+
+      console.log('📝 Creating order with payload:', orderPayload);
 
       const orderResponse = await fetchWithCredentials('/api/orders', {
         method: 'POST',
@@ -262,81 +311,104 @@ const PaymentPage = () => {
       }
 
       const orderData = await orderResponse.json();
-      const orderNumber = orderData.order?.orderNumber;
+      console.log('✅ Order created successfully:', orderData);
 
+      const orderNumber = orderData.order?.orderNumber;
       if (!orderNumber) {
         throw new Error('Order created but no order number received');
       }
 
+      // Step 2: Handle Payment
+      console.log('💳 Processing payment for method:', checkoutData.selectedPaymentMethod);
+
+      const paymentResponse = await fetchWithCredentials('/api/payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: orderData.order._id,
+          paymentMethod: checkoutData.selectedPaymentMethod,
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        const errorData = await paymentResponse.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to initialize payment');
+      }
+
+      const paymentData = await paymentResponse.json();
+      console.log('✅ Payment initialized:', paymentData);
+
+      // Handle different payment methods
       if (checkoutData.selectedPaymentMethod === 'cod') {
         try {
           await removeOrderedItemsFromCart(selectedCartItems);
         } catch (cartError) {
-          setOrderError(
-            `Error removing ordered items from cart: ${
-              cartError instanceof Error ? cartError.message : String(cartError)
-            }`,
-          );
+          console.warn('Warning: Failed to remove items from cart:', cartError);
         }
 
         clearCheckout();
-
+        fetchOrders(filters, true);
+        toast.success('Order placed successfully!');
         router.replace(`/order-success?orderNumber=${orderNumber}`);
         return;
-      } else {
+      }
+
+      if (checkoutData.selectedPaymentMethod === 'razorpay') {
+        if (!window.Razorpay) {
+          setOrderError('Payment gateway failed to load. Please refresh and try again.');
+          return;
+        }
+
         try {
-          const paymentResponse = await fetchWithCredentials('/api/payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId: orderData.order._id,
-              paymentMethod: checkoutData.selectedPaymentMethod,
-              upiId: checkoutData.selectedPaymentMethod === 'upi' ? upiId : undefined,
-            }),
-          });
+          const paymentResult = await handleRazorpayPayment(orderData.order, paymentData);
+          console.log('✅ Razorpay payment completed:', paymentResult);
 
-          if (paymentResponse.ok) {
-            toast.success('Processing payment...');
-
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-
-            try {
-              await removeOrderedItemsFromCart(selectedCartItems);
-            } catch (cartError) {
-              setOrderError(
-                `Error removing ordered items from cart after payment: ${
-                  cartError instanceof Error ? cartError.message : String(cartError)
-                }`,
-              );
-              setOrderError(
-                'Payment successful but failed to update cart. Please refresh your cart.',
-              );
-            }
-
-            clearCheckout();
-
-            toast.success('Payment successful! Order placed.');
-            router.replace(`/order-success?orderNumber=${orderNumber}`);
-          } else {
-            const errorData = await paymentResponse.json().catch(() => ({}));
-            throw new Error(errorData.error || `Payment failed: ${paymentResponse.status}`);
+          // Payment successful, clean up and redirect
+          try {
+            await removeOrderedItemsFromCart(selectedCartItems);
+          } catch (cartError) {
+            console.warn('Warning: Failed to remove items from cart:', cartError);
           }
+
+          clearCheckout();
+          fetchOrders(filters, true);
+          toast.success('Payment successful! Order confirmed.');
+          router.replace(`/order-success?orderNumber=${orderNumber}`);
         } catch (paymentError) {
-          setOrderError(
-            `Payment error: ${
-              paymentError instanceof Error ? paymentError.message : String(paymentError)
-            }`,
-          );
+          console.error('❌ Razorpay payment failed:', paymentError);
+          const errorMessage =
+            paymentError instanceof Error ? paymentError.message : 'Payment failed';
+
+          if (errorMessage.includes('cancelled')) {
+            setOrderError(
+              'Payment was cancelled. Your order is saved and you can retry payment from your orders page.',
+            );
+          } else if (errorMessage.includes('verification failed')) {
+            setOrderError(
+              'Payment verification failed. If amount was deducted, it will be refunded within 5-7 business days.',
+            );
+          } else {
+            setOrderError(`Payment failed: ${errorMessage}`);
+          }
         }
       }
     } catch (error) {
+      console.error('💥 Order placement failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to place order';
-      setOrderError(`Order placement error: ${errorMessage}`);
+      setOrderError(`Order placement failed: ${errorMessage}`);
     } finally {
       setPlacingOrder(false);
     }
-  }, [checkoutData, selectedCartItems, upiId, router, clearCheckout, removeOrderedItemsFromCart]);
+  }, [
+    checkoutData,
+    selectedCartItems,
+    router,
+    clearCheckout,
+    removeOrderedItemsFromCart,
+    handleRazorpayPayment,
+  ]);
 
+  // Early returns for various states
   if (!user?._id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -348,6 +420,23 @@ const PaymentPage = () => {
             className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
           >
             Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasValidCheckout()) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-xs shadow-sm border border-gray-200 w-full max-w-md">
+          <h1 className="text-xl font-semibold mb-4 text-gray-900">Invalid Checkout Session</h1>
+          <p className="text-gray-600 mb-4 text-sm">Please go back to your cart and try again.</p>
+          <button
+            onClick={() => router.push('/cart')}
+            className="w-full bg-blue-600 text-white px-6 py-3 hover:bg-blue-700 transition-colors rounded-xs font-medium text-sm"
+          >
+            Go to Cart
           </button>
         </div>
       </div>
@@ -409,7 +498,7 @@ const PaymentPage = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4  gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => router.back()}
@@ -420,15 +509,17 @@ const PaymentPage = () => {
             <div className="min-w-0 flex-1">
               <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Payment</h1>
             </div>
-            {orderError && (
-              <ErrorMessage message={orderError} onClose={() => setOrderError(null)} />
-            )}
           </div>
+          {orderError && (
+            <div className="w-full sm:w-auto">
+              <ErrorMessage message={orderError} onClose={() => setOrderError(null)} />
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Section - Payment Methods */}
-          <div className="lg:col-span-2 space-y-2 ">
+          <div className="lg:col-span-2 space-y-2">
             {/* Address Summary */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -478,7 +569,7 @@ const PaymentPage = () => {
               <div className="p-4 sm:p-6 border-b border-gray-200">
                 <h3 className="font-medium text-gray-900">Choose Payment Method</h3>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                  Currently, only Cash on Delivery is available. Online payments coming soon!
+                  Secure payment options available
                 </p>
               </div>
 
@@ -487,106 +578,54 @@ const PaymentPage = () => {
                   <div key={method.id} className="relative">
                     <div
                       onClick={() => handlePaymentMethodSelect(method.id)}
-                      className={`flex items-center p-2 sm:p-4 transition-colors ${
-                        method.available
-                          ? `cursor-pointer hover:bg-gray-50 ${
-                              checkoutData.selectedPaymentMethod === method.id ? 'bg-blue-50' : ''
-                            }`
-                          : 'cursor-not-allowed opacity-60'
+                      className={`flex items-center p-4 sm:p-6 transition-colors cursor-pointer hover:bg-gray-50 ${
+                        checkoutData.selectedPaymentMethod === method.id ? 'bg-blue-50' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <div
                           className={`p-2 sm:p-3 rounded-xs ${
-                            checkoutData.selectedPaymentMethod === method.id && method.available
+                            checkoutData.selectedPaymentMethod === method.id
                               ? 'bg-blue-600 text-white'
-                              : method.available
-                              ? 'bg-gray-100 text-gray-600'
-                              : 'bg-gray-100 text-gray-400'
+                              : 'bg-gray-100 text-gray-600'
                           }`}
                         >
                           {method.icon}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center flex-wrap gap-2 mb-1">
-                            <h4
-                              className={`font-medium text-sm sm:text-base ${
-                                method.available ? 'text-gray-900' : 'text-gray-500'
-                              }`}
-                            >
+                            <h4 className="font-medium text-sm sm:text-base text-gray-900">
                               {method.name}
                             </h4>
-                            {method.popular && method.available && (
+                            {method.popular && (
                               <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-xs">
                                 Popular
                               </span>
                             )}
-                            {!method.available && (
-                              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-xs">
-                                Coming Soon
-                              </span>
-                            )}
                           </div>
-                          <p
-                            className={`text-xs sm:text-sm ${
-                              method.available ? 'text-gray-600' : 'text-gray-500'
-                            }`}
-                          >
-                            {method.description}
-                          </p>
-                          {/* {method.offers && method.available && (
-                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-600">{method.description}</p>
+                          {method.offers && (
+                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 mt-2">
                               {method.offers.map((offer, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-xs text-green-600"
+                                  className="text-xs text-green-600 flex items-center gap-1"
                                 >
-                                  • {offer}
+                                  <Shield className="w-3 h-3" />
+                                  {offer}
                                 </span>
                               ))}
                             </div>
-                          )} */}
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        {checkoutData.selectedPaymentMethod === method.id && method.available && (
+                        {checkoutData.selectedPaymentMethod === method.id && (
                           <Check className="w-5 h-5 text-blue-600" />
                         )}
-                        {method.available && <ChevronRight className="w-4 h-4 text-gray-400" />}
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
                       </div>
                     </div>
-
-                    {/* UPI Form - Only show if UPI is selected and available */}
-                    <AnimatePresence>
-                      {method.id === 'upi' &&
-                        checkoutData.selectedPaymentMethod === 'upi' &&
-                        method.available && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden border-t border-gray-200 bg-gray-50"
-                          >
-                            <div className="p-4 sm:p-6">
-                              <div className="max-w-md">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Enter UPI ID
-                                </label>
-                                <input
-                                  type="text"
-                                  value={upiId}
-                                  onChange={(e) => setUpiId(e.target.value)}
-                                  placeholder="example@upi"
-                                  className="w-full px-3 py-2 border border-gray-300 bg-white text-gray-900 rounded-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                                />
-                                <p className="text-xs text-gray-600 mt-1">
-                                  Enter your UPI ID (e.g., name@paytm, name@googlepay)
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                    </AnimatePresence>
                   </div>
                 ))}
               </div>
@@ -615,21 +654,20 @@ const PaymentPage = () => {
         </div>
 
         {/* Fixed Bottom Place Order Button */}
-        {checkoutData && (
-          <div
-            className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-2xl transition-all duration-300 ease-in-out z-50 ${
-              showFixedCheckout
-                ? 'translate-y-0 opacity-100'
-                : 'translate-y-full opacity-0 pointer-events-none'
-            }`}
-          >
-            <button
-              onClick={handlePlaceOrder}
-              disabled={placingOrder || !canPlaceOrder() || !checkoutData.selectedPaymentMethod}
-              className="w-full h-[60px] bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 rounded-2xl font-semibold shadow-xl hover:from-emerald-600 hover:to-emerald-700 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border-2 border-emerald-400/30"
+        <AnimatePresence>
+          {showFixedCheckout && checkoutData && (
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="fixed bottom-0 left-0 right-0 bg-white shadow-2xl border-t border-gray-200 z-50 p-4"
             >
-              <div className="flex items-center justify-between h-full">
-                <span className="font-bold text-lg tracking-wide">
+              <button
+                onClick={handlePlaceOrder}
+                disabled={placingOrder || !canPlaceOrder() || !checkoutData.selectedPaymentMethod}
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-xs font-semibold shadow-lg hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-between"
+              >
+                <span className="font-bold text-lg">
                   {placingOrder ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -641,18 +679,18 @@ const PaymentPage = () => {
                 </span>
                 {!placingOrder && (
                   <div className="flex items-center gap-3">
-                    <span className="bg-white/20 px-2 py-1 rounded-full text-sm font-medium">
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
                       {checkoutData.totals.selectedQuantity}
                     </span>
-                    <span className="font-bold text-lg tracking-wide">
+                    <span className="font-bold text-lg">
                       ₹{checkoutData.totals.totalAmount.toLocaleString()}
                     </span>
                   </div>
                 )}
-              </div>
-            </button>
-          </div>
-        )}
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

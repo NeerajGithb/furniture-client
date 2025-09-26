@@ -86,7 +86,7 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
       case 'checkout':
         return 'Proceed to Payment';
       case 'payment':
-        return 'PLACE ORDER';
+        return selectedPaymentMethod === 'cod' ? 'PLACE ORDER' : 'PAY NOW';
       default:
         return 'Continue';
     }
@@ -291,10 +291,15 @@ const PriceSummaryCard: React.FC<PriceSummaryCardProps> = ({
           ) : (
             <>
               {mode === 'payment' ? (
-                <CreditCard className="w-4 h-4" />
+                selectedPaymentMethod === 'cod' ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <CreditCard className="w-4 h-4" />
+                )
               ) : (
                 <ArrowRight className="w-4 h-4" />
               )}
+
               {getButtonText()}
             </>
           )}

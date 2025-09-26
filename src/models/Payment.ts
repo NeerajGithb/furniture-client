@@ -6,9 +6,19 @@ export interface IPayment extends Document {
   paymentId: string;
   amount: number;
   currency: string;
-  method: 'card' | 'upi' | 'netbanking' | 'cod' | 'wallet';
+  method:
+    | 'card'
+    | 'upi'
+    | 'netbanking'
+    | 'cod'
+    | 'wallet'
+    | 'razorpay'
+    | 'stripe'
+    | 'paytm'
+    | 'phonepe'
+    | 'googlepay';
   status: 'pending' | 'success' | 'failed' | 'cancelled' | 'refunded';
-  gateway: 'razorpay' | 'stripe' | 'paytm' | 'phonepe' | 'googlepay' | 'mock';
+  gateway: 'razorpay' | 'stripe' | 'paytm' | 'phonepe' | 'googlepay' | 'mock' | 'offline';
   gatewayTransactionId?: string;
   gatewayResponse?: any;
   refundId?: string;
@@ -49,7 +59,18 @@ const PaymentSchema = new Schema<IPayment>(
     },
     method: {
       type: String,
-      enum: ['card', 'upi', 'netbanking', 'cod', 'wallet'],
+      enum: [
+        'card',
+        'upi',
+        'netbanking',
+        'cod',
+        'wallet',
+        'razorpay',
+        'stripe',
+        'paytm',
+        'phonepe',
+        'googlepay',
+      ],
       required: true,
     },
     status: {
@@ -59,7 +80,7 @@ const PaymentSchema = new Schema<IPayment>(
     },
     gateway: {
       type: String,
-      enum: ['razorpay', 'stripe', 'paytm', 'phonepe', 'googlepay', 'mock'],
+      enum: ['razorpay', 'stripe', 'paytm', 'phonepe', 'googlepay', 'mock', 'offline'],
       required: true,
     },
     gatewayTransactionId: {
@@ -91,15 +112,26 @@ const PaymentSchema = new Schema<IPayment>(
   },
 );
 
+// Indexes
 PaymentSchema.index({ orderId: 1 });
 PaymentSchema.index({ userId: 1 });
 PaymentSchema.index({ status: 1 });
 PaymentSchema.index({ createdAt: -1 });
+PaymentSchema.index({ paymentId: 1 }, { unique: true });
 
+// Pre-save middleware to generate paymentId
+PaymentSchema.pre('save', function (next) {
+  if (!this.paymentId) {
+    this.paymentId = `pay_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+  }
+  next();
+});
+
+// Static methods
 PaymentSchema.statics.createPayment = function (data: Partial<IPayment>) {
   return this.create({
     ...data,
-    paymentId: data.paymentId || `pay_${Date.now()}_${Math.random().toString(36).substring(2)}`,
+    paymentId: data.paymentId || `pay_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
   });
 };
 
@@ -107,25 +139,47 @@ PaymentSchema.statics.findByOrderId = function (orderId: string) {
   return this.findOne({ orderId }).populate('orderId userId');
 };
 
+// Instance methods
 PaymentSchema.methods.markAsSuccess = function (gatewayData: any = {}) {
   this.status = 'success';
-  this.gatewayTransactionId = gatewayData.transactionId;
-  this.gatewayResponse = gatewayData;
+  this.gatewayTransactionId = gatewayData.transactionId || gatewayData.razorpayPaymentId;
+  this.gatewayResponse = {
+    ...this.gatewayResponse,
+    ...gatewayData,
+    paidAt: new Date(),
+  };
   return this.save();
 };
 
 PaymentSchema.methods.markAsFailed = function (reason: string, gatewayData: any = {}) {
   this.status = 'failed';
   this.failureReason = reason;
-  this.gatewayResponse = gatewayData;
+  this.gatewayResponse = {
+    ...this.gatewayResponse,
+    ...gatewayData,
+    failedAt: new Date(),
+  };
   return this.save();
 };
 
 PaymentSchema.methods.processRefund = function (amount?: number, refundId?: string) {
   this.status = 'refunded';
   this.refundAmount = amount || this.amount;
-  this.refundId = refundId;
+  this.refundId = refundId || `refund_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
   this.refundedAt = new Date();
+  return this.save();
+};
+
+PaymentSchema.methods.markAsCancelled = function (reason?: string) {
+  this.status = 'cancelled';
+  if (reason) {
+    this.failureReason = reason;
+  }
+  this.gatewayResponse = {
+    ...this.gatewayResponse,
+    cancelledAt: new Date(),
+    reason,
+  };
   return this.save();
 };
 

@@ -485,7 +485,7 @@ export default function OrdersPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     layout
-                    onClick={() => router.push(`/order-success?orderNumber=${order.orderNumber}`)}
+                    onClick={() => router.push(`/orders/track?orderNumber=${order.orderNumber}`)}
                     className={`bg-white rounded-xs border border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all overflow-hidden cursor-pointer ${
                       isDeleting ? 'opacity-50 pointer-events-none' : ''
                     }`}

@@ -53,7 +53,17 @@ export interface IOrder extends Document {
   discount: number;
   totalAmount: number;
   shippingAddress: IShippingAddress;
-  paymentMethod: 'card' | 'upi' | 'netbanking' | 'cod' | 'wallet';
+  paymentMethod:
+    | 'card'
+    | 'upi'
+    | 'netbanking'
+    | 'cod'
+    | 'wallet'
+    | 'razorpay'
+    | 'stripe'
+    | 'paytm'
+    | 'phonepe'
+    | 'googlepay';
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   orderStatus:
     | 'pending'
@@ -213,7 +223,18 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type: String,
-      enum: ['card', 'upi', 'netbanking', 'cod', 'wallet'],
+      enum: [
+        'card',
+        'upi',
+        'netbanking',
+        'cod',
+        'wallet',
+        'razorpay',
+        'stripe',
+        'paytm',
+        'phonepe',
+        'googlepay',
+      ],
       required: true,
     },
     paymentStatus: {

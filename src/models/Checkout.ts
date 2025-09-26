@@ -53,7 +53,18 @@ const CheckoutSchema = new Schema<ICheckout>(
     },
     selectedPaymentMethod: {
       type: String,
-      enum: ['cod', 'card', 'upi', 'netbanking', 'wallet'],
+      enum: [
+        'cod',
+        'card',
+        'upi',
+        'netbanking',
+        'wallet',
+        'razorpay',
+        'stripe',
+        'paytm',
+        'phonepe',
+        'googlepay',
+      ],
     },
     expiresAt: {
       type: Date,

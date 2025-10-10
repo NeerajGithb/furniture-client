@@ -1,0 +1,534 @@
+[
+  {
+    "_id": "68b59d29dc26eaab4af45011",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756732711/inspirations/cgspj44xl8hv75uv6gzz.jpg",
+      "alt": "Modern Living Room",
+      "publicId": "inspirations/cgspj44xl8hv75uv6gzz"
+    },
+    "tags": [
+      "modern living room",
+      "contemporary design",
+      "minimalist style",
+      "cozy interiors",
+      "stylish furniture",
+      "elegant decor",
+      "functional space",
+      "premium home design"
+    ],
+    "keywords": [
+      "sofa",
+      "sectional sofa",
+      "coffee table",
+      "center table",
+      "tv stand",
+      "media unit",
+      "bookshelf",
+      "wall shelf",
+      "armchair",
+      "lounge chair",
+      "side table",
+      "accent table",
+      "cabinet",
+      "storage cabinet",
+      "modern furniture",
+      "contemporary furniture",
+      "living room ideas",
+      "home decor",
+      "interior design",
+      "stylish home"
+    ],
+    "categories": [
+      {
+        "_id": "68b579620629cfb9f4f378b6",
+        "name": "Sofa",
+        "slug": "sofa"
+      },
+      {
+        "_id": "68b57a030629cfb9f4f378bb",
+        "name": "Coffee Table",
+        "slug": "coffee-table"
+      },
+      {
+        "_id": "68b57a8d0629cfb9f4f378de",
+        "name": "TV Stand",
+        "slug": "tv-stand"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      },
+      {
+        "_id": "68b57b1e0629cfb9f4f3790b",
+        "name": "Armchair",
+        "slug": "armchair"
+      },
+      {
+        "_id": "68b57a590629cfb9f4f378cf",
+        "name": "Bookshelf",
+        "slug": "bookshelf"
+      }
+    ],
+    "title": "Living Room",
+    "slug": "living-room",
+    "description": "A modern living room that blends style, comfort, and functionality. Featuring a spacious sofa, elegant coffee table, sleek TV stand, and versatile storage with a bookshelf, side table, and cabinet. The armchair adds charm and comfort, while the minimalist design creates a sophisticated yet cozy atmosphere.",
+    "createdAt": "2025-09-01T13:18:33.144Z",
+    "updatedAt": "2025-09-01T16:19:41.347Z",
+    "__v": 2,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756732711/inspirations/cgspj44xl8hv75uv6gzz.jpg"
+  },
+  {
+    "_id": "68b5a4ebdc26eaab4af45022",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734698/inspirations/a9pryelmmhnuuq6vlhqp.jpg",
+      "alt": "Bedroom Inspiration",
+      "publicId": "inspirations/a9pryelmmhnuuq6vlhqp"
+    },
+    "tags": [
+      "upholstered bed",
+      "king size bed",
+      "wooden wardrobe",
+      "mirrored dresser",
+      "compact nightstand",
+      "bedroom bench",
+      "cozy sofa",
+      "luxury chest of drawers",
+      "modern armchair"
+    ],
+    "keywords": [
+      "luxury bedroom furniture ideas",
+      "premium bed designs",
+      "modern wardrobe storage",
+      "stylish nightstand",
+      "elegant dresser setup",
+      "cozy bedroom inspiration",
+      "personalized bedroom space"
+    ],
+    "categories": [
+      {
+        "_id": "68b579320629cfb9f4f378b1",
+        "name": "Bed",
+        "slug": "bed"
+      },
+      {
+        "_id": "68b579620629cfb9f4f378b6",
+        "name": "Sofa",
+        "slug": "sofa"
+      },
+      {
+        "_id": "68b57b050629cfb9f4f37901",
+        "name": "Bench",
+        "slug": "bench"
+      },
+      {
+        "_id": "68b57b1e0629cfb9f4f3790b",
+        "name": "Armchair",
+        "slug": "armchair"
+      },
+      {
+        "_id": "68b57a7c0629cfb9f4f378d9",
+        "name": "Dresser",
+        "slug": "dresser"
+      }
+    ],
+    "title": "Bedroom Inspiration",
+    "slug": "bedroom-inspiration",
+    "description": "Experience the ultimate comfort with a bedroom designed for relaxation, intimacy, and style. Premium beds with upholstered or wooden frames, spacious wardrobes, elegant nightstands, and dressers redefine the sleeping space. Add cozy benches and armchairs to complete a personal sanctuary that blends storage and aesthetics seamlessly.",
+    "createdAt": "2025-09-01T13:51:39.893Z",
+    "updatedAt": "2025-09-01T13:51:39.893Z",
+    "__v": 0,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734698/inspirations/a9pryelmmhnuuq6vlhqp.jpg"
+  },
+  {
+    "_id": "68b5a578dc26eaab4af4502b",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734838/inspirations/huo3daifuduwqu5lcd0u.jpg",
+      "alt": "Dining Room Inspiration",
+      "publicId": "inspirations/huo3daifuduwqu5lcd0u"
+    },
+    "tags": [
+      "wooden dining table",
+      "upholstered chair",
+      "dining bench",
+      "elegant sideboard",
+      "crockery cabinet",
+      "console table",
+      "extendable dining table",
+      "modern ottoman"
+    ],
+    "keywords": [
+      "modern dining room ideas",
+      "luxury dining set",
+      "wooden table with chairs",
+      "space-saving dining solutions",
+      "stylish crockery cabinet",
+      "elegant dining setup",
+      "designer dining room furniture"
+    ],
+    "categories": [
+      {
+        "_id": "68b57a200629cfb9f4f378c0",
+        "name": "Dining Table",
+        "slug": "dining-table"
+      },
+      {
+        "_id": "68b57a390629cfb9f4f378c5",
+        "name": "Chair",
+        "slug": "chair"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      },
+      {
+        "_id": "68b57b050629cfb9f4f37901",
+        "name": "Bench",
+        "slug": "bench"
+      }
+    ],
+    "title": "Dining Inspiration",
+    "slug": "dining-inspiration",
+    "description": "Elevate your dining experience with a space that celebrates togetherness and style. From sturdy wooden dining tables and cushioned chairs to benches, console tables, and cabinets, every detail contributes to a warm and welcoming atmosphere. Perfect for family dinners, festive gatherings, or intimate evenings.",
+    "createdAt": "2025-09-01T13:54:00.573Z",
+    "updatedAt": "2025-09-01T13:54:00.573Z",
+    "__v": 0,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734838/inspirations/huo3daifuduwqu5lcd0u.jpg"
+  },
+  {
+    "_id": "68b5a5ecdc26eaab4af45034",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734954/inspirations/c7mtcrsk9ba3kehuecw6.jpg",
+      "alt": "Storage Inspiration",
+      "publicId": "inspirations/c7mtcrsk9ba3kehuecw6"
+    },
+    "tags": [
+      "modular wardrobe",
+      "compact shoe rack",
+      "floating bookshelf",
+      "multi-drawer dresser",
+      "modern cabinet",
+      "entryway console table",
+      "space-saving storage solutions"
+    ],
+    "keywords": [
+      "modern storage furniture",
+      "premium wardrobe design",
+      "stylish shoe rack",
+      "space-saving storage ideas",
+      "living room bookshelf",
+      "hidden storage furniture",
+      "multifunctional home storage"
+    ],
+    "categories": [
+      {
+        "_id": "68b57b2f0629cfb9f4f37910",
+        "name": "Shoe Rack",
+        "slug": "shoe-rack"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      },
+      {
+        "_id": "68b57a590629cfb9f4f378cf",
+        "name": "Bookshelf",
+        "slug": "bookshelf"
+      },
+      {
+        "_id": "68b57a7c0629cfb9f4f378d9",
+        "name": "Dresser",
+        "slug": "dresser"
+      }
+    ],
+    "title": "Storage Inspiration",
+    "slug": "storage-inspiration",
+    "description": "Keep your home clutter-free with smart and stylish storage furniture. From multifunctional wardrobes and chic shoe racks to sleek console tables and bookshelves, these pieces add order and elegance. Storage doesn’t have to be hidden — it can be a design statement that enhances your interiors.",
+    "createdAt": "2025-09-01T13:55:56.225Z",
+    "updatedAt": "2025-09-01T13:55:56.225Z",
+    "__v": 0,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756734954/inspirations/c7mtcrsk9ba3kehuecw6.jpg"
+  },
+  {
+    "_id": "68b5a697dc26eaab4af4503d",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735125/inspirations/x37ejcpskr4ogdh2olpd.jpg",
+      "alt": "Outdoor Inspiration",
+      "publicId": "inspirations/x37ejcpskr4ogdh2olpd"
+    },
+    "tags": [
+      "turn your balcony",
+      "terrace",
+      "or garden into a luxurious retreat. comfortable outdoor sofas",
+      "benches",
+      "and armchairs paired with coffee tables and ottomans create a perfect spot for relaxation. crafted with durable",
+      "weather-resistant materials",
+      "these designs bring elegance to the open air."
+    ],
+    "keywords": [
+      "patio sofa",
+      "garden bench",
+      "outdoor armchair",
+      "balcony coffee table",
+      "weatherproof ottoman",
+      "rattan furniture",
+      "outdoor side table",
+      "modular outdoor seating",
+      "luxury outdoor furniture",
+      "garden seating inspiration",
+      "balcony makeover ideas",
+      "patio sofa set",
+      "weather-resistant furniture",
+      "cozy outdoor setup",
+      "modern terrace design"
+    ],
+    "categories": [
+      {
+        "_id": "68b579620629cfb9f4f378b6",
+        "name": "Sofa",
+        "slug": "sofa"
+      },
+      {
+        "_id": "68b57b050629cfb9f4f37901",
+        "name": "Bench",
+        "slug": "bench"
+      },
+      {
+        "_id": "68b57aa10629cfb9f4f378e3",
+        "name": "Desk",
+        "slug": "desk"
+      },
+      {
+        "_id": "68b57a390629cfb9f4f378c5",
+        "name": "Chair",
+        "slug": "chair"
+      },
+      {
+        "_id": "68b57a030629cfb9f4f378bb",
+        "name": "Coffee Table",
+        "slug": "coffee-table"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      }
+    ],
+    "title": "Outdoor Inspiration",
+    "slug": "outdoor-inspiration",
+    "description": "Turn your balcony, terrace, or garden into a luxurious retreat. Comfortable outdoor sofas, benches, and armchairs paired with coffee tables and ottomans create a perfect spot for relaxation. Crafted with durable, weather-resistant materials, these designs bring elegance to the open air.",
+    "createdAt": "2025-09-01T13:58:47.265Z",
+    "updatedAt": "2025-09-01T13:58:47.265Z",
+    "__v": 0,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735125/inspirations/x37ejcpskr4ogdh2olpd.jpg"
+  },
+  {
+    "_id": "68b5a70ddc26eaab4af45046",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735244/inspirations/jugngbq7eohg5opztnje.jpg",
+      "alt": "Office Inspiration",
+      "publicId": "inspirations/jugngbq7eohg5opztnje"
+    },
+    "tags": [
+      "ergonomic desk",
+      "executive chair",
+      "modern bookshelf",
+      "filing cabinet",
+      "minimal console table",
+      "study armchair",
+      "compact ottoman",
+      "office storage solutions"
+    ],
+    "keywords": [
+      "home office design ideas",
+      "modern study setup",
+      "ergonomic workspace furniture",
+      "stylish desk setup",
+      "small home office solutions",
+      "luxury office furniture inspiration"
+    ],
+    "categories": [
+      {
+        "_id": "68b57aa10629cfb9f4f378e3",
+        "name": "Desk",
+        "slug": "desk"
+      },
+      {
+        "_id": "68b57a390629cfb9f4f378c5",
+        "name": "Chair",
+        "slug": "chair"
+      },
+      {
+        "_id": "68b57a590629cfb9f4f378cf",
+        "name": "Bookshelf",
+        "slug": "bookshelf"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      },
+      {
+        "_id": "68b57b1e0629cfb9f4f3790b",
+        "name": "Armchair",
+        "slug": "armchair"
+      },
+      {
+        "_id": "68b57a8d0629cfb9f4f378de",
+        "name": "TV Stand",
+        "slug": "tv-stand"
+      }
+    ],
+    "title": "Office Inspiration",
+    "slug": "office-inspiration",
+    "description": "Design a home office that balances productivity with comfort. Sleek desks, ergonomic chairs, and functional bookshelves pair with storage cabinets and console tables for a refined look. Whether for remote work, study, or creativity, your office can be both stylish and efficient.",
+    "createdAt": "2025-09-01T14:00:45.720Z",
+    "updatedAt": "2025-09-01T14:00:45.720Z",
+    "__v": 0,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735244/inspirations/jugngbq7eohg5opztnje.jpg"
+  },
+  {
+    "_id": "68b5a758dc26eaab4af4504f",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735318/inspirations/nibvigi1nwbse0g16x9z.jpg",
+      "alt": "Study Inspiration",
+      "publicId": "inspirations/nibvigi1nwbse0g16x9z"
+    },
+    "tags": [
+      "student desk",
+      "study bookshelf",
+      "ergonomic chair",
+      "modern armchair",
+      "side table",
+      "reading sofa",
+      "compact cabinet",
+      "console table"
+    ],
+    "keywords": [
+      "modern study room ideas",
+      "productive study setup",
+      "stylish bookshelf design",
+      "ergonomic study desk",
+      "cozy reading nook",
+      "small study room inspiration",
+      "functional workspace furniture"
+    ],
+    "categories": [
+      {
+        "_id": "68b57aa10629cfb9f4f378e3",
+        "name": "Desk",
+        "slug": "desk"
+      },
+      {
+        "_id": "68b57a590629cfb9f4f378cf",
+        "name": "Bookshelf",
+        "slug": "bookshelf"
+      },
+      {
+        "_id": "68b57a390629cfb9f4f378c5",
+        "name": "Chair",
+        "slug": "chair"
+      },
+      {
+        "_id": "68b57b1e0629cfb9f4f3790b",
+        "name": "Armchair",
+        "slug": "armchair"
+      },
+      {
+        "_id": "68b579620629cfb9f4f378b6",
+        "name": "Sofa",
+        "slug": "sofa"
+      },
+      {
+        "_id": "68b57ae80629cfb9f4f378f7",
+        "name": "Cabinet",
+        "slug": "cabinet"
+      }
+    ],
+    "title": "Study Room",
+    "slug": "study-room",
+    "description": "Create a focused and inspiring study space that supports both work and learning. Functional desks, spacious bookshelves, and ergonomic chairs are complemented by side tables, sofas, and armchairs for reading or brainstorming. The study becomes more than a workspace — it becomes a hub of ideas.",
+    "createdAt": "2025-09-01T14:02:00.469Z",
+    "updatedAt": "2025-09-01T15:27:41.805Z",
+    "__v": 1,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735318/inspirations/nibvigi1nwbse0g16x9z.jpg"
+  },
+  {
+    "_id": "68b5a875dc26eaab4af45058",
+    "heroImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735603/inspirations/liokuqga0f6iuaazy9ur.jpg",
+      "alt": "Guest Room Inspiration",
+      "publicId": "inspirations/liokuqga0f6iuaazy9ur"
+    },
+    "tags": [
+      "guest room furniture",
+      "guest room design ideas",
+      "cozy guest room setup",
+      "space saving furniture",
+      "multifunctional guest room",
+      "guest bed ideas",
+      "stylish nightstands",
+      "storage solutions",
+      "guest room inspiration",
+      "modern guest room decor"
+    ],
+    "keywords": [
+      "guest room inspiration",
+      "guest room furniture ideas",
+      "cozy beds for guest room",
+      "space saving guest room design",
+      "wardrobe and storage for guests",
+      "best furniture for guest rooms",
+      "stylish nightstands for guest bedroom",
+      "guest room sofa bed ideas",
+      "modern guest room decor",
+      "functional guest room setup"
+    ],
+    "categories": [
+      {
+        "_id": "68b57aa10629cfb9f4f378e3",
+        "name": "Desk",
+        "slug": "desk"
+      },
+      {
+        "_id": "68b57a390629cfb9f4f378c5",
+        "name": "Chair",
+        "slug": "chair"
+      },
+      {
+        "_id": "68b579320629cfb9f4f378b1",
+        "name": "Bed",
+        "slug": "bed"
+      },
+      {
+        "_id": "68b579620629cfb9f4f378b6",
+        "name": "Sofa",
+        "slug": "sofa"
+      },
+      {
+        "_id": "68b57b1e0629cfb9f4f3790b",
+        "name": "Armchair",
+        "slug": "armchair"
+      },
+      {
+        "_id": "68b57a7c0629cfb9f4f378d9",
+        "name": "Dresser",
+        "slug": "dresser"
+      },
+      {
+        "_id": "68b57b050629cfb9f4f37901",
+        "name": "Bench",
+        "slug": "bench"
+      }
+    ],
+    "title": "Guest Room",
+    "slug": "guest-room",
+    "description": "Create the perfect retreat for your visitors with our Guest Room Inspiration. From cozy beds and elegant nightstands to space-saving wardrobes and multipurpose sofa beds, we bring together furniture ideas that combine comfort, style, and practicality. Whether your guest room doubles as a study, a storage zone, or a welcoming space for overnight stays, explore designs that maximize space while keeping it warm and inviting.",
+    "createdAt": "2025-09-01T14:06:45.417Z",
+    "updatedAt": "2025-09-01T15:27:12.262Z",
+    "__v": 1,
+    "imageUrl": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756735603/inspirations/liokuqga0f6iuaazy9ur.jpg"
+  }
+]

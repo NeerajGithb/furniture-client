@@ -1,0 +1,181 @@
+[
+  {
+    "_id": "68b57b1e0629cfb9f4f3790b",
+    "name": "Armchair",
+    "slug": "armchair",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723997/categories/d7uk2taxxooqab0hrpaj.jpg",
+      "alt": "Armchair",
+      "publicId": "categories/d7uk2taxxooqab0hrpaj"
+    },
+    "createdAt": "2025-09-01T10:53:18.745Z",
+    "updatedAt": "2025-09-01T10:53:18.745Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b579320629cfb9f4f378b1",
+    "name": "Bed",
+    "slug": "bed",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723504/categories/yp2epu5vs5jfavmpogir.jpg",
+      "alt": "Bed",
+      "publicId": "categories/yp2epu5vs5jfavmpogir"
+    },
+    "createdAt": "2025-09-01T10:45:06.535Z",
+    "updatedAt": "2025-09-01T18:46:06.814Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57b050629cfb9f4f37901",
+    "name": "Bench",
+    "slug": "bench",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723972/categories/rmyzbkewaf4f6u8l20h6.jpg",
+      "alt": "Bench",
+      "publicId": "categories/rmyzbkewaf4f6u8l20h6"
+    },
+    "createdAt": "2025-09-01T10:52:53.662Z",
+    "updatedAt": "2025-09-01T10:52:53.662Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a590629cfb9f4f378cf",
+    "name": "Bookshelf",
+    "slug": "bookshelf",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723800/categories/ct7x6fzggsvzhywtas6d.jpg",
+      "alt": "Bookshelf",
+      "publicId": "categories/ct7x6fzggsvzhywtas6d"
+    },
+    "createdAt": "2025-09-01T10:50:01.639Z",
+    "updatedAt": "2025-09-01T10:50:01.639Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57ae80629cfb9f4f378f7",
+    "name": "Cabinet",
+    "slug": "cabinet",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723943/categories/pniyaf8rqofe8iz9gprw.jpg",
+      "alt": "Cabinet",
+      "publicId": "categories/pniyaf8rqofe8iz9gprw"
+    },
+    "createdAt": "2025-09-01T10:52:24.850Z",
+    "updatedAt": "2025-09-01T10:52:24.850Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a390629cfb9f4f378c5",
+    "name": "Chair",
+    "slug": "chair",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723767/categories/vd3xvnyxwmai4rxxbxpq.jpg",
+      "alt": "Chair",
+      "publicId": "categories/vd3xvnyxwmai4rxxbxpq"
+    },
+    "createdAt": "2025-09-01T10:49:29.468Z",
+    "updatedAt": "2025-09-01T10:49:29.468Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a030629cfb9f4f378bb",
+    "name": "Coffee Table",
+    "slug": "coffee-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723714/categories/hu6juo29camjmgum3j0z.jpg",
+      "alt": "Coffee Table",
+      "publicId": "categories/hu6juo29camjmgum3j0z"
+    },
+    "createdAt": "2025-09-01T10:48:35.742Z",
+    "updatedAt": "2025-09-07T09:25:41.547Z",
+    "__v": 0,
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "isActive": false
+  },
+  {
+    "_id": "68b57aa10629cfb9f4f378e3",
+    "name": "Desk",
+    "slug": "desk",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723872/categories/kqjwfvno9c9hee743rmx.jpg",
+      "alt": "Desk",
+      "publicId": "categories/kqjwfvno9c9hee743rmx"
+    },
+    "createdAt": "2025-09-01T10:51:13.720Z",
+    "updatedAt": "2025-09-01T10:51:13.720Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a200629cfb9f4f378c0",
+    "name": "Dining Table",
+    "slug": "dining-table",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723742/categories/zlbfigw6gd786zlycbr9.jpg",
+      "alt": "Dining Table",
+      "publicId": "categories/zlbfigw6gd786zlycbr9"
+    },
+    "createdAt": "2025-09-01T10:49:04.491Z",
+    "updatedAt": "2025-09-01T10:49:04.491Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a7c0629cfb9f4f378d9",
+    "name": "Dresser",
+    "slug": "dresser",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723835/categories/wjywjdkams6yv6fwnzfm.jpg",
+      "alt": "Dresser",
+      "publicId": "categories/wjywjdkams6yv6fwnzfm"
+    },
+    "createdAt": "2025-09-01T10:50:36.786Z",
+    "updatedAt": "2025-09-01T18:58:55.361Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57b2f0629cfb9f4f37910",
+    "name": "Shoe Rack",
+    "slug": "shoe-rack",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756724013/categories/cdufan9kg12gx3g4ifw8.jpg",
+      "alt": "Shoe Rack",
+      "publicId": "categories/cdufan9kg12gx3g4ifw8"
+    },
+    "createdAt": "2025-09-01T10:53:35.338Z",
+    "updatedAt": "2025-09-01T19:02:46.881Z",
+    "__v": 0,
+    "description": "dfgdfg",
+    "keywords": [
+      "sdfdf"
+    ],
+    "priority": 10,
+    "isActive": true
+  },
+  {
+    "_id": "68b579620629cfb9f4f378b6",
+    "name": "Sofa",
+    "slug": "sofa",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723552/categories/wku84iuf7xkevxmrf4ch.jpg",
+      "alt": "Sofa",
+      "publicId": "categories/wku84iuf7xkevxmrf4ch"
+    },
+    "createdAt": "2025-09-01T10:45:54.161Z",
+    "updatedAt": "2025-09-01T10:45:54.161Z",
+    "__v": 0
+  },
+  {
+    "_id": "68b57a8d0629cfb9f4f378de",
+    "name": "TV Stand",
+    "slug": "tv-stand",
+    "mainImage": {
+      "url": "https://res.cloudinary.com/dtpyqhw2j/image/upload/v1756723851/categories/rgfez6ugqsr3g1qe5w9a.jpg",
+      "alt": "TV Stand",
+      "publicId": "categories/rgfez6ugqsr3g1qe5w9a"
+    },
+    "createdAt": "2025-09-01T10:50:53.363Z",
+    "updatedAt": "2025-09-01T10:50:53.363Z",
+    "__v": 0
+  }
+]

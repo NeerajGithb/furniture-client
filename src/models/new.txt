@@ -1,0 +1,139 @@
+# Furniture Categories & Subcategories Guide
+
+*Complete guide to product organization and classification*
+
+---
+
+## 1. Living Room
+
+### Categories & Subcategories
+
+**1. Sofas & Seating**
+- 2-Seater Sofa, 3-Seater Sofa, Sectional Sofa, Loveseat, Armchair
+
+**2. Coffee Tables**
+- Rectangular Coffee Table, Round Coffee Table, Nested Tables, Side Table, Lift-Top Table
+
+**3. TV Units**
+- Low TV Console, Wall-Mounted Unit, Storage TV Unit, Media Cabinet, Corner TV Stand
+
+**4. Bookcases & Shelves**
+- Open Shelves, Wall-Mounted Shelves, Corner Bookcase, Ladder Shelf, Modular Unit
+
+**5. Accent Furniture**
+- Ottomans, Benches, Console Tables, Sideboards, Poufs
+
+---
+
+## 2. Bedroom
+
+### Categories & Subcategories
+
+**1. Beds**
+- King Bed, Queen Bed, Single Bed, Bunk Bed, Platform Bed
+
+**2. Nightstands**
+- Single Drawer, Double Drawer, Floating, Open Shelf, Ladder Stand
+
+**3. Wardrobes**
+- Sliding Door, Hinged Door, Corner Wardrobe, Modular Wardrobe, Freestanding
+
+**4. Dressers & Chests**
+- 3-Drawer Dresser, 5-Drawer Dresser, Chest of Drawers, Tallboy, Vanity Table
+
+**5. Benches & Seating**
+- Bedroom Bench, Storage Bench, Window Seat, Accent Chair, Pouf
+
+---
+
+## 3. Dining Room
+
+### Categories & Subcategories
+
+**1. Dining Tables**
+- Rectangular, Round, Extendable, Folding, Pedestal
+
+**2. Dining Chairs**
+- Wooden Chair, Upholstered Chair, Armchair, Bench, Bar Stool
+
+**3. Sideboards & Buffets**
+- Low Sideboard, Tall Buffet, Console, Cabinet, Display Unit
+
+**4. Bar & Counter Units**
+- Wine Rack, Mini Bar, Bar Cabinet, Counter Table, Bar Stool Set
+
+**5. Dining Sets**
+- 4-Seater, 6-Seater, 8-Seater, Outdoor Dining, Folding Set
+
+---
+
+## 4. Home Office
+
+### Categories & Subcategories
+
+**1. Desks**
+- Writing Desk, L-Shaped Desk, Standing Desk, Executive Desk, Floating Desk
+
+**2. Chairs**
+- Ergonomic Chair, Task Chair, Executive Chair, Wooden Chair, Stools
+
+**3. Bookcases & Storage**
+- Open Shelves, Filing Cabinet, Modular Storage, Corner Shelf, Wall Unit
+
+**4. Tables & Workstations**
+- Side Table, Printer Table, Drafting Table, Laptop Table, Meeting Table
+
+**5. Accessories**
+- Desk Organizer, Lamp, Footrest, Monitor Stand, Cable Management
+
+---
+
+## 5. Outdoor
+
+### Categories & Subcategories
+
+**1. Seating**
+- Outdoor Sofa, Garden Bench, Swing Chair, Adirondack Chair, Folding Chair
+
+**2. Tables**
+- Outdoor Coffee Table, Dining Table, Side Table, Bistro Table, Patio Table
+
+**3. Storage**
+- Garden Cabinet, Outdoor Chest, Deck Box, Planter Storage, Tool Organizer
+
+**4. Decor & Accessories**
+- Umbrella, Lantern, Outdoor Rug, Planters, Cushions
+
+**5. Loungers & Daybeds**
+- Sun Lounger, Daybed, Hammock, Folding Lounger, Chaise Lounge
+
+---
+
+*© 2025 Furniture Categories Guide | Generated on August 31, 2025*
+
+
+
+
+{/* 
+          <motion.div
+            className='bg-gray-50 p-4 border border-gray-200 rounded-lg'
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h3 className='font-semibold text-sm uppercase tracking-wide text-black mb-3'>Featured</h3>
+            <div className='space-y-2'>
+              <p className='text-sm text-gray-800 mb-3'>
+                Discover our {inspiration.name.toLowerCase()} collection
+              </p>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href={`/inspirations/${inspiration.slug}`}
+                  className='inline-block text-sm font-medium text-white bg-black px-4 py-2 hover:bg-gray-800 transition-colors duration-200 rounded'
+                  onClick={handleLinkClick}
+                >
+                  Explore {inspiration.name}
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div> */}

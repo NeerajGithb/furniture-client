@@ -8,7 +8,6 @@ const queryClient = new QueryClient();
 const ReactQueryProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ReactQueryDevtools initialIsOpen={false} />
       {children}
     </QueryClientProvider>
   );

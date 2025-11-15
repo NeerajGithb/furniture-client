@@ -37,6 +37,7 @@ interface ProfileState {
   cancelEdit: () => void;
   updateProfile: () => Promise<{ success: boolean; user?: User }>;
   uploadProfileImage: (file: File) => Promise<{ success: boolean; user?: User }>;
+  uploadChatImage: (file: File) => Promise<{ success: boolean; url?: string }>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -230,6 +231,68 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     } catch (error: any) {
       console.error('Profile image upload error:', error);
       set({ error: error.message || 'Failed to upload image' });
+      return { success: false };
+    } finally {
+      set({ uploadingImage: false });
+    }
+  },
+
+  uploadChatImage: async (file: File) => {
+    if (!file) {
+      set({ error: 'No file selected' });
+      return { success: false };
+    }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      const errorMsg = `Invalid file type: ${file.type}. Please use JPG, PNG, GIF, or WebP.`;
+      set({ error: errorMsg });
+      toast.error(errorMsg);
+      return { success: false };
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      const errorMsg = `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 5MB.`;
+      set({ error: errorMsg });
+      toast.error(errorMsg);
+      return { success: false };
+    }
+
+    set({ uploadingImage: true, error: null });
+
+    try {
+      const reader = new FileReader();
+      const fileResult = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          if (reader.result) resolve(reader.result as string);
+          else reject(new Error('Failed to read file'));
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsDataURL(file);
+      });
+
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: fileResult, folder: 'chat-images' }),
+      });
+
+      if (!uploadRes.ok) {
+        const errorData = await uploadRes.json();
+        throw new Error(errorData?.message || 'Failed to upload image');
+      }
+
+      const uploadData = await uploadRes.json();
+      if (!uploadData.url) throw new Error('Invalid upload response');
+
+      toast.success('Image uploaded successfully');
+      return { success: true, url: uploadData.url };
+    } catch (error: any) {
+      console.error('Chat image upload error:', error);
+      const errorMsg = error.message || 'Failed to upload image';
+      set({ error: errorMsg });
+      toast.error(errorMsg);
       return { success: false };
     } finally {
       set({ uploadingImage: false });

@@ -79,6 +79,7 @@ export default function ProfileOverview() {
     if (!file) return;
 
     const result = await uploadProfileImage(file);
+    
     if (result.success) {
       await updateAuthUser();
     }

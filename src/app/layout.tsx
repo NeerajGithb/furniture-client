@@ -1,3 +1,4 @@
+// @ts-ignore: allow side-effect css import without type declarations
 import './globals.css';
 import Providers from '@/context/Providers';
 import ToastProvider from '@/provider/ToastProvider';
@@ -7,6 +8,9 @@ import { Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import ReactQueryProvider from '@/provider/ReactQueryProvider';
+import ChatAssistant from '@/components/ai/ChatAssistant';
+import ChatWidget from '@/components/chat/ChatWidget';
+import ChatHandler from '@/components/chat/ChatHandler';
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
@@ -33,6 +37,9 @@ export default function RootLayout({
           >
             <ReactQueryProvider>
               <Providers>
+                {/* <ChatAssistant/> */}
+                <ChatWidget />
+                <ChatHandler />
                 <ToastProvider />
                 <Header />
                 <div className="max-w-[1700px] min-h-screen mx-auto w-full">

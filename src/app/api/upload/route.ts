@@ -5,6 +5,7 @@ import cloudinary from '@/lib/cloudinary';
 export const runtime = 'nodejs'; // ensure Node runtime
 
 export async function POST(request: NextRequest) {
+  console.log('Received upload request');
   try {
     const contentType = request.headers.get('content-type');
 
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     if (contentType?.includes('multipart/form-data')) {
       const formData = await request.formData();
       const file = formData.get('file');
-
+      console.log('FormData file received:', file);
       if (!file) {
         console.warn('No file provided in FormData');
         return NextResponse.json({ error: 'No file provided' }, { status: 400 });
